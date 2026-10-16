@@ -97,13 +97,13 @@ public sealed class ContentGroupEntriesBuilder
         return this;
     }
 
-    public ContentGroupEntriesBuilder List(string listKey) => Entry(ContentGroupEntryKinds.List, listKey);
+    public ContentGroupEntriesBuilder OptionList(string listKey) => Entry(ContentGroupEntryKinds.OptionList, listKey);
 
-    public ContentGroupEntriesBuilder Lists(params string[] listKeys)
+    public ContentGroupEntriesBuilder OptionLists(params string[] listKeys)
     {
         foreach (var listKey in listKeys)
         {
-            List(listKey);
+            OptionList(listKey);
         }
 
         return this;
@@ -112,7 +112,7 @@ public sealed class ContentGroupEntriesBuilder
 
 /// <summary>
 /// Turns an entry reference into what it covers. One resolver per entry KIND; the
-/// "type" kind ships here, "list" ships with the Content Part Lists feature, and a
+/// "type" kind ships here, "optionlist" ships with the Option lists feature, and a
 /// module can add a kind of its own without the group system knowing about it.
 /// </summary>
 public interface IContentGroupEntryResolver

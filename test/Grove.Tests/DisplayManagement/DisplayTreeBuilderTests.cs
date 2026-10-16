@@ -111,8 +111,8 @@ public sealed class DisplayTreeBuilderTests
             await section.AddAsync(DisplayTreeTestHost.NewShape("Secret"), "1");
 
             var heading = DisplayTreeTestHost.NewShape("Heading", ("Text", "Same"));
-            heading.Metadata.Name = "TitlePart";
-            heading.Metadata.Differentiator = "TitlePart-Title";
+            heading.Metadata.Name = "Title";
+            heading.Metadata.Differentiator = "Title-Title";
             await section.AddAsync(heading, "2");
 
             return section;

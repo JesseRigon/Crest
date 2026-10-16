@@ -32,7 +32,7 @@ public static class ContentIndexingConstants
 
     public const string FullTextKey = "Content.ContentItem.FullText";
 
-    public const string ContainedPartKey = "Content.ContentItem.ContainedPart";
+    public const string ParentContentItemKey = "Content.ContentItem.ParentContentItem";
 
     public const string KeywordKey = ".keyword";
 

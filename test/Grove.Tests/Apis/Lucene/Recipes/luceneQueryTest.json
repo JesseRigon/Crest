@@ -44,12 +44,12 @@
               "Listable": true
             }
           },
-          "ContentTypePartDefinitionRecords": [
+          "ContentTypeFieldSetDefinitionRecords": [
             {
-              "PartName": "HtmlBodyPart",
-              "Name": "HtmlBodyPart",
+              "FieldSetName": "HtmlBody",
+              "Name": "HtmlBody",
               "Settings": {
-                "ContentTypePartSettings": {
+                "ContentTypeFieldSetSettings": {
                   "Position": "1",
                   "Editor": "Wysiwyg"
                 },
@@ -61,10 +61,10 @@
               }
             },
             {
-              "PartName": "Article",
+              "FieldSetName": "Article",
               "Name": "Article",
               "Settings": {
-                "ContentTypePartSettings": {
+                "ContentTypeFieldSetSettings": {
                   "Position": "2"
                 }
               }
@@ -97,8 +97,8 @@
           "Latest": true,
           "Published": true,
           "Article": {},
-          "HtmlBodyPart": {
-            "Html": "It’s important to note the differences between the framework and the CMS."
+          "HtmlBody": {
+            "Html": { "Html": "It’s important to note the differences between the framework and the CMS." }
           }
         },
         {
@@ -108,8 +108,8 @@
           "Latest": true,
           "Published": true,
           "Article": {},
-          "HtmlBodyPart": {
-            "Html": "This is a redevelopment on ASP.NET Core."
+          "HtmlBody": {
+            "Html": { "Html": "This is a redevelopment on ASP.NET Core." }
           }
         },
         {
@@ -119,8 +119,8 @@
           "Latest": true,
           "Published": true,
           "Article": {},
-          "HtmlBodyPart": {
-            "Html": "A Web Content Management System (CMS) built on top of the Grove Framework."
+          "HtmlBody": {
+            "Html": { "Html": "A Web Content Management System (CMS) built on top of the Grove Framework." }
           }
         },
         {
@@ -130,8 +130,8 @@
           "Latest": true,
           "Published": true,
           "Article": {},
-          "HtmlBodyPart": {
-            "Html": "Grove is an application framework for building modular, multi-tenant applications on ASP.NET Core."
+          "HtmlBody": {
+            "Html": { "Html": "Grove is an application framework for building modular, multi-tenant applications on ASP.NET Core." }
           }
         }
       ]

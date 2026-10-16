@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Nodes;
 using System.Text.Json.Settings;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using Grove.Contents.Management.CompiledQueries;
@@ -33,6 +34,23 @@ public class DefaultContentManager : IContentManager
     private readonly IClock _clock;
     private readonly IValidationSink _validationSink;
     private readonly IContentSaveGuard[] _saveGuards;
+    private readonly IContentLifecycle _lifecycle;
+    private IContentFieldConditions[] _fieldConditions;
+
+    // Resolved when an item is validated or saved: field conditions read option sources, which
+    // reach the authorization stack and the content manager again.
+    private IContentFieldConditions[] FieldConditions => _fieldConditions ??= _services.GetServices<IContentFieldConditions>().ToArray();
+    private readonly IServiceProvider _services;
+    private IContentProjection[] _projections;
+
+    // The lifecycle points' previous state (docs/content-engine.md › Behaviour is workflows) is
+    // the stored version, read only when asked; these are the versions whose stored row is not
+    // their previous state, by version id: a new draft (its source's row), a merged version (a copy).
+    private readonly Dictionary<string, ContentPreviousState> _previous = new(StringComparer.Ordinal);
+
+    // Above zero while an operation runs the points of its own (importing, cloning): the
+    // creates and updates it makes inside run no points of theirs.
+    private int _quiet;
 
     protected readonly IStringLocalizer S;
 
@@ -46,9 +64,13 @@ public class DefaultContentManager : IContentManager
         IClock clock,
         IValidationSink validationSink,
         IStringLocalizer<DefaultContentManager> localizer,
-        IEnumerable<IContentSaveGuard> saveGuards)
+        IEnumerable<IContentSaveGuard> saveGuards,
+        IContentLifecycle lifecycle,
+        IServiceProvider services)
     {
+        _services = services;
         _saveGuards = saveGuards.ToArray();
+        _lifecycle = lifecycle;
         _contentDefinitionManager = contentDefinitionManager;
         Handlers = handlers;
         _session = session;
@@ -177,7 +199,11 @@ public class DefaultContentManager : IContentManager
                     // Save the previous version.
                     await _session.SaveAsync(contentItem, checkConcurrency: true);
 
+                    var source = contentItem.Id;
                     contentItem = await BuildNewVersionAsync(contentItem);
+
+                    // The new draft's previous state is the version it was built from.
+                    _previous[contentItem.ContentItemVersionId] = ContentPreviousState.Stored(source);
                 }
             }
 
@@ -367,13 +393,19 @@ public class DefaultContentManager : IContentManager
             return;
         }
 
+        var previous = PreviousOf(contentItem);
         var context = new SaveDraftContentContext(contentItem);
 
         await Handlers.InvokeAsync((handler, context) => handler.DraftSavingAsync(context), context, _logger);
 
+        await HookAsync(ContentLifecyclePoints.SavingDraft, contentItem, previous);
+
         await _session.SaveAsync(contentItem, checkConcurrency: true);
 
         await ReversedHandlers.InvokeAsync((handler, context) => handler.DraftSavedAsync(context), context, _logger);
+
+        await TriggerAsync(ContentLifecyclePoints.SavingDraft, contentItem, previous);
+        Stored(contentItem);
     }
 
     public async Task<bool> PublishAsync(ContentItem contentItem)
@@ -416,6 +448,10 @@ public class DefaultContentManager : IContentManager
             return false;
         }
 
+        // The previous state of publishing is what was live: the previously published version.
+        var previousState = ContentPreviousState.Of(previous);
+        await HookAsync(ContentLifecyclePoints.Publishing, contentItem, previousState);
+
         if (previous != null)
         {
             await _session.SaveAsync(previous, checkConcurrency: true);
@@ -426,6 +462,9 @@ public class DefaultContentManager : IContentManager
         await _session.SaveAsync(contentItem, checkConcurrency: true);
 
         await ReversedHandlers.InvokeAsync((handler, context) => handler.PublishedAsync(context), context, _logger);
+
+        await TriggerAsync(ContentLifecyclePoints.Publishing, contentItem, previousState);
+        Stored(contentItem);
 
         return true;
     }
@@ -488,11 +527,17 @@ public class DefaultContentManager : IContentManager
             return false;
         }
 
+        var previousState = ContentPreviousState.Of(publishedItem);
+        await HookAsync(ContentLifecyclePoints.Unpublishing, contentItem, previousState);
+
         publishedItem.Published = false;
         publishedItem.ModifiedUtc = _clock.UtcNow;
         await _session.SaveAsync(publishedItem, checkConcurrency: true);
 
         await ReversedHandlers.InvokeAsync((handler, context) => handler.UnpublishedAsync(context), context, _logger);
+
+        await TriggerAsync(ContentLifecyclePoints.Unpublishing, contentItem, previousState);
+        Stored(contentItem);
 
         return true;
     }
@@ -648,10 +693,18 @@ public class DefaultContentManager : IContentManager
             return false;
         }
 
+        await HookAsync(ContentLifecyclePoints.Creating, contentItem, ContentPreviousState.None);
+        if (options.IsPublished)
+        {
+            await HookAsync(ContentLifecyclePoints.Publishing, contentItem, ContentPreviousState.None);
+        }
+
         await _session.SaveAsync(contentItem);
         _contentManagerSession.Store(contentItem);
 
         await ReversedHandlers.InvokeAsync((handler, context) => handler.CreatedAsync(context), context, _logger);
+
+        await TriggerAsync(ContentLifecyclePoints.Creating, contentItem, ContentPreviousState.None);
 
         if (options.IsPublished)
         {
@@ -662,7 +715,11 @@ public class DefaultContentManager : IContentManager
 
             // invoke handlers to acquire state, or at least establish lazy loading callbacks.
             await ReversedHandlers.InvokeAsync((handler, context) => handler.PublishedAsync(context), publishContext, _logger);
+
+            await TriggerAsync(ContentLifecyclePoints.Publishing, contentItem, ContentPreviousState.None);
         }
+
+        Stored(contentItem);
 
         return true;
     }
@@ -731,6 +788,8 @@ public class DefaultContentManager : IContentManager
                     originalVersion = versionsToUpdate.FirstOrDefault(x => string.Equals(x.ContentItemVersionId, importingItem.ContentItemVersionId, StringComparison.OrdinalIgnoreCase));
                 }
 
+                var previousState = ContentPreviousState.Of(originalVersion);
+
                 if (originalVersion == null)
                 {
                     // The version does not exist in the current database.
@@ -738,8 +797,20 @@ public class DefaultContentManager : IContentManager
 
                     await Handlers.InvokeAsync((handler, context) => handler.ImportingAsync(context), context, _logger);
 
+                    await HookAsync(ContentLifecyclePoints.Importing, importingItem, ContentPreviousState.None);
+
                     var evictionVersions = versionsThatMaybeEvicted.Where(x => string.Equals(x.ContentItemId, importingItem.ContentItemId, StringComparison.OrdinalIgnoreCase));
-                    var result = await CreateContentItemVersionAsync(importingItem, evictionVersions);
+                    ContentValidateResult result;
+                    _quiet++;
+                    try
+                    {
+                        result = await CreateContentItemVersionAsync(importingItem, evictionVersions);
+                    }
+                    finally
+                    {
+                        _quiet--;
+                    }
+
                     if (!result.Succeeded)
                     {
                         if (_logger.IsEnabled(LogLevel.Error))
@@ -753,6 +824,9 @@ public class DefaultContentManager : IContentManager
                     // Imported handlers will only be fired if the validation has been successful.
                     // Consumers should implement validated handlers to alter the success of that operation.
                     await ReversedHandlers.InvokeAsync((handler, context) => handler.ImportedAsync(context), context, _logger);
+
+                    await TriggerAsync(ContentLifecyclePoints.Importing, importingItem, previousState);
+                    Stored(importingItem);
 
                     importedContentItems.Add(importingItem);
                 }
@@ -796,8 +870,20 @@ public class DefaultContentManager : IContentManager
 
                     await Handlers.InvokeAsync((handler, context) => handler.ImportingAsync(context), context, _logger);
 
+                    await HookAsync(ContentLifecyclePoints.Importing, importingItem, previousState);
+
                     var evictionVersions = versionsThatMaybeEvicted.Where(x => string.Equals(x.ContentItemId, importingItem.ContentItemId, StringComparison.OrdinalIgnoreCase));
-                    var result = await UpdateContentItemVersionAsync(originalVersion, importingItem, evictionVersions);
+                    ContentValidateResult result;
+                    _quiet++;
+                    try
+                    {
+                        result = await UpdateContentItemVersionAsync(originalVersion, importingItem, evictionVersions);
+                    }
+                    finally
+                    {
+                        _quiet--;
+                    }
+
                     if (!result.Succeeded)
                     {
                         if (_logger.IsEnabled(LogLevel.Error))
@@ -812,6 +898,9 @@ public class DefaultContentManager : IContentManager
                     // Consumers should implement validated handlers to alter the success of that operation.
                     await ReversedHandlers.InvokeAsync((handler, context) => handler.ImportedAsync(context), context, _logger);
 
+                    await TriggerAsync(ContentLifecyclePoints.Importing, importingItem, previousState);
+                    Stored(importingItem);
+
                     importedContentItems.Add(importingItem);
                 }
             }
@@ -825,15 +914,41 @@ public class DefaultContentManager : IContentManager
     {
         ArgumentNullException.ThrowIfNull(contentItem);
 
+        var previous = PreviousOf(contentItem);
         var context = new UpdateContentContext(contentItem);
 
         await Handlers.InvokeAsync((handler, context) => handler.UpdatingAsync(context), context, _logger);
 
         await GuardAsync(contentItem);
 
+        await HookAsync(ContentLifecyclePoints.Updating, contentItem, previous);
+
         await _session.SaveAsync(contentItem);
 
         await ReversedHandlers.InvokeAsync((handler, context) => handler.UpdatedAsync(context), context, _logger);
+
+        await TriggerAsync(ContentLifecyclePoints.Updating, contentItem, previous);
+        Stored(contentItem);
+    }
+
+    // The lifecycle points (docs/content-engine.md › Behaviour is workflows): the hook runs inside
+    // the unit before the item is stored and may refuse; the trigger runs once it is stored.
+    private Task HookAsync(string point, ContentItem contentItem, ContentPreviousState previous)
+        => _quiet == 0 ? _lifecycle.HookAsync(point, contentItem, previous) : Task.CompletedTask;
+
+    private Task TriggerAsync(string point, ContentItem contentItem, ContentPreviousState previous)
+        => _quiet == 0 ? _lifecycle.TriggerAsync(point, contentItem, previous) : Task.CompletedTask;
+
+    private ContentPreviousState PreviousOf(ContentItem contentItem)
+        => contentItem.ContentItemVersionId is { } id && _previous.TryGetValue(id, out var previous) ? previous : ContentPreviousState.Of(contentItem);
+
+    // Once stored, a version's previous state for a later point is its stored row again.
+    private void Stored(ContentItem contentItem)
+    {
+        if (!string.IsNullOrEmpty(contentItem.ContentItemVersionId))
+        {
+            _previous.Remove(contentItem.ContentItemVersionId);
+        }
     }
 
     // Save guards run on every create and update, after the handlers; a refusal is not
@@ -863,9 +978,36 @@ public class DefaultContentManager : IContentManager
 
         var validateContext = new ValidateContentContext(contentItem);
 
+        // A field its visibility hides keeps no value, so its own checks do not run.
+        foreach (var conditions in FieldConditions)
+        {
+            await conditions.ClearHiddenFieldsAsync(contentItem);
+        }
+
         await Handlers.InvokeAsync((handler, context) => handler.ValidatingAsync(context), validateContext, _logger);
 
         await ReversedHandlers.InvokeAsync((handler, context) => handler.ValidatedAsync(context), validateContext, _logger);
+
+        // The type's rules across fields, keyed by the field path they name.
+        foreach (var conditions in FieldConditions)
+        {
+            await conditions.ValidateRulesAsync(contentItem, validateContext.ContentValidateResult);
+        }
+
+        // The validating hooks' refusals join the item's validation errors, keyed by field path.
+        if (_quiet == 0)
+        {
+            var previous = PreviousOf(contentItem);
+            foreach (var error in await _lifecycle.CheckAsync(ContentLifecyclePoints.Validating, contentItem, previous))
+            {
+                validateContext.ContentValidateResult.Fail(new ValidationResult(error.Message, string.IsNullOrEmpty(error.Path) ? [] : [error.Path]));
+            }
+
+            if (validateContext.ContentValidateResult.Succeeded)
+            {
+                await _lifecycle.TriggerAsync(ContentLifecyclePoints.Validating, contentItem, previous);
+            }
+        }
 
         return validateContext.ContentValidateResult;
     }
@@ -890,7 +1032,7 @@ public class DefaultContentManager : IContentManager
         var validationResult = await ValidateAsync(contentItem);
         if (!validationResult.Succeeded)
         {
-            await _session.CancelAsync();
+            await _services.GetRequiredService<Grove.Data.Documents.IDocumentStore>().CancelAsync();
             return validationResult;
         }
 
@@ -924,6 +1066,13 @@ public class DefaultContentManager : IContentManager
         };
 
         await Handlers.InvokeAsync((handler, context) => handler.GetContentItemAspectAsync(context), context, _logger);
+
+        // The item-level read projections, after the field sets' (docs/content-engine.md › Behaviour is workflows).
+        _projections ??= [.. _services.GetServices<IContentProjection>()];
+        foreach (var projection in _projections)
+        {
+            await projection.ProjectAsync(context);
+        }
 
         return aspect;
     }
@@ -962,6 +1111,9 @@ public class DefaultContentManager : IContentManager
             return false;
         }
 
+        var previousState = ContentPreviousState.Of(contentItem);
+        await HookAsync(ContentLifecyclePoints.Removing, contentItem, previousState);
+
         foreach (var version in activeVersions)
         {
             version.Published = false;
@@ -970,6 +1122,8 @@ public class DefaultContentManager : IContentManager
         }
 
         await ReversedHandlers.InvokeAsync((handler, context) => handler.RemovedAsync(context), context, _logger);
+
+        await TriggerAsync(ContentLifecyclePoints.Removing, contentItem, previousState);
 
         return true;
     }
@@ -989,10 +1143,15 @@ public class DefaultContentManager : IContentManager
 
         await Handlers.InvokeAsync((handler, context) => handler.RemovingAsync(context), context, _logger);
 
+        var previousState = ContentPreviousState.Of(contentItem);
+        await HookAsync(ContentLifecyclePoints.Removing, contentItem, previousState);
+
         contentItem.Latest = false;
         await _session.SaveAsync(contentItem);
 
         await ReversedHandlers.InvokeAsync((handler, context) => handler.RemovedAsync(context), context, _logger);
+
+        await TriggerAsync(ContentLifecyclePoints.Removing, contentItem, previousState);
 
         if (publishedItem != null)
         {
@@ -1007,7 +1166,17 @@ public class DefaultContentManager : IContentManager
 
         var cloneContentItem = await NewAsync(contentItem.ContentType);
         cloneContentItem.DisplayText = contentItem.DisplayText;
-        await CreateAsync(cloneContentItem, VersionOptions.Draft);
+
+        // The clone is created empty and filled below: cloning is its point, not creating.
+        _quiet++;
+        try
+        {
+            await CreateAsync(cloneContentItem, VersionOptions.Draft);
+        }
+        finally
+        {
+            _quiet--;
+        }
 
         var context = new CloneContentContext(contentItem, cloneContentItem);
 
@@ -1015,9 +1184,16 @@ public class DefaultContentManager : IContentManager
 
         await Handlers.InvokeAsync((handler, context) => handler.CloningAsync(context), context, _logger);
 
+        // The previous state of a clone is the item it was cloned from.
+        var source = ContentPreviousState.Copy(contentItem.Snapshot());
+        await HookAsync(ContentLifecyclePoints.Cloning, context.CloneContentItem, source);
+
         await _session.SaveAsync(context.CloneContentItem);
 
         await ReversedHandlers.InvokeAsync((handler, context) => handler.ClonedAsync(context), context, _logger);
+
+        await TriggerAsync(ContentLifecyclePoints.Cloning, context.CloneContentItem, source);
+        Stored(context.CloneContentItem);
 
         return context.CloneContentItem;
     }
@@ -1069,7 +1245,7 @@ public class DefaultContentManager : IContentManager
         var result = await ValidateAsync(contentItem);
         if (!result.Succeeded)
         {
-            await _session.CancelAsync();
+            await _services.GetRequiredService<Grove.Data.Documents.IDocumentStore>().CancelAsync();
             return result;
         }
 
@@ -1164,6 +1340,9 @@ public class DefaultContentManager : IContentManager
             await RemovePublishedVersionAsync(updatingVersion, evictionVersions);
         }
 
+        // The version's state before the merge is the updating point's previous state.
+        _previous[updatingVersion.ContentItemVersionId ?? string.Empty] = ContentPreviousState.Copy(updatingVersion.Snapshot());
+
         updatingVersion.Merge(updatedVersion, s_updateJsonMergeSettings);
         updatingVersion.Latest = importingLatest;
         updatingVersion.Published = importingPublished;
@@ -1173,7 +1352,7 @@ public class DefaultContentManager : IContentManager
 
         if (!result.Succeeded)
         {
-            await _session.CancelAsync();
+            await _services.GetRequiredService<Grove.Data.Documents.IDocumentStore>().CancelAsync();
             return result;
         }
 

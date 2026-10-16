@@ -11,7 +11,7 @@ public static class ContentItemLinks
     public static string SitePath(ContentItem item)
     {
         System.Text.Json.Nodes.JsonObject content = item.Content;
-        return content["AutoroutePart"]?["Path"] is System.Text.Json.Nodes.JsonValue value && value.TryGetValue<string>(out var path) && path.Length > 0
+        return content["Autoroute"]?["Path"]?["Text"] is System.Text.Json.Nodes.JsonValue value && value.TryGetValue<string>(out var path) && path.Length > 0
             ? path.TrimStart('/')
             : "Contents/ContentItems/" + Uri.EscapeDataString(item.ContentItemId);
     }

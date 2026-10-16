@@ -112,13 +112,13 @@ party may have no customer account, one, or potentially several.
   hidden type: phone, email, web, social, messaging, other), `parties.address-kind`,
   `parties.organization-type` (the legal form only: Incorporation, LLC, Community Group, NGO,
   Government; trade names are `dba` legal entity names), `parties.organization-name-kind` and
-  `parties.association-type` (data-locked module types): module-owned Content Part Lists
+  `parties.association-type` (data-locked module types): module-owned Option lists
   seeded DEFERRED (Parties migrates before Contents' index tables exist at first-time setup,
   so inline seeding aborts provisioning; every early module defers), none locked (the
   address-kind seed gains a DataLock when posting starts snapshotting by kind). Organization
   carries OrganizationType and Industry pickers. Seed keys in
   `PartiesOptionSets`/`ContactPointKinds`/`AddressKinds`.
-- **Content Part List adoption.** `Grove.Parties` declares `Grove.Contents.PartLists` in its
+- **Option list adoption.** `Grove.Parties` declares `Grove.Contents.OptionLists` in its
   manifest and its migration attaches pickers DEFERRED (global lists seed in a deferred task;
   an inline attach at first-time setup runs before the seeds and aborts provisioning): Person
   gets Honorific, Suffix and PreferredLanguage from Grove's global lists; the `ContactPoint`
@@ -136,13 +136,13 @@ hides survive every reseed.
 
 ## Contact points and addresses
 
-- **Contact points and addresses**: two named BagParts on Person and Organization,
+- **Contact points and addresses**: two embeddings on Person and Organization,
   `ContactPoints` (element type `ContactPoint`: Kind picker, Value, Label, Preferred,
   PhoneCountry picker) and `Addresses` (element type `Address`: Kind picker, Line1/2,
   Locality, `Geo` (a `GeoStackField` from `Grove.Data.Regions` whose level 1 is the country),
   PostalCode, Preferred). Person and Organization carry no scalar Email/Phone/Website fields.
-- **One bag-element service.** The platform stores bags but edits them only through its MVC
-  editor, so Parties owns the write surface: `PartyBagElementService` over `PartyBag`
+- **One bag-element service.** The platform stores embeddings and edits them in the item's
+  editor; Parties owns the API write surface: `PartyBagElementService` over `PartyBag`
   descriptors (`PartyBags.ContactPoints|Addresses|OrganizationNames`), one service
   parameterized by bag, element type and kind list, never a second bag service. API:
   `api/grove/parties/{partyId}/contacts|contact-points|addresses|names` (authorized with
@@ -184,7 +184,7 @@ hides survive every reseed.
 
 ## Organizations
 
-- **Legal entity names.** The display name (the TitlePart; for the tenant, `ISite.SiteName`)
+- **Legal entity names.** The display name (the TitleFieldSet; for the tenant, `ISite.SiteName`)
   is the name shown everywhere. An Organization also carries its legal entity names as a list
   of kinds: the `OrganizationNames` bag (`OrganizationName` element: Kind from
   `parties.organization-name-kind` (legal, dba, former, other), Name, Primary), so an
@@ -207,8 +207,8 @@ hides survive every reseed.
 
 ## Party ↔ user link
 
-`Person.PortalUser` is a stock `UserPickerField`, indexed by
-`Grove.Contents.Fields.Indexing.SQL.UserPicker` so person-for-user is a query.
+`Person.PortalUser` is an option list field on the `users` source, indexed by the option list
+field index so person-for-user is a query.
 `IPartyUserLinkService` (Parties) owns the writes and the lookup;
 `Grove.Access.Members.CreateMemberAsync` calls it when a `PersonId` is supplied (unknown person →
 error), so the link is recorded on both sides by the module that creates the account. Who a
@@ -217,9 +217,9 @@ member is, and the bindings and hierarchy around the link, are under
 
 ## Org structure
 
-A `Positions` bag on Person (element type `OrgPosition`: an Organization option picker over content items
-restricted to Organization, Title, Department, Primary; one primary per person). Bag-contained
-fields are outside stock field indexes, so `PartyPositionIndex` (Parties-owned map index, one
+A `Positions` embedding on Person (element type `OrgPosition`: an Organization option picker over content items
+restricted to Organization, Title, Department, Primary; one primary per person). Embedded
+items' fields are outside stock field indexes, so `PartyPositionIndex` (Parties-owned map index, one
 row per position) makes the organization side a query: `api/grove/parties/{personId}/positions`
 (CRUD) and `api/grove/parties/{orgId}/people`. Live check: `party-positions-api.js`.
 
@@ -409,7 +409,7 @@ of its own, so All Parties is exercised by the checks of whichever module regist
 - [ ] **Hierarchy-aware scope expansion** feeding the fail-closed scope providers
   ([workflows.md › Operations](workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery)):
   subtree(user) as an input to the content scope, joining on the organization-scope axis
-  (`GroveOrganizationPart` and its index). Not wired yet; the management bound on users
+  (`OwningOrganizationFieldSet` and its index). Not wired yet; the management bound on users
   already uses the closure table ([permissions.md](permissions.md)).
 - [ ] **Per-type contact validation and the kind data lock** (› Contact points and
   addresses), pending P2.

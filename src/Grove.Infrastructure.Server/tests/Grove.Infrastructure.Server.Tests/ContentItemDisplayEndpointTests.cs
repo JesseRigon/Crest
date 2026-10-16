@@ -113,7 +113,7 @@ public sealed class ContentItemDisplayEndpointTests
     private Task<IResult> DisplayAsync(string contentItemId = ItemId, string? displayType = null)
     {
         // Only the collaborators the display action uses; the others are not touched by it.
-        var handlers = new Grove.Contents.Api.ContentItemsHandlers(null!, null!, _contentManager, null!, null!, null!, _callers, null!);
+        var handlers = new Grove.Contents.Api.ContentItemsHandlers(null!, null!, _contentManager, null!, null!, _callers, null!);
 
         // A published item's tree is versioned (decision 12), which reads the version service.
         handlers.BindTo(new DefaultHttpContext { RequestServices = new ServiceCollection().AddSingleton<DisplayTreeVersions>().BuildServiceProvider() });

@@ -107,18 +107,18 @@ resolved; the report is the live answer.
 
 | Shape | Owner module | Live path | Status |
 | --- | --- | --- | --- |
-| `TermPart` (a term's page: the items tagged) | Grove.Contents.Taxonomies | site | - [x] `TermPart` (`ListPart`'s display, bound as `TermPart`) |
-| `ListPartFeed` (RSS link in the head) | Grove.Contents.Lists | site | - [x] `HeadLink`, bound as `ListPartFeed`: the feed driver puts the link's values on the shape |
-| `LiquidPart`, `LiquidPart_Summary` | Grove.Display.Liquid | site | - [x] retired: one body format. Grove.Display.Templates' migration (`Migrations.UpdateFrom3Async`, `LiquidBodies`) gives every type with the part `DisplayTreePart` in its place, converts every version's body (a body rendering one shape by name becomes that component's node; a body without Liquid a `RichText` node; a body with Liquid a published composite template of its own, `LiquidBody_{id}`, placed by name with the item's id as its `ContentItemId` input, `Model.ContentItem` read through the `Content` accessor) and deletes the part's definition |
+| `TermFieldSet` (a term's page: the items tagged) | Grove.Contents.Taxonomies | site | - [x] `TermFieldSet` (`ChildContentItemsFieldSet`'s display, bound as `TermFieldSet`) |
+| `ChildContentItemsFieldSetFeed` (RSS link in the head) | Grove.Contents.Hierarchy | site | - [x] `HeadLink`, bound as `ChildContentItemsFieldSetFeed`: the feed driver puts the link's values on the shape |
+| `LiquidPart`, `LiquidPart_Summary` | Grove.Display.Liquid | site | - [x] retired: one body format. Grove.Display.Templates' migration (`Migrations.UpdateFrom3Async`, `LiquidBodies`) gives every type with the part `DisplayTreeFieldSet` in its place, converts every version's body (a body rendering one shape by name becomes that component's node; a body without Liquid a `RichText` node; a body with Liquid a published composite template of its own, `LiquidBody_{id}`, placed by name with the item's id as its `ContentItemId` input, `Model.ContentItem` read through the `Content` accessor) and deletes the part's definition |
 | `SearchFormPart` | Grove.Search | none | - [x] deleted with its driver (views.md › Search) |
-| `PublishLaterPart`, `ArchiveLaterPart` (scheduled-date notes) | Grove.Contents.PublishLater, Grove.Contents.ArchiveLater | `/display` | - [x] `PublishLaterPart`, `ArchiveLaterPart` (the scheduled date as a badge); their `_SummaryAdmin` shapes resolve through the registry's display-variant rule |
+| `PublishLaterFieldSet`, `ArchiveLaterFieldSet` (scheduled-date notes) | Grove.Contents.PublishLater, Grove.Contents.ArchiveLater | `/display` | - [x] `PublishLaterFieldSet`, `ArchiveLaterFieldSet` (the scheduled date as a badge); their `_SummaryAdmin` shapes resolve through the registry's display-variant rule |
 | `DashboardPart` and its shapes | Grove.AdminDashboard | — | - [x] deleted with the module |
 | `*_SummaryAdmin`, `*_Thumbnail`, `*_Admin` of the MVC admin lists; the deployment modals | Grove.Contents, Grove.Contents.SiteMenu | — | - [x] deleted with the Contents MVC screens and Grove.Themes.TheAdmin |
-| `ListPart_RemotePublishing` | Grove.Contents.Lists | — | ☑ deleted with Grove.XmlRpc |
-| `TestContentPartA`, `LowerDoll` | Grove.Demo | — | ☑ deleted with Grove.Demo |
+| `ChildContentItems_RemotePublishing` | Grove.Contents.Hierarchy | — | ☑ deleted with Grove.XmlRpc |
+| `TestContentFieldSetA`, `LowerDoll` | Grove.Demo | — | ☑ deleted with Grove.Demo |
 | Non-driver shapes rendered into the site layout (menus, pager, layout zones) | Grove.Contents.SiteMenu, Grove.Display.Navigation, theme clients | site | ☑ covered (`Menu`, `MenuItem`, `Pager`, `PagerSlim`, `Layout`, `Content`, `NotFound`, `Forbidden`) |
-| `ContentPart`, `ContentPart_Summary` (a part with fields and no driver) | Grove.Contents | site, `/display` | - [x] `ContentPart` (`Grove.Display.Components/Components/Content/ContentPartDisplay.cs`, its `Content` zone) |
-| Field, part and content displays (text, HTML, Markdown, numbers, dates, links, pickers, users, media, taxonomy fields, YouTube, geo point, title, bag, list, HTML and Markdown bodies, taxonomy pages, `DisplayTreePart`) | ContentFields, Media, Markdown, Taxonomies, Spatial, Title, Flows, Lists, Html, Templates | site, `/display` | ☑ covered (blazor-display.md step 7) |
+| `ContentFieldSet`, `ContentFieldSet_Summary` (a part with fields and no driver) | Grove.Contents | site, `/display` | - [x] `ContentFieldSet` (`Grove.Display.Components/Components/Content/ContentFieldSetDisplay.cs`, its `Content` zone) |
+| Field, part and content displays (text, HTML, Markdown, numbers, dates, links, pickers, users, media, taxonomy fields, YouTube, geo point, title, bag, list, HTML and Markdown bodies, taxonomy pages, `DisplayTreeFieldSet`) | ContentFields, Media, Markdown, Taxonomies, Spatial, Title, Flows, Lists, Html, Templates | site, `/display` | ☑ covered (blazor-display.md step 7) |
 
 ### Tracker: no fallback
 
@@ -134,7 +134,7 @@ resolved; the report is the live answer.
 ## Display drivers and the JSON APIs
 
 A display driver has a display half only: `DisplayDriver<TModel>.Display`/`DisplayAsync`,
-`ContentPartDisplayDriver<TPart>.Display`, `ContentFieldDisplayDriver<TField>.Display`. Editors
+`ContentFieldSetDisplayDriver<TFieldSet>.Display`, `ContentFieldDisplayDriver<TField>.Display`. Editors
 are trees built from type metadata (`ContentEditorTreeBuilder`) and the registry's editor
 components, saved as JSON by the content API. Content definitions are edited through the
 definitions API (`ContentDefinitionsApi`); there are no definition editor drivers. A display
@@ -142,19 +142,19 @@ driver that reads the request (a pager's page) reads the query string
 (`PagerParameters.FromQuery`, `PagerSlimParameters.FromQuery`).
 
 Validation is where every save runs it: the part and field handlers' `ValidatingAsync`
-(`ContentPartHandler`, `ContentFieldHandler`), which the content manager runs on every save and
+(`ContentFieldSetHandler`, `ContentFieldHandler`), which the content manager runs on every save and
 the Blazor editor's server round-trip reports: Text, Numeric, Date, Time, DateTime, Link,
 MultiText, Html, YouTube, the user, localization-set and option pickers, Media, GeoPoint,
 Markdown (Liquid syntax), Title (required), Taxonomy field (required) and part (term type),
 Seo (canonical characters, JSON schema), Alias, Autoroute, HTML body, menu items, contained
-items and `DisplayTreePart`.
+items and `DisplayTreeFieldSet`.
 
 ### The validation sink
 
 `IValidationSink` (`Grove.Display.Management.Abstractions/Validation/IValidationSink.cs`,
 namespace `Grove.Validation`): `AddError(string key, string message)`, `ValidationErrors Errors`,
 `bool IsValid`. One per request (scoped; `ValidationSink` is the implementation, registered by
-the display engine and by Grove.Contents.Management). Keys are field paths (`Part.Field`),
+the display engine and by Grove.Contents.Management). Keys are field paths (`FieldSet.Field`),
 setting names or `""` for the object, kept as the error contract's wire keys (`ValidationErrors`).
 
 - `DefaultContentManager` reports a cancelled publish, unpublish, create or delete into the

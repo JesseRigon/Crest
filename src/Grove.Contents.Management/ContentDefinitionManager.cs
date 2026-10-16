@@ -20,10 +20,10 @@ public class ContentDefinitionManager : IContentDefinitionManager
     private readonly IMemoryCache _memoryCache;
 
     private readonly ConcurrentDictionary<string, ContentTypeDefinition> _cachedTypeDefinitions;
-    private readonly ConcurrentDictionary<string, ContentPartDefinition> _cachedPartDefinitions;
+    private readonly ConcurrentDictionary<string, ContentFieldSetDefinition> _cachedFieldSetDefinitions;
 
     private readonly Dictionary<string, ContentTypeDefinition> _scopedTypeDefinitions = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<string, ContentPartDefinition> _scopedPartDefinitions = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, ContentFieldSetDefinition> _scopedFieldSetDefinitions = new(StringComparer.OrdinalIgnoreCase);
 
     public ContentDefinitionManager(
         IContentDefinitionStore contentDefinitionStore,
@@ -37,7 +37,7 @@ public class ContentDefinitionManager : IContentDefinitionManager
         _memoryCache = memoryCache;
 
         _cachedTypeDefinitions = _memoryCache.GetOrCreate("TypeDefinitions", entry => new ConcurrentDictionary<string, ContentTypeDefinition>(StringComparer.OrdinalIgnoreCase));
-        _cachedPartDefinitions = _memoryCache.GetOrCreate("PartDefinitions", entry => new ConcurrentDictionary<string, ContentPartDefinition>(StringComparer.OrdinalIgnoreCase));
+        _cachedFieldSetDefinitions = _memoryCache.GetOrCreate("FieldSetDefinitions", entry => new ConcurrentDictionary<string, ContentFieldSetDefinition>(StringComparer.OrdinalIgnoreCase));
     }
 
     public async Task<IEnumerable<ContentTypeDefinition>> LoadTypeDefinitionsAsync()
@@ -56,20 +56,20 @@ public class ContentDefinitionManager : IContentDefinitionManager
         return document.ContentTypeDefinitionRecords.Select(type => GetTypeDefinition(document, type.Name)).ToList();
     }
 
-    public async Task<IEnumerable<ContentPartDefinition>> LoadPartDefinitionsAsync()
+    public async Task<IEnumerable<ContentFieldSetDefinition>> LoadFieldSetDefinitionsAsync()
     {
         var document = await _contentDefinitionStore.LoadContentDefinitionAsync();
 
-        return document.ContentPartDefinitionRecords.Select(part => LoadPartDefinition(document, part.Name)).ToList();
+        return document.ContentFieldSetDefinitionRecords.Select(part => LoadFieldSetDefinition(document, part.Name)).ToList();
     }
 
-    public async Task<IEnumerable<ContentPartDefinition>> ListPartDefinitionsAsync()
+    public async Task<IEnumerable<ContentFieldSetDefinition>> ListFieldSetDefinitionsAsync()
     {
         var document = await _contentDefinitionStore.GetContentDefinitionAsync();
 
         CheckDocumentIdentifier(document);
 
-        return document.ContentPartDefinitionRecords.Select(part => GetPartDefinition(document, part.Name)).ToList();
+        return document.ContentFieldSetDefinitionRecords.Select(part => GetFieldSetDefinition(document, part.Name)).ToList();
     }
 
     public async Task<ContentTypeDefinition> LoadTypeDefinitionAsync(string name)
@@ -97,21 +97,21 @@ public class ContentDefinitionManager : IContentDefinitionManager
         return GetTypeDefinition(document, name);
     }
 
-    public async Task<ContentPartDefinition> LoadPartDefinitionAsync(string name)
+    public async Task<ContentFieldSetDefinition> LoadFieldSetDefinitionAsync(string name)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
 
-        if (_scopedPartDefinitions.TryGetValue(name, out var partDefinition))
+        if (_scopedFieldSetDefinitions.TryGetValue(name, out var partDefinition))
         {
             return partDefinition;
         }
 
         var document = await _contentDefinitionStore.LoadContentDefinitionAsync();
 
-        return LoadPartDefinition(document, name);
+        return LoadFieldSetDefinition(document, name);
     }
 
-    public async Task<ContentPartDefinition> GetPartDefinitionAsync(string name)
+    public async Task<ContentFieldSetDefinition> GetFieldSetDefinitionAsync(string name)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
 
@@ -119,7 +119,7 @@ public class ContentDefinitionManager : IContentDefinitionManager
 
         CheckDocumentIdentifier(document);
 
-        return GetPartDefinition(document, name);
+        return GetFieldSetDefinition(document, name);
     }
 
     public async Task DeleteTypeDefinitionAsync(string name)
@@ -138,7 +138,7 @@ public class ContentDefinitionManager : IContentDefinitionManager
         }
     }
 
-    public async Task DeletePartDefinitionAsync(string name)
+    public async Task DeleteFieldSetDefinitionAsync(string name)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
 
@@ -148,20 +148,20 @@ public class ContentDefinitionManager : IContentDefinitionManager
         var typeDefinitions = document.ContentTypeDefinitionRecords
             .Select(type => LoadTypeDefinition(document, type.Name)).ToList();
 
-        var typesWithPart = typeDefinitions
-            .Where(typeDefinition => typeDefinition.Parts
-                .Any(part => part.PartDefinition.Name.EqualsOrdinalIgnoreCase(name)));
+        var typesWithFieldSet = typeDefinitions
+            .Where(typeDefinition => typeDefinition.FieldSets
+                .Any(part => part.FieldSetDefinition.Name.EqualsOrdinalIgnoreCase(name)));
 
-        foreach (var typeDefinition in typesWithPart)
+        foreach (var typeDefinition in typesWithFieldSet)
         {
-            await this.AlterTypeDefinitionAsync(typeDefinition.Name, builder => Task.FromResult(builder.RemovePart(name)));
+            await this.AlterTypeDefinitionAsync(typeDefinition.Name, builder => Task.FromResult(builder.RemoveFieldSet(name)));
         }
 
         // Delete part.
-        var record = document.ContentPartDefinitionRecords.FirstOrDefault(part => part.Name.EqualsOrdinalIgnoreCase(name));
+        var record = document.ContentFieldSetDefinitionRecords.FirstOrDefault(part => part.Name.EqualsOrdinalIgnoreCase(name));
         if (record is not null)
         {
-            document.ContentPartDefinitionRecords.Remove(record);
+            document.ContentFieldSetDefinitionRecords.Remove(record);
             await UpdateContentDefinitionRecordAsync(document);
         }
     }
@@ -175,11 +175,11 @@ public class ContentDefinitionManager : IContentDefinitionManager
         await UpdateContentDefinitionRecordAsync(document);
     }
 
-    public async Task StorePartDefinitionAsync(ContentPartDefinition contentPartDefinition)
+    public async Task StoreFieldSetDefinitionAsync(ContentFieldSetDefinition contentFieldSetDefinition)
     {
         var document = await _contentDefinitionStore.LoadContentDefinitionAsync();
 
-        Apply(contentPartDefinition, Acquire(document, contentPartDefinition));
+        Apply(contentFieldSetDefinition, Acquire(document, contentFieldSetDefinition));
 
         await UpdateContentDefinitionRecordAsync(document);
     }
@@ -193,25 +193,25 @@ public class ContentDefinitionManager : IContentDefinitionManager
         : _scopedTypeDefinitions[name] = Build(
             name,
             document.ContentTypeDefinitionRecords.FirstOrDefault(type => type.Name.EqualsOrdinalIgnoreCase(name)),
-            document.ContentPartDefinitionRecords);
+            document.ContentFieldSetDefinitionRecords);
 
     private ContentTypeDefinition GetTypeDefinition(ContentDefinitionRecord document, string name) =>
         _cachedTypeDefinitions.GetOrAdd(name, name => Build(
             name,
             document.ContentTypeDefinitionRecords.FirstOrDefault(type => type.Name.EqualsOrdinalIgnoreCase(name)),
-            document.ContentPartDefinitionRecords));
+            document.ContentFieldSetDefinitionRecords));
 
-    private ContentPartDefinition LoadPartDefinition(ContentDefinitionRecord document, string name) =>
-        !_scopedPartDefinitions.TryGetValue(name, out var partDefinition)
-        ? _scopedPartDefinitions[name] = Build(
+    private ContentFieldSetDefinition LoadFieldSetDefinition(ContentDefinitionRecord document, string name) =>
+        !_scopedFieldSetDefinitions.TryGetValue(name, out var partDefinition)
+        ? _scopedFieldSetDefinitions[name] = Build(
             name,
-            document.ContentPartDefinitionRecords.FirstOrDefault(part => part.Name.EqualsOrdinalIgnoreCase(name)))
+            document.ContentFieldSetDefinitionRecords.FirstOrDefault(part => part.Name.EqualsOrdinalIgnoreCase(name)))
         : partDefinition;
 
-    private ContentPartDefinition GetPartDefinition(ContentDefinitionRecord document, string name) =>
-        _cachedPartDefinitions.GetOrAdd(name, name => Build(
+    private ContentFieldSetDefinition GetFieldSetDefinition(ContentDefinitionRecord document, string name) =>
+        _cachedFieldSetDefinitions.GetOrAdd(name, name => Build(
             name,
-            document.ContentPartDefinitionRecords.FirstOrDefault(record => record.Name.EqualsOrdinalIgnoreCase(name))));
+            document.ContentFieldSetDefinitionRecords.FirstOrDefault(record => record.Name.EqualsOrdinalIgnoreCase(name))));
 
     private static ContentTypeDefinitionRecord Acquire(
         ContentDefinitionRecord document,
@@ -234,21 +234,21 @@ public class ContentDefinitionManager : IContentDefinitionManager
         return result;
     }
 
-    private static ContentPartDefinitionRecord Acquire(
+    private static ContentFieldSetDefinitionRecord Acquire(
         ContentDefinitionRecord document,
-        ContentPartDefinition contentPartDefinition)
+        ContentFieldSetDefinition contentFieldSetDefinition)
     {
-        var result = document.ContentPartDefinitionRecords
-            .FirstOrDefault(part => part.Name.EqualsOrdinalIgnoreCase(contentPartDefinition.Name));
+        var result = document.ContentFieldSetDefinitionRecords
+            .FirstOrDefault(part => part.Name.EqualsOrdinalIgnoreCase(contentFieldSetDefinition.Name));
 
         if (result is null)
         {
-            result = new ContentPartDefinitionRecord
+            result = new ContentFieldSetDefinitionRecord
             {
-                Name = contentPartDefinition.Name,
+                Name = contentFieldSetDefinition.Name,
             };
 
-            document.ContentPartDefinitionRecords.Add(result);
+            document.ContentFieldSetDefinitionRecords.Add(result);
         }
 
         return result;
@@ -258,89 +258,90 @@ public class ContentDefinitionManager : IContentDefinitionManager
     {
         record.DisplayName = model.DisplayName;
         record.Settings = model.Settings;
+        record.EmbeddedContentDefinitionRecords = [.. model.Embeddings.Select(embedding => embedding.ToRecord())];
 
-        var toRemove = record.ContentTypePartDefinitionRecords
-            .Where(typePartDefinitionRecord => !model.Parts
-                .Any(typePart => typePart.Name.EqualsOrdinalIgnoreCase(typePartDefinitionRecord.Name)))
+        var toRemove = record.ContentTypeFieldSetDefinitionRecords
+            .Where(typeFieldSetDefinitionRecord => !model.FieldSets
+                .Any(typeFieldSet => typeFieldSet.Name.EqualsOrdinalIgnoreCase(typeFieldSetDefinitionRecord.Name)))
             .ToArray();
 
         foreach (var remove in toRemove)
         {
-            record.ContentTypePartDefinitionRecords.Remove(remove);
+            record.ContentTypeFieldSetDefinitionRecords.Remove(remove);
         }
 
-        foreach (var part in model.Parts)
+        foreach (var part in model.FieldSets)
         {
-            var typePartRecord = record.ContentTypePartDefinitionRecords
-                .FirstOrDefault(typePart => typePart.Name.EqualsOrdinalIgnoreCase(part.Name));
+            var typeFieldSetRecord = record.ContentTypeFieldSetDefinitionRecords
+                .FirstOrDefault(typeFieldSet => typeFieldSet.Name.EqualsOrdinalIgnoreCase(part.Name));
 
-            if (typePartRecord is null)
+            if (typeFieldSetRecord is null)
             {
-                typePartRecord = new ContentTypePartDefinitionRecord
+                typeFieldSetRecord = new ContentTypeFieldSetDefinitionRecord
                 {
-                    PartName = part.PartDefinition.Name,
+                    FieldSetName = part.FieldSetDefinition.Name,
                     Name = part.Name,
                     Settings = part.Settings,
                 };
 
-                record.ContentTypePartDefinitionRecords.Add(typePartRecord);
+                record.ContentTypeFieldSetDefinitionRecords.Add(typeFieldSetRecord);
             }
 
-            Apply(part, typePartRecord);
+            Apply(part, typeFieldSetRecord);
         }
     }
 
-    private static void Apply(ContentTypePartDefinition model, ContentTypePartDefinitionRecord record)
+    private static void Apply(ContentTypeFieldSetDefinition model, ContentTypeFieldSetDefinitionRecord record)
         => record.Settings = model.Settings;
 
-    private static void Apply(ContentPartDefinition model, ContentPartDefinitionRecord record)
+    private static void Apply(ContentFieldSetDefinition model, ContentFieldSetDefinitionRecord record)
     {
         record.Settings = model.Settings;
 
-        var toRemove = record.ContentPartFieldDefinitionRecords
+        var toRemove = record.ContentFieldDefinitionRecords
             .Where(partFieldDefinitionRecord => !model.Fields
                 .Any(partField => partField.Name.EqualsOrdinalIgnoreCase(partFieldDefinitionRecord.Name)))
             .ToArray();
 
         foreach (var remove in toRemove)
         {
-            record.ContentPartFieldDefinitionRecords.Remove(remove);
+            record.ContentFieldDefinitionRecords.Remove(remove);
         }
 
         foreach (var field in model.Fields)
         {
-            var partFieldRecord = record.ContentPartFieldDefinitionRecords
+            var partFieldRecord = record.ContentFieldDefinitionRecords
                 .FirstOrDefault(partField => partField.Name.EqualsOrdinalIgnoreCase(field.Name));
 
             if (partFieldRecord is null)
             {
-                if (field.FieldDefinition is null)
+                if (field.FieldTypeDefinition is null)
                 {
                     throw new InvalidOperationException(
                         $"The '{field.Name}' field in '{model.Name}' part was defined without a specified type." +
                         " Please review the migration and explicitly specify the field type.");
                 }
 
-                partFieldRecord = new ContentPartFieldDefinitionRecord
+                partFieldRecord = new ContentFieldDefinitionRecord
                 {
-                    FieldName = field.FieldDefinition.Name,
+                    FieldName = field.FieldTypeDefinition.Name,
                     Name = field.Name,
                 };
 
-                record.ContentPartFieldDefinitionRecords.Add(partFieldRecord);
+                record.ContentFieldDefinitionRecords.Add(partFieldRecord);
             }
 
             Apply(field, partFieldRecord);
         }
     }
 
-    private static void Apply(ContentPartFieldDefinition model, ContentPartFieldDefinitionRecord record)
+    private static void Apply(ContentFieldDefinition model, ContentFieldDefinitionRecord record)
         => record.Settings = model.Settings;
 
     private ContentTypeDefinition Build(
         string name,
         ContentTypeDefinitionRecord source,
-        IList<ContentPartDefinitionRecord> partDefinitionRecords)
+        IList<ContentFieldSetDefinitionRecord> partDefinitionRecords)
     {
         var context = new ContentTypeBuildingContext(name, source);
 
@@ -354,62 +355,63 @@ public class ContentDefinitionManager : IContentDefinitionManager
         return new ContentTypeDefinition(
             context.Record.Name,
             context.Record.DisplayName,
-            context.Record.ContentTypePartDefinitionRecords.Select(typePart => Build(context.Record.Name,
-                typePart,
-                partDefinitionRecords.FirstOrDefault(part => part.Name.EqualsOrdinalIgnoreCase(typePart.PartName)))),
-            context.Record.Settings);
+            context.Record.ContentTypeFieldSetDefinitionRecords.Select(typeFieldSet => Build(context.Record.Name,
+                typeFieldSet,
+                partDefinitionRecords.FirstOrDefault(part => part.Name.EqualsOrdinalIgnoreCase(typeFieldSet.FieldSetName)))),
+            context.Record.Settings,
+            (context.Record.EmbeddedContentDefinitionRecords ?? []).Select(embedding => new EmbeddedContentDefinition(embedding)));
     }
 
-    private ContentTypePartDefinition Build(
+    private ContentTypeFieldSetDefinition Build(
         string name,
-        ContentTypePartDefinitionRecord source,
-        ContentPartDefinitionRecord partDefinitionRecord)
+        ContentTypeFieldSetDefinitionRecord source,
+        ContentFieldSetDefinitionRecord partDefinitionRecord)
     {
-        var context = new ContentTypePartBuildingContext(name, source);
+        var context = new ContentTypeFieldSetBuildingContext(name, source);
 
-        _handlers.Invoke((handler, ctx) => handler.ContentTypePartBuilding(ctx), context, _logger);
+        _handlers.Invoke((handler, ctx) => handler.ContentTypeFieldSetBuilding(ctx), context, _logger);
 
         if (context.Record is null)
         {
             return null;
         }
 
-        return new ContentTypePartDefinition(
+        return new ContentTypeFieldSetDefinition(
             context.Record.Name,
-            Build(context.Record.Name, partDefinitionRecord) ?? new ContentPartDefinition(context.Record.PartName, [], []),
+            Build(context.Record.Name, partDefinitionRecord) ?? new ContentFieldSetDefinition(context.Record.FieldSetName, [], []),
             context.Record.Settings);
     }
 
-    private ContentPartDefinition Build(string name, ContentPartDefinitionRecord source)
+    private ContentFieldSetDefinition Build(string name, ContentFieldSetDefinitionRecord source)
     {
-        var context = new ContentPartBuildingContext(name, source);
+        var context = new ContentFieldSetBuildingContext(name, source);
 
-        _handlers.Invoke((handler, ctx) => handler.ContentPartBuilding(ctx), context, _logger);
+        _handlers.Invoke((handler, ctx) => handler.ContentFieldSetBuilding(ctx), context, _logger);
 
         if (context.Record is null)
         {
             return null;
         }
 
-        return new ContentPartDefinition(
+        return new ContentFieldSetDefinition(
             context.Record.Name,
-            context.Record.ContentPartFieldDefinitionRecords.Select(x => Build(context.Record.Name, x)),
+            context.Record.ContentFieldDefinitionRecords.Select(x => Build(context.Record.Name, x)),
             context.Record.Settings);
     }
 
-    private ContentPartFieldDefinition Build(string name, ContentPartFieldDefinitionRecord source)
+    private ContentFieldDefinition Build(string name, ContentFieldDefinitionRecord source)
     {
-        var context = new ContentPartFieldBuildingContext(name, source);
+        var context = new ContentFieldBuildingContext(name, source);
 
-        _handlers.Invoke((handler, ctx) => handler.ContentPartFieldBuilding(ctx), context, _logger);
+        _handlers.Invoke((handler, ctx) => handler.ContentFieldBuilding(ctx), context, _logger);
 
         if (context.Record is null)
         {
             return null;
         }
 
-        return new ContentPartFieldDefinition(
-            Build(new ContentFieldDefinitionRecord
+        return new ContentFieldDefinition(
+            Build(new ContentFieldTypeDefinitionRecord
             {
                 Name = context.Record.FieldName,
             }),
@@ -417,14 +419,14 @@ public class ContentDefinitionManager : IContentDefinitionManager
             context.Record.Settings);
     }
 
-    private static ContentFieldDefinition Build(ContentFieldDefinitionRecord source)
+    private static ContentFieldTypeDefinition Build(ContentFieldTypeDefinitionRecord source)
     {
         if (source is null)
         {
             return null;
         }
 
-        return new ContentFieldDefinition(source.Name);
+        return new ContentFieldTypeDefinition(source.Name);
     }
 
     private async Task UpdateContentDefinitionRecordAsync(ContentDefinitionRecord document)
@@ -433,7 +435,7 @@ public class ContentDefinitionManager : IContentDefinitionManager
 
         // If multiple updates in the same scope, types and parts may need to be rebuilt.
         _scopedTypeDefinitions.Clear();
-        _scopedPartDefinitions.Clear();
+        _scopedFieldSetDefinitions.Clear();
     }
 
     /// <summary>
@@ -450,7 +452,7 @@ public class ContentDefinitionManager : IContentDefinitionManager
             };
 
             _cachedTypeDefinitions.Clear();
-            _cachedPartDefinitions.Clear();
+            _cachedFieldSetDefinitions.Clear();
 
             _memoryCache.Set(CacheKey, cacheEntry);
         }

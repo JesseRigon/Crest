@@ -10,7 +10,7 @@ using Grove.Contents.Management;
 using Grove.Contents.Management.Handlers;
 using Grove.Contents.Management.Records;
 using Grove.Workflows.Indexes;
-using Grove.Workflows.Parts;
+using Grove.Workflows.FieldSets;
 using Grove.Workflows.Registry;
 using Grove.Workflows.Services;
 using Grove.Workflows.Extensions;
@@ -29,14 +29,14 @@ public class YesSqlWorkflowDefinitionStore(
 
     private readonly Lazy<IContentManager> _contentManager = new(serviceProvider.GetRequiredService<IContentManager>);
     private readonly Lazy<WorkflowDefinitionMapper> _workflowDefinitionMapper = new(serviceProvider.GetRequiredService<WorkflowDefinitionMapper>);
-    private readonly Lazy<WorkflowDefinitionPartMapper> _workflowDefinitionPartMapper = new(serviceProvider.GetRequiredService<WorkflowDefinitionPartMapper>);
-    private readonly Lazy<WorkflowDefinitionPartSerializer> _workflowDefinitionPartSerializer = new(serviceProvider.GetRequiredService<WorkflowDefinitionPartSerializer>);
+    private readonly Lazy<WorkflowDefinitionFieldSetMapper> _workflowDefinitionFieldSetMapper = new(serviceProvider.GetRequiredService<WorkflowDefinitionFieldSetMapper>);
+    private readonly Lazy<WorkflowDefinitionFieldSetSerializer> _workflowDefinitionFieldSetSerializer = new(serviceProvider.GetRequiredService<WorkflowDefinitionFieldSetSerializer>);
     private IEnumerable<IContentHandler>? _contentHandlers;
     private IEnumerable<IContentHandler>? _reversedHandlers;
     private IContentManager ContentManager => _contentManager.Value;
     private WorkflowDefinitionMapper WorkflowDefinitionMapper => _workflowDefinitionMapper.Value;
-    private WorkflowDefinitionPartMapper WorkflowDefinitionPartMapper => _workflowDefinitionPartMapper.Value;
-    private WorkflowDefinitionPartSerializer WorkflowDefinitionPartSerializer => _workflowDefinitionPartSerializer.Value;
+    private WorkflowDefinitionFieldSetMapper WorkflowDefinitionFieldSetMapper => _workflowDefinitionFieldSetMapper.Value;
+    private WorkflowDefinitionFieldSetSerializer WorkflowDefinitionFieldSetSerializer => _workflowDefinitionFieldSetSerializer.Value;
     private IEnumerable<IContentHandler> ContentHandlers => _contentHandlers ??= serviceProvider.GetServices<IContentHandler>().ToArray();
     private IEnumerable<IContentHandler> ReversedHandlers => _reversedHandlers ??= ContentHandlers.Reverse().ToArray();
 
@@ -134,10 +134,10 @@ public class YesSqlWorkflowDefinitionStore(
             contentItem = await ContentManager.NewAsync("WorkflowDefinition");
 
         contentItem.DisplayText = definition.Name;
-        await contentItem.AlterAsync<WorkflowDefinitionPart>(async part =>
+        await contentItem.AlterAsync<WorkflowDefinitionFieldSet>(async part =>
         {
             var model = await WorkflowDefinitionMapper.MapAsync(definition, cancellationToken);
-            WorkflowDefinitionPartMapper.Map(model, part);
+            WorkflowDefinitionFieldSetMapper.Map(model, part);
             part.DefinitionVersionId = contentItem.ContentItemVersionId;
             part.DefinitionId = contentItem.ContentItemId;
         });
@@ -147,10 +147,10 @@ public class YesSqlWorkflowDefinitionStore(
             await ContentManager.CreateAsync(contentItem, VersionOptions.Draft);
             definition.Id = contentItem.ContentItemVersionId!;
 
-            contentItem.Alter<WorkflowDefinitionPart>(part =>
+            contentItem.Alter<WorkflowDefinitionFieldSet>(part =>
             {
                 part.DefinitionVersionId = definition.Id;
-                WorkflowDefinitionPartSerializer.UpdateSerializedData(part);
+                WorkflowDefinitionFieldSetSerializer.UpdateSerializedData(part);
             });
         }
 
@@ -195,12 +195,12 @@ public class YesSqlWorkflowDefinitionStore(
 
     public async Task<long> CountDistinctAsync(CancellationToken cancellationToken = default)
     {
-        return await session.Query<WorkflowDefinitionPart, WorkflowDefinitionIndex>(collection: Collection).CountAsync(cancellationToken);
+        return await session.Query<WorkflowDefinitionFieldSet, WorkflowDefinitionIndex>(collection: Collection).CountAsync(cancellationToken);
     }
 
     public async Task<bool> GetIsNameUnique(string name, string? definitionId = null, CancellationToken cancellationToken = default)
     {
-        var query = session.Query<WorkflowDefinitionPart, WorkflowDefinitionIndex>(collection: Collection).Where(x => x.Name == name);
+        var query = session.Query<WorkflowDefinitionFieldSet, WorkflowDefinitionIndex>(collection: Collection).Where(x => x.Name == name);
 
         if (definitionId != null)
             query = query.Where(x => x.DefinitionId != definitionId);
@@ -229,22 +229,22 @@ public class YesSqlWorkflowDefinitionStore(
 
     private WorkflowDefinition? Map(ContentItem? contentItem)
     {
-        return Map(contentItem?.Get<WorkflowDefinitionPart>(typeof(WorkflowDefinitionPart).Name));
+        return Map(contentItem?.Get<WorkflowDefinitionFieldSet>(ContentFieldSetName.Of<WorkflowDefinitionFieldSet>()));
     }
 
-    private WorkflowDefinition? Map(WorkflowDefinitionPart? part)
+    private WorkflowDefinition? Map(WorkflowDefinitionFieldSet? part)
     {
-        return part == null ? null : WorkflowDefinitionPartMapper.Map(part);
+        return part == null ? null : WorkflowDefinitionFieldSetMapper.Map(part);
     }
 
     private IEnumerable<WorkflowDefinition> Map(IEnumerable<ContentItem> contentItems)
     {
-        return contentItems.Select(x => WorkflowDefinitionPartMapper.Map(x.Get<WorkflowDefinitionPart>(typeof(WorkflowDefinitionPart).Name)));
+        return contentItems.Select(x => WorkflowDefinitionFieldSetMapper.Map(x.Get<WorkflowDefinitionFieldSet>(ContentFieldSetName.Of<WorkflowDefinitionFieldSet>())));
     }
 
     private IEnumerable<WorkflowDefinitionSummary> MapSummaries(IEnumerable<ContentItem> contentItems)
     {
-        return contentItems.Select(x => WorkflowDefinitionPartMapper.MapSummary(x.Get<WorkflowDefinitionPart>(typeof(WorkflowDefinitionPart).Name)));
+        return contentItems.Select(x => WorkflowDefinitionFieldSetMapper.MapSummary(x.Get<WorkflowDefinitionFieldSet>(ContentFieldSetName.Of<WorkflowDefinitionFieldSet>())));
     }
 
     private async Task RemoveContentItemVersionAsync(ContentItem contentItem, CancellationToken cancellationToken = default)

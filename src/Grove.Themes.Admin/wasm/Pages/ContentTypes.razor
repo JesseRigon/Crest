@@ -19,7 +19,7 @@
     <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
         <GroveStack Gap="0.25rem">
             <GroveText TextStyle="TextStyle.H4" Text="@T["Content Types"]" />
-            <GroveText TextStyle="TextStyle.Body2" Text="@T["Manage which parts each content type carries. Fields live on the parts - edit them on the Content Parts screen."]" />
+            <GroveText TextStyle="TextStyle.Body2" Text="@T["Manage which field groups each content type carries. Fields live in the field groups - edit them on the Field groups screen."]" />
         </GroveStack>
         <GroveButton Text="@T["Refresh"]" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsLoading" />
     </GroveStack>
@@ -41,7 +41,7 @@
                             SelectedKey="@SelectedTypeName"
                             KeySelector="@(type => type.Name)"
                             TextSelector="@(type => type.DisplayName)"
-                            DescriptionSelector="@(type => T["{0} · {1} parts", type.Name, type.Parts.Length])"
+                            DescriptionSelector="@(type => T["{0} · {1} field groups", type.Name, type.FieldSets.Length])"
                             SearchPredicate="MatchesSearch"
                             Select="SelectTypeAsync"
                             ShowCreate="false"
@@ -57,7 +57,7 @@
             }
             else if (SelectedType is null)
             {
-                <GroveCard><GroveText Text="@T["Select a content type to manage its parts."]" /></GroveCard>
+                <GroveCard><GroveText Text="@T["Select a content type to manage its field groups."]" /></GroveCard>
             }
             else
             {
@@ -79,21 +79,21 @@
                         </GroveStack>
                     </Header>
                     <ChildContent>
-                        @if (SelectedType.Parts.Length == 0)
+                        @if (SelectedType.FieldSets.Length == 0)
                         {
-                            <GroveAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">@T["This type has no attached parts."]</GroveAlert>
+                            <GroveAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">@T["This type has no attached field groups."]</GroveAlert>
                         }
                         else
                         {
-                            @foreach (var part in SelectedType.Parts.OrderBy(part => part.Name, StringComparer.OrdinalIgnoreCase))
+                            @foreach (var part in SelectedType.FieldSets.OrderBy(part => part.Name, StringComparer.OrdinalIgnoreCase))
                             {
                                 var attachedName = part.Name;
-                                <GroveFieldset Text="@part.Name" AllowCollapse="true" Collapsed="true" class="content-definition-part">
+                                <GroveFieldset Text="@part.Name" AllowCollapse="true" Collapsed="true" class="content-definition-field-set">
                                     <GroveStack Gap="0.7rem">
                                         <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Wrap="FlexWrap.Wrap">
                                             <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
-                                                <GroveBadge Text="@part.Part.Name" BadgeStyle="BadgeStyle.Secondary" />
-                                                <GroveBadge Text="@T["{0} fields", part.Part.Fields.Length]" BadgeStyle="BadgeStyle.Info" />
+                                                <GroveBadge Text="@part.FieldSet.Name" BadgeStyle="BadgeStyle.Secondary" />
+                                                <GroveBadge Text="@T["{0} fields", part.FieldSet.Fields.Length]" BadgeStyle="BadgeStyle.Info" />
                                                 @if (part.Lock != "None")
                                                 {
                                                     @* A locked attachment stays on the type (docs/content-engine.md › Definition locks). *@
@@ -101,43 +101,49 @@
                                                 }
                                             </GroveStack>
                                             <GroveButton Text="@T["Detach"]" Icon="link_off" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light"
-                                                         Click="@(() => DetachPartAsync(attachedName))" Disabled="@(IsLoading || part.Lock != "None")" data-testid="detach-part" />
+                                                         Click="@(() => DetachFieldSetAsync(attachedName))" Disabled="@(IsLoading || part.Lock != "None")" data-testid="detach-field-set" />
                                         </GroveStack>
 
                                         @* The ATTACHMENT's instance settings - how this part presents
                                            on THIS type. The part's fields stay shared. *@
-                                        <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap" data-testid="part-attachment-settings">
+                                        <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap" data-testid="field-set-attachment-settings">
                                             <GroveFormField Text="@T["Display name"]">
-                                                <GroveTextBox Value="@AttachmentDraft(attachedName, "DisplayName", PartSetting(part, "DisplayName"))"
+                                                <GroveTextBox Value="@AttachmentDraft(attachedName, "DisplayName", FieldSetSetting(part, "DisplayName"))"
                                                               ValueChanged="@(value => SetAttachmentDraft(attachedName, "DisplayName", value))"
                                                               Disabled="@IsLoading" />
                                             </GroveFormField>
                                             <GroveFormField Text="@T["Description"]">
-                                                <GroveTextBox Value="@AttachmentDraft(attachedName, "Description", PartSetting(part, "Description"))"
+                                                <GroveTextBox Value="@AttachmentDraft(attachedName, "Description", FieldSetSetting(part, "Description"))"
                                                               ValueChanged="@(value => SetAttachmentDraft(attachedName, "Description", value))"
                                                               Disabled="@IsLoading" Style="min-width: 16rem;" />
                                             </GroveFormField>
                                             <GroveFormField Text="@T["Position"]">
-                                                <GroveTextBox Value="@AttachmentDraft(attachedName, "Position", PartSetting(part, "Position"))"
+                                                <GroveTextBox Value="@AttachmentDraft(attachedName, "Position", FieldSetSetting(part, "Position"))"
                                                               ValueChanged="@(value => SetAttachmentDraft(attachedName, "Position", value))"
                                                               Disabled="@IsLoading" Style="width: 5rem;" />
                                             </GroveFormField>
                                             <GroveButton Text="@T["Save"]" Icon="save" Size="ButtonSize.Small"
-                                                         Click="@(() => SaveAttachmentAsync(attachedName))" Disabled="@IsLoading" data-testid="save-part-attachment" />
+                                                         Click="@(() => SaveAttachmentAsync(attachedName))" Disabled="@IsLoading" data-testid="save-field-set-attachment" />
                                         </GroveStack>
 
-                                        @if (part.Part.Fields.Length > 0)
+                                        @if (part.FieldSet.Fields.Length > 0)
                                         {
                                             <div class="content-definition-fields">
-                                                @foreach (var field in part.Part.Fields.OrderBy(field => field.Name, StringComparer.OrdinalIgnoreCase))
+                                                @foreach (var field in part.FieldSet.Fields.OrderBy(field => field.Name, StringComparer.OrdinalIgnoreCase))
                                                 {
+                                                    var fieldName = field.Name;
                                                     <div class="content-definition-field">
                                                         <GroveText TextStyle="TextStyle.Subtitle2" Text="@field.Name" />
-                                                        <GroveText TextStyle="TextStyle.Caption" Text="@field.Field.Name" />
+                                                        <GroveText TextStyle="TextStyle.Caption" Text="@field.FieldType.Name" />
+                                                        @* Per attachment: a shared field may be culture-dependent on one type and not another. *@
+                                                        <GroveFormField Text="@T["Culture affects this field"]">
+                                                            <GroveSwitch Value="@CultureAffects(part, fieldName)" Change="@(value => SetCultureAffectsAsync(attachedName, fieldName, (bool)value))"
+                                                                         Disabled="@IsLoading" data-testid="field-culture-affects" />
+                                                        </GroveFormField>
                                                     </div>
                                                 }
                                             </div>
-                                            <GroveText TextStyle="TextStyle.Caption" Text="@T["Fields are shared by every type carrying this part - edit them on the Content Parts screen."]" />
+                                            <GroveText TextStyle="TextStyle.Caption" Text="@T["Fields are shared by every type carrying this field group - edit them on the Field groups screen."]" />
                                         }
                                     </GroveStack>
                                 </GroveFieldset>
@@ -145,13 +151,17 @@
                         }
 
                         <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
-                            <GroveFormField Text="@T["Attach part"]">
-                                <GroveDropDown @bind-Value="PartToAttach" TValue="string" Data="@AttachablePartChoices"
-                                               TextProperty="Label" ValueProperty="Value" Disabled="@IsLoading" Style="min-width: 14rem;" data-testid="attach-part-dropdown" />
+                            <GroveFormField Text="@T["Attach field group"]">
+                                <GroveDropDown @bind-Value="FieldSetToAttach" TValue="string" Data="@AttachableFieldSetChoices"
+                                               TextProperty="Label" ValueProperty="Value" Disabled="@IsLoading" Style="min-width: 14rem;" data-testid="attach-field-set-dropdown" />
                             </GroveFormField>
                             <GroveButton Text="@T["Attach"]" Icon="add_link" Size="ButtonSize.Small"
-                                         Click="AttachPartAsync" Disabled="@(IsLoading || string.IsNullOrWhiteSpace(PartToAttach))" data-testid="attach-part" />
+                                         Click="AttachFieldSetAsync" Disabled="@(IsLoading || string.IsNullOrWhiteSpace(FieldSetToAttach))" data-testid="attach-field-set" />
                         </GroveStack>
+
+                        <EmbeddingsEditor TypeName="@SelectedType.Name" Embeddings="@(SelectedType.Embeddings ?? [])" Changed="LoadAsync" />
+
+                        <FieldRulesEditor TypeName="@SelectedType.Name" Fields="@FieldPaths(SelectedType)" />
 
                         <ContentTypeDefinitionEditor TypeName="@SelectedType.Name" Changed="LoadAsync" Deleted="OnTypeDeletedAsync" />
                     </ChildContent>
@@ -175,21 +185,25 @@
     }
 
     private ContentType[] AllContentTypes { get; set; } = [];
-    private string[] AllPartNames { get; set; } = [];
+    private string[] AllFieldSetNames { get; set; } = [];
     private string? SelectedTypeName { get; set; }
     private bool IsLoading { get; set; }
     private string? ErrorMessage { get; set; }
-    private string PartToAttach { get; set; } = string.Empty;
+    private string FieldSetToAttach { get; set; } = string.Empty;
+
+    // The type's fields as the paths field conditions name them: attachment name, field name.
+    private static FieldConditionEditor.FieldChoice[] FieldPaths(ContentType type) => [.. type.FieldSets
+        .SelectMany(part => part.FieldSet.Fields.Select(field => new FieldConditionEditor.FieldChoice($"{part.Name} · {field.Name}", $"{part.Name}.{field.Name}")))];
 
     private ContentType? SelectedType => AllContentTypes.FirstOrDefault(type => string.Equals(type.Name, SelectedTypeName, StringComparison.OrdinalIgnoreCase));
 
     private sealed record Choice(string Label, string Value);
-    private sealed record PartDefinitionSummary(string Name);
+    private sealed record FieldSetDefinitionSummary(string Name);
 
-    private Choice[] AttachablePartChoices => SelectedType is null
+    private Choice[] AttachableFieldSetChoices => SelectedType is null
         ? []
-        : [.. AllPartNames
-            .Where(name => !SelectedType.Parts.Any(part => string.Equals(part.Name, name, StringComparison.OrdinalIgnoreCase)))
+        : [.. AllFieldSetNames
+            .Where(name => !SelectedType.FieldSets.Any(part => string.Equals(part.Name, name, StringComparison.OrdinalIgnoreCase)))
             .Select(name => new Choice(name, name))];
 
     protected override async Task OnInitializedAsync()
@@ -210,8 +224,8 @@
                 ? SelectedTypeName
                 : AllContentTypes.FirstOrDefault()?.Name;
 
-            var parts = await Http.GetFromJsonAsync<PartDefinitionSummary[]>("api/grove/content-types/parts") ?? [];
-            AllPartNames = [.. parts.Select(part => part.Name)];
+            var parts = await Http.GetFromJsonAsync<FieldSetDefinitionSummary[]>("api/grove/content-types/field-sets") ?? [];
+            AllFieldSetNames = [.. parts.Select(part => part.Name)];
         }
         catch (Exception ex)
         {
@@ -233,8 +247,8 @@
     private static bool MatchesSearch(ContentType contentType, string term) =>
         contentType.Name.Contains(term, StringComparison.OrdinalIgnoreCase)
         || contentType.DisplayName.Contains(term, StringComparison.OrdinalIgnoreCase)
-        || contentType.Parts.Any(part => part.Name.Contains(term, StringComparison.OrdinalIgnoreCase)
-            || part.Part.Fields.Any(field => field.Name.Contains(term, StringComparison.OrdinalIgnoreCase)));
+        || contentType.FieldSets.Any(part => part.Name.Contains(term, StringComparison.OrdinalIgnoreCase)
+            || part.FieldSet.Fields.Any(field => field.Name.Contains(term, StringComparison.OrdinalIgnoreCase)));
 
     // The designation is stored on the type definition's settings bag under the
     // POCO's type name; the serializer omits default values, so absent = false.
@@ -262,9 +276,9 @@
     }
 
     // The type-part attachment's stored settings live in the part attachment's
-    // Settings JSON under ContentTypePartSettings.
-    private static string PartSetting(ContentTypePart part, string key) =>
-        part.Settings?["ContentTypePartSettings"]?[key]?.ToString() ?? string.Empty;
+    // Settings JSON under ContentTypeFieldSetSettings.
+    private static string FieldSetSetting(ContentTypeFieldSet part, string key) =>
+        part.Settings?["ContentTypeFieldSetSettings"]?[key]?.ToString() ?? string.Empty;
 
     // Draft buffer per (part, setting): the boxes re-render on every keystroke.
     private Dictionary<string, string> AttachmentDrafts { get; } = new(StringComparer.Ordinal);
@@ -282,38 +296,69 @@
             return;
         }
 
-        var part = SelectedType.Parts.FirstOrDefault(candidate => string.Equals(candidate.Name, partName, StringComparison.OrdinalIgnoreCase));
+        var part = SelectedType.FieldSets.FirstOrDefault(candidate => string.Equals(candidate.Name, partName, StringComparison.OrdinalIgnoreCase));
         if (part is null)
         {
             return;
         }
 
         await SendAsync(
-            () => Http.PutAsJsonAsync($"api/grove/content-types/{Uri.EscapeDataString(SelectedType.Name)}/parts", new
+            () => Http.PutAsJsonAsync($"api/grove/content-types/{Uri.EscapeDataString(SelectedType.Name)}/field-sets", new
             {
-                Part = partName,
-                DisplayName = AttachmentDraft(partName, "DisplayName", PartSetting(part, "DisplayName")),
-                Description = AttachmentDraft(partName, "Description", PartSetting(part, "Description")),
-                Position = AttachmentDraft(partName, "Position", PartSetting(part, "Position")),
+                FieldSet = partName,
+                DisplayName = AttachmentDraft(partName, "DisplayName", FieldSetSetting(part, "DisplayName")),
+                Description = AttachmentDraft(partName, "Description", FieldSetSetting(part, "Description")),
+                Position = AttachmentDraft(partName, "Position", FieldSetSetting(part, "Position")),
             }),
-            T["Part settings saved."]);
+            T["Field group settings saved."]);
     }
 
-    private async Task AttachPartAsync()
+    // Whether culture affects a field where this attachment carries it: true unless the attachment lists it invariant.
+    private static bool CultureAffects(ContentTypeFieldSet part, string fieldName) =>
+        part.Settings?["FieldCultureSettings"]?["InvariantFields"] is not System.Text.Json.Nodes.JsonArray invariant
+        || !invariant.Any(name => string.Equals(name?.ToString(), fieldName, StringComparison.OrdinalIgnoreCase));
+
+    // Saves the attachment's settings with the field added to or removed from its culture-invariant fields.
+    private async Task SetCultureAffectsAsync(string partName, string fieldName, bool affects)
     {
-        if (SelectedType is null || string.IsNullOrWhiteSpace(PartToAttach))
+        if (SelectedType?.FieldSets.FirstOrDefault(candidate => string.Equals(candidate.Name, partName, StringComparison.OrdinalIgnoreCase)) is not { } part)
         {
             return;
         }
 
-        var partName = PartToAttach;
+        var settings = part.Settings?.DeepClone().AsObject() ?? [];
+        var invariant = (settings["FieldCultureSettings"]?["InvariantFields"] as System.Text.Json.Nodes.JsonArray)?
+            .Select(name => name?.ToString()).Where(name => !string.IsNullOrEmpty(name) && !string.Equals(name, fieldName, StringComparison.OrdinalIgnoreCase)).ToList() ?? [];
+        if (!affects)
+        {
+            invariant.Add(fieldName);
+        }
+
+        settings["FieldCultureSettings"] = new System.Text.Json.Nodes.JsonObject
+        {
+            ["InvariantFields"] = new System.Text.Json.Nodes.JsonArray([.. invariant.Select(name => (System.Text.Json.Nodes.JsonNode?)System.Text.Json.Nodes.JsonValue.Create(name))]),
+        };
+
         await SendAsync(
-            () => Http.PutAsJsonAsync($"api/grove/content-types/{Uri.EscapeDataString(SelectedType.Name)}/parts", new { Part = partName }),
-            T["Part attached."]);
-        PartToAttach = string.Empty;
+            () => Http.PutAsJsonAsync($"api/grove/content-types/{Uri.EscapeDataString(SelectedType.Name)}/field-sets/{Uri.EscapeDataString(partName)}/settings", new { Settings = settings }),
+            T["Field group settings saved."]);
     }
 
-    private async Task DetachPartAsync(string partName)
+    private async Task AttachFieldSetAsync()
+    {
+        if (SelectedType is null || string.IsNullOrWhiteSpace(FieldSetToAttach))
+        {
+            return;
+        }
+
+        var partName = FieldSetToAttach;
+        await SendAsync(
+            () => Http.PutAsJsonAsync($"api/grove/content-types/{Uri.EscapeDataString(SelectedType.Name)}/field-sets", new { FieldSet = partName }),
+            T["Field group attached."]);
+        FieldSetToAttach = string.Empty;
+    }
+
+    private async Task DetachFieldSetAsync(string partName)
     {
         if (SelectedType is null)
         {
@@ -321,8 +366,8 @@
         }
 
         await SendAsync(
-            () => Http.DeleteAsync($"api/grove/content-types/{Uri.EscapeDataString(SelectedType.Name)}/parts/{Uri.EscapeDataString(partName)}"),
-            T["Part detached."]);
+            () => Http.DeleteAsync($"api/grove/content-types/{Uri.EscapeDataString(SelectedType.Name)}/field-sets/{Uri.EscapeDataString(partName)}"),
+            T["Field group detached."]);
     }
 
     private async Task SendAsync(Func<Task<HttpResponseMessage>> send, string successMessage)

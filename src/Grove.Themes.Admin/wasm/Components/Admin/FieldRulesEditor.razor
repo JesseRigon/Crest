@@ -1,0 +1,147 @@
+@namespace Grove.Themes.Admin.Components.Admin
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject NotificationService Notifications
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
+
+@* A type's rules across fields (docs/content-engine.md › Validation and conditions run on the one
+   expression engine): while a rule's condition holds, a field is required or the save is refused
+   with the rule's message under it. Evaluated when an item is validated, on every write path.
+   Definition work, gated server-side by EditContentTypes; a rule on a locked field is refused. *@
+<GroveFieldset Text="@T["Field rules"]" AllowCollapse="true" Collapsed="true" data-testid="field-rules-editor">
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <GroveAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</GroveAlert>
+    }
+
+    @if (IsLoading)
+    {
+        <GroveProgressBar Mode="ProgressBarMode.Indeterminate" />
+    }
+    else
+    {
+        <GroveStack Gap="1rem">
+            <GroveText TextStyle="TextStyle.Caption" Text="@T["A rule makes a field required, or refuses the save with a message under a field, while its condition holds."]" />
+
+            @for (var index = 0; index < Rules.Count; index++)
+            {
+                var position = index;
+                var rule = Rules[position];
+                <GroveCard data-testid="field-rule">
+                    <GroveStack Gap="0.5rem">
+                        <GroveText TextStyle="TextStyle.Subtitle2" Text="@T["When"]" />
+                        <FieldConditionEditor Value="@rule.When" ValueChanged="@((DisplayBinding? when) => rule.When = when)" Fields="@Fields" Disabled="@IsBusy" />
+                        <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
+                            <GroveFormField Text="@T["Then"]">
+                                <GroveDropDown TValue="string" Value="@rule.Effect" ValueChanged="@((string value) => rule.Effect = value)" Data="@EffectChoices"
+                                               TextProperty="Label" ValueProperty="Value" Disabled="@IsBusy" Style="width: 12rem;" data-testid="rule-effect" />
+                            </GroveFormField>
+                            <GroveFormField Text="@T["Field"]">
+                                <GroveDropDown TValue="string" Value="@rule.Field" ValueChanged="@((string value) => rule.Field = value)" Data="@Fields"
+                                               TextProperty="Label" ValueProperty="Value" Disabled="@IsBusy" Style="width: 14rem;" data-testid="rule-field" />
+                            </GroveFormField>
+                            <GroveFormField Text="@(rule.Effect == "refuse" ? T["Message"] : T["Message (optional)"])">
+                                <GroveTextBox Value="@rule.Message" ValueChanged="@((string value) => rule.Message = value)" Disabled="@IsBusy" Style="min-width: 16rem;" data-testid="rule-message" />
+                            </GroveFormField>
+                            <GroveButton Icon="delete" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => Rules.RemoveAt(position))" Disabled="@IsBusy" data-testid="rule-remove" />
+                        </GroveStack>
+                    </GroveStack>
+                </GroveCard>
+            }
+
+            <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.SpaceBetween">
+                <GroveButton Text="@T["Add rule"]" Icon="add" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="Add" Disabled="@(IsBusy || Fields.Length == 0)" data-testid="rule-add" />
+                <GroveButton Text="@T["Save rules"]" Icon="save" Size="ButtonSize.Small" Click="SaveAsync" Disabled="@IsBusy" data-testid="rules-save" />
+            </GroveStack>
+        </GroveStack>
+    }
+</GroveFieldset>
+
+@code {
+    [Parameter, EditorRequired] public string TypeName { get; set; } = string.Empty;
+
+    /// <summary>The type's fields as field paths (FieldSet.Field), by attachment name.</summary>
+    [Parameter] public FieldConditionEditor.FieldChoice[] Fields { get; set; } = [];
+
+    private List<Rule> Rules = [];
+    private string? _loaded;
+
+    private bool IsLoading;
+    private bool IsSaving;
+    private bool IsBusy => IsLoading || IsSaving;
+    private string? ErrorMessage;
+
+    private sealed class Rule
+    {
+        public DisplayBinding? When { get; set; }
+        public string Field { get; set; } = string.Empty;
+        public string Effect { get; set; } = "require";
+        public string? Message { get; set; }
+    }
+
+    private sealed class RulesModel
+    {
+        public List<Rule> Rules { get; set; } = [];
+    }
+
+    private sealed record Choice(string Label, string Value);
+
+    private Choice[] EffectChoices =>
+    [
+        new(T["Require"], "require"),
+        new(T["Refuse the save"], "refuse"),
+    ];
+
+    private string Url => $"api/grove/content-types/{Uri.EscapeDataString(TypeName)}/field-rules";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_loaded == TypeName)
+        {
+            return;
+        }
+
+        _loaded = TypeName;
+        IsLoading = true;
+        ErrorMessage = null;
+        try
+        {
+            Rules = (await Http.GetFromJsonAsync<RulesModel>(Url))?.Rules ?? [];
+        }
+        catch (Exception exception)
+        {
+            ErrorMessage = exception.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private void Add() => Rules.Add(new Rule { Field = Fields[0].Value });
+
+    private async Task SaveAsync()
+    {
+        IsSaving = true;
+        ErrorMessage = null;
+        try
+        {
+            using var response = await Http.PutAsJsonAsync(Url, new { Rules });
+            if (!response.IsSuccessStatusCode)
+            {
+                ErrorMessage = await response.Content.ReadAsStringAsync();
+                return;
+            }
+
+            Notifications.Notify(NotificationSeverity.Success, T["Field rules"], T["Field rules saved."]);
+        }
+        catch (Exception exception)
+        {
+            ErrorMessage = exception.Message;
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+}

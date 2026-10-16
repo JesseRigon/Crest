@@ -25,7 +25,7 @@ public class LocalizedContentItemIndexProvider : ContentHandlerBase, IIndexProvi
     {
         if (context.NoActiveVersionLeft)
         {
-            if (context.ContentItem.TryGet<LocalizationPart>(out _))
+            if (context.ContentItem.TryGet<LocalizationFieldSet>(out _))
             {
                 _itemRemoved.Add(context.ContentItem);
             }
@@ -38,16 +38,16 @@ public class LocalizedContentItemIndexProvider : ContentHandlerBase, IIndexProvi
     {
         // Validate that the content definition contains this part, this prevents indexing parts
         // that have been removed from the type definition, but are still present in the elements.            
-        if (context.ContentItem.TryGet<LocalizationPart>(out _))
+        if (context.ContentItem.TryGet<LocalizationFieldSet>(out _))
         {
             // Lazy initialization because of ISession cyclic dependency.
             _contentDefinitionManager ??= _serviceProvider.GetRequiredService<IContentDefinitionManager>();
 
             // Search for this part.
             var contentTypeDefinition = await _contentDefinitionManager.GetTypeDefinitionAsync(context.ContentItem.ContentType);
-            if (!contentTypeDefinition.Parts.Any(ctd => ctd.Name == nameof(LocalizationPart)))
+            if (!contentTypeDefinition.FieldSets.Any(ctd => ctd.Name == ContentFieldSetName.Of<LocalizationFieldSet>()))
             {
-                context.ContentItem.Remove<LocalizationPart>();
+                context.ContentItem.Remove<LocalizationFieldSet>();
                 _partRemoved.Add(context.ContentItem.ContentItemId);
             }
         }
@@ -60,7 +60,7 @@ public class LocalizedContentItemIndexProvider : ContentHandlerBase, IIndexProvi
     public void Describe(DescribeContext<ContentItem> context)
     {
         context.For<LocalizedContentItemIndex>()
-            .When(contentItem => contentItem.Has<LocalizationPart>() || _partRemoved.Contains(contentItem.ContentItemId))
+            .When(contentItem => contentItem.Has<LocalizationFieldSet>() || _partRemoved.Contains(contentItem.ContentItemId))
             .Map(contentItem =>
             {
                 // If the content item was removed, a record is still added.
@@ -72,7 +72,7 @@ public class LocalizedContentItemIndexProvider : ContentHandlerBase, IIndexProvi
                 // If the part was removed from the type definition, a record is still added.
                 var partRemoved = _partRemoved.Contains(contentItem.ContentItemId);
 
-                if (!contentItem.TryGet<LocalizationPart>(out var part) && !partRemoved)
+                if (!contentItem.TryGet<LocalizationFieldSet>(out var part) && !partRemoved)
                 {
                     return null;
                 }

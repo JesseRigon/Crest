@@ -14,7 +14,8 @@ namespace Grove.Contents.Api;
 public sealed class ContentSaveRefusedExceptionMapper : IApiExceptionMapper
 {
     public IResult? Map(Exception exception, HttpContext httpContext) =>
-        exception is ContentSaveRefusedException refused
-            ? ApiProblems.Validation(new Dictionary<string, string[]> { [string.Empty] = [.. refused.Errors] }, detail: refused.Message)
-            : null;
+        exception is ContentSaveRefusedException refused ? ToResult(refused) : null;
+
+    public static IResult ToResult(ContentSaveRefusedException refused) =>
+        ApiProblems.Validation(new Dictionary<string, string[]> { [string.Empty] = [.. refused.Errors] }, detail: refused.Message);
 }

@@ -4,15 +4,12 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Grove.Routes.Auto.Indexes;
-using Grove.Routes.Auto.Services;
-using Grove.Routes.Auto.Handlers;
 using Grove.Routes.Auto.Indexing;
 using Grove.Routes.Auto.Models;
 using Grove.Routes.Auto.Routing;
 using Grove.Routes.Auto.Services;
 using Grove.Routes.Auto.Sitemaps;
 using Grove.Routes.Auto.ViewModels;
-using Grove.Contents.Localization.Handlers;
 using Grove.Contents.Management;
 using Grove.Contents.Management.Display.ContentDisplay;
 using Grove.Contents.Management.GraphQL.Options;
@@ -27,6 +24,7 @@ using Grove.Modules;
 using Grove.Routing;
 using Grove.Security.Permissions;
 using Grove.Seo.Sitemaps.Services;
+using Grove.Workflows.Extensions;
 
 namespace Grove.Routes.Auto;
 
@@ -39,7 +37,7 @@ public sealed class Startup : StartupBase
     {
         services.Configure<TemplateOptions>(o =>
         {
-            o.MemberAccessStrategy.Register<AutoroutePartViewModel>();
+            o.MemberAccessStrategy.Register<AutorouteFieldSetViewModel>();
 
             o.MemberAccessStrategy.Register<LiquidContentAccessor, LiquidPropertyAccessor>("Slug", (obj, context) =>
             {
@@ -67,18 +65,19 @@ public sealed class Startup : StartupBase
             });
         });
 
-        // Autoroute Part
-        services.AddContentPart<AutoroutePart>()
-            .AddHandler<AutoroutePartHandler>();
-
-        services.AddScoped<IContentHandler, DefaultRouteContentHandler>();
-        services.AddScoped<IContentHandler, AutorouteContentHandler>();
+        // The Autoroute field set: its data is its fields; its behaviour, the system flows below;
+        // its route values, read projections.
+        services.AddContentFieldSet<AutorouteFieldSet>();
+        services.AddScoped<AutorouteBehaviour>();
+        services.AddContentFieldSetProjection<Projections.AutorouteRouteProjection>();
+        services.AddContentProjection<Projections.DefaultRouteProjection>();
+        services.AddContentProjection<Projections.ContainedRouteValuesProjection>();
         services.AddPermissionProvider<Permissions>();
-        services.AddScoped<IContentPartIndexHandler, AutoroutePartIndexHandler>();
+        services.AddScoped<IContentFieldSetIndexHandler, AutorouteFieldSetIndexHandler>();
 
-        services.AddScoped<AutoroutePartIndexProvider>();
-        services.AddScoped<IScopedIndexProvider>(sp => sp.GetRequiredService<AutoroutePartIndexProvider>());
-        services.AddScoped<IContentHandler>(sp => sp.GetRequiredService<AutoroutePartIndexProvider>());
+        services.AddScoped<AutorouteIndexProvider>();
+        services.AddScoped<IScopedIndexProvider>(sp => sp.GetRequiredService<AutorouteIndexProvider>());
+        services.AddScoped<IContentHandler>(sp => sp.GetRequiredService<AutorouteIndexProvider>());
 
         services.AddDataMigration<Migrations>();
         services.AddSingleton<IAutorouteEntries, AutorouteEntries>();
@@ -86,7 +85,7 @@ public sealed class Startup : StartupBase
 
         services.Configure<GraphQLContentOptions>(options =>
         {
-            options.ConfigurePart<AutoroutePart>(partOptions =>
+            options.ConfigureFieldSet<AutorouteFieldSet>(partOptions =>
             {
                 partOptions.Collapse = true;
             });
@@ -117,11 +116,15 @@ public sealed class ContentAutourouteStartup : StartupBase
     }
 }
 
-[RequireFeatures("Grove.Contents.Localization")]
-public class ContentLocalizationStartup : StartupBase
+/// <summary>The permalink's system flows and their activities (docs/content-engine.md › Behaviour is workflows).</summary>
+[RequireFeatures(Grove.Workflows.WorkflowsConstants.ContentsFeatureId)]
+public sealed class WorkflowsStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddScoped<IContentLocalizationHandler, AutorouteContentLocalizationHandler>();
+        services.AddScoped<Grove.Workflows.IWorkflowActivityProvider, Workflows.AutorouteWorkflowProvider>();
+        services.AddScoped<Grove.Workflows.IWorkflowFlowProvider, Workflows.AutorouteWorkflowProvider>();
+        services.AddScoped<Grove.Workflows.IWorkflowFieldSetHookAttachmentProvider, Workflows.AutorouteWorkflowProvider>();
+        services.ConfigureGroveWorkflows(workflows => workflows.AddActivitiesFrom<WorkflowsStartup>());
     }
 }

@@ -217,7 +217,7 @@ public sealed class TemplatesApi : ApiContributor
         new(record.ContentItemId, record.Name, record.Theme, record.DisplayType, record.Description, record.Source, published, !record.Published, record.ModifiedUtc,
             record.IsComposite, record.DisplayName, record.Category, record.Icon, record.Inputs, record.Outputs);
 
-    private static TemplatePart ToPart(TemplateRecord record) => new()
+    private static TemplateFieldSet ToPart(TemplateRecord record) => new()
     {
         Name = record.Name,
         Theme = record.Theme,
@@ -264,7 +264,7 @@ public sealed record TemplateWrite(
     List<TemplateInput>? Inputs = null,
     List<TemplateOutput>? Outputs = null)
 {
-    public TemplatePart ToPart() => new()
+    public TemplateFieldSet ToPart() => new()
     {
         Name = Name,
         Theme = Theme,

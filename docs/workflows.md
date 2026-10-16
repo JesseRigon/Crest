@@ -45,6 +45,7 @@ registry is read at `GET api/grove/workflows/registry`.
 | Triggers it raises | `IWorkflowTriggerProvider`, raised with `IWorkflowTriggerPublisher.PublishAsync(key, correlationId, payload)` | `party.role-created` |
 | Activities (palette entries) | `IWorkflowActivityProvider` + an engine `Activity` class | `Create party role`, `Resolve party` |
 | Hook slots and system attachments | `IWorkflowHookSlotProvider`, `IWorkflowHookAttachmentProvider`, run with `IWorkflowHookRunner.RunAsync(slot, correlationId, payload)` | `flow.hook` |
+| System flows on a field set's types | `IWorkflowFieldSetHookAttachmentProvider` (`WorkflowFieldSetHookAttachmentDescriptor`: field set, lifecycle point, flow key) | a posting flow on `publishing` of every type carrying `Transaction` |
 | Shipped flows | `IWorkflowFlowProvider` (definition JSON embedded in the module) | a module's `Data/workflows/*.json` |
 | Connections | the connector engine's `services.AddConnection(...)` ([connectors.md](connectors.md)); each operation becomes a `Call connector` preset | `facebook-graph` |
 
@@ -195,7 +196,7 @@ live there too; no module registers endpoint assemblies.
 
 **Tenant citizenship.** One engine per shell: every engine service, store and hosted service
 lives in the tenant container. Definitions are `WorkflowDefinition` content items
-(`WorkflowDefinitionPart`; drafts and versions are the content system's); instances, stored
+(`WorkflowDefinitionFieldSet`; drafts and versions are the content system's); instances, stored
 triggers, bookmarks, execution logs and activity execution records are YesSql collections with
 per-shell migrations. The file lock directory is `<data root>/Sites/<tenant>/locks`;
 `MediatorOptions.JobWorkerCount = 1` per shell; `JobRunnerHostedService` and
@@ -206,7 +207,7 @@ async-only tenant service is replaced (`SyncDisposableTenantService`) and a scan
 the async-only surface of the engine assemblies.
 
 **Definitions store and publisher.** `YesSqlWorkflowDefinitionStore` maps
-`WorkflowDefinitionPart` ↔ `WorkflowDefinition`; `ContentItemWorkflowDefinitionPublisher`
+`WorkflowDefinitionFieldSet` ↔ `WorkflowDefinition`; `ContentItemWorkflowDefinitionPublisher`
 publishes through the content manager (a save with `publish: true` on a new definition
 stores the draft first). The engine's definition notifications are raised once, by
 `WorkflowDefinitionContentHandler` (Retracted with the definition as unpublished, so the
@@ -403,7 +404,7 @@ Grove and content triggers, `Require permission` and `Validate user` ask the one
   `user.confirmed`) act as the user the event names when the request is anonymous
   (`IWorkflowTriggerPublisher.PublishForUserAsync`; an administrator creating a user stays the
   actor). Anonymous runs are opt-in per definition (`Grove.AcceptsAnonymousRuns`,
-  `WorkflowsConstants.AcceptsAnonymousRunsProperty`, mirrored on `WorkflowDefinitionPart`,
+  `WorkflowsConstants.AcceptsAnonymousRunsProperty`, mirrored on `WorkflowDefinitionFieldSet`,
   publishing it takes `ManageShippedWorkflows`) and only for runs starting at an `HttpEndpoint`
   trigger (a public page, and the public endpoints that serve specific public media and
   content); a backend API endpoint never accepts an anonymous run. A privileged step in an
@@ -437,7 +438,12 @@ which takes the catalog. (The catalog is to fold into the engine's registry,
 - **Flows**: `WorkflowFlowDescriptor(Key, DisplayName, Object, DefinitionJson, Position,
   Publish, Ownership, Version)`: the engine's export JSON, embedded under the module's
   `Data/workflows`, imported per tenant by `WorkflowFlowImporter.SyncAsync` right after the
-  activity registry is populated (the JSON names activity types). `Publish: false` ships a
+  activity registry is populated (the JSON names activity types). Both run once per shell
+  (`ShippedFlowsInstaller`): when the shell activates, once that activation's migrations have
+  committed and before the request or recipe step that activated it runs, and on demand the
+  first time a content hook finds one of its system flows missing (an item a feature seeds while
+  its shell is being built). A flow that does not import is logged as an error, and a hook whose
+  required system flow is still missing refuses the save instead of skipping it. `Publish: false` ships a
   flow as a draft the tenant opts into (anything that changes business data on its own).
   `WorkflowFlowLookup` finds a tenant's copy by `Grove.FlowKey`.
 - **Connections**: the connector engine's registry (`IConnectionRegistry`); the palette lists
@@ -541,7 +547,8 @@ terms) is in the same unit; the invoice with those fields exists, or nothing doe
 - **A failed unit is cancelled.** A burst that a required hook or atomic step fails is
   cancelled before the host would commit it: nothing the burst wrote stands, the faulted
   instance is recorded in a fresh scope so the journal shows what happened, and an API request
-  that ran the hook answers **409** with the slot, the attachment and the reason.
+  that ran the hook answers **409** with the slot, the attachment and the reason; a content
+  lifecycle hook's refusal answers **400** with its errors by field path ([Hook slots](#hook-slots)).
 - **External calls are boundaries, like waits.** `Call connector`, `Poll connector` and the
   external platform activities (`Send email`, `Send SMS`, `Notify users`, ...: `IUnitBoundary`)
   are the engine's own **background activities** (`RunAsynchronously`): the engine's middleware
@@ -614,10 +621,59 @@ split, but neither is after-commit). Child scopes never activate the shell
 (`activateShell: false`): during setup that path would wait on the activation lock the
 setting-up scope holds.
 
+### Hook slots
+
+A hook slot is a named point where attached flows run inside the unit of work that reached it.
+Slots come from two places:
+- **Module slots**, declared in code (`IWorkflowHookSlotProvider`): a module's own points, such
+  as a document's created or posting slot, and the generic `flow.hook` a flow places with the
+  `Hook` activity. A module runs its slot from its request through `IWorkflowHookRunner`; a
+  required attachment that fails answers **409**.
+- **Content lifecycle slots**, one per content type and lifecycle point, read from the tenant's
+  definitions when asked (`IWorkflowHookSlotSource`), so a type created at runtime has its slots
+  at once. The key is `content:{Type}.{point}` (`content:Invoice.publishing`); the points are
+  creating, updating, validating, saving-draft, publishing, unpublishing, removing, cloning,
+  importing and localizing ([content-engine.md](content-engine.md) › Behaviour is workflows). The
+  content manager runs the slot at the point, before the item is stored. An attachment refuses
+  with `Fail unit`, whose optional `Field` names the field the refusal is about
+  (`FieldSet.Field`, a field set, or blank for the item): the operation is aborted, the unit
+  cancelled, and the content items API answers **400** with the errors under their field paths
+  (`ContentLifecycleRefusedException`). At validating, the refusals join the item's validation
+  errors. The attachments' input carries the item's new state (`ContentItem`), its previous state
+  (`PreviousContentItem`, absent when it is being created) and the point. The previous state is
+  the stored version, read from the store past the session (so the request's in-memory changes do
+  not show), and only when it is needed: when the type's slot has attachments, or when a flow
+  starts or waits on the point's trigger for the type, in which case it is read before the item is
+  stored. Where the stored row is not the previous state, it is a copy: a version being merged by
+  an import, a clone's or a translation's source; a new draft's previous state is the version it
+  was built from.
+
+System attachments to content slots are declared against a field set
+(`IWorkflowFieldSetHookAttachmentProvider`): the flow runs at the point for every type that
+attaches the field set, so a field set and its system flows attach and detach together. A
+slot's resolved attachments are cached per tenant until the content definitions change, a
+shipped flow is imported, a tenant attachment is added or removed, or a flow is published or
+removed; a slot with no attachment starts no workflow instance. A field
+set a module welds on a type's items instead of attaching it in the definition (a child item's
+`ParentContentItem`) is declared through `IWorkflowWeldedFieldSetSource`, and its flows attach
+to those types the same way. A module's flow definitions ship in its `Data/workflows` folder,
+read with `ShippedFlows.Read`. Tenants attach their flows on the Hooks page, a type's lifecycle
+slots at a time.
+
+Each lifecycle point also raises its trigger once the unit commits, through the stimulus queue,
+as its own unit: `Content created`, `Content updated`, `Content validated`, `Content draft saved`,
+`Content published`, `Content unpublished`, `Content removed`, `Content cloned`, `Content
+imported`, `Content localized`, each filtered by content type and carrying the new state as its
+result and the previous one as `PreviousContentItem`.
+
+Hooks do not re-enter: while an item's hooks run, a write the hook makes to that item in the same
+unit runs no hooks again (its trigger still fires after commit). Every hook run is recorded on
+the audit system as `HookRan` or `HookFailed`.
+
 ## Field dependencies
 
 **Contracts are per-activity field dependencies, not a record-level contract.** An activity
-declares each content field it reads or writes as a dependency on a field path (`Part.Field`)
+declares each content field it reads or writes as a dependency on a field path (`FieldSet.Field`)
 with a **required marker per field** and a read/write marker (`Server/Fields`, contracts in
 Abstractions): system activities declare theirs in code with
 `[FieldDependency(path, Required, Writes, ContentType)]`; configurable activities derive theirs
@@ -681,7 +737,7 @@ Triggers, activities and shipped flows by Grove module:
 | Users | `user.created`, `.updated`, `.deleted`, `.enabled`, `.disabled`, `.confirmed`, `.logged-in`, `.logged-out` (event handlers and both login paths; correlation = user id) | `CreateUser`, `ValidateUser`, `AssignUserRole`, `UnassignUserRole`, `GetUsersByRole` | — |
 | Email, Sms, Notifications, Twitter, Facebook, Tenants | — | `SendEmail`; `SendSms`; `NotifyUsers`, `NotifyContentOwner`; `UpdateTwitterStatus`; `SendMetaConversionEvent`; `CreateTenant`, `SetupTenant`, `EnableTenant`, `DisableTenant` | — |
 | Parties | `party.role-created`, `.role-removed` (a content handler on every registered party type except the two base types; correlation = role id) | `CreatePartyRole` (registry key → role type, party from the payload, through `IPartyRoleService`, idempotent); `ResolveParty` (a role or base party id → RoleId, RoleContentType, RoleTypeKey, BasePartyId, BasePartyContentType: which item holds a field, nothing walks the graph implicitly) | — |
-| Grove.Workflows | `flow.raised`; hook slot `flow.hook` | `Registry trigger`, `Raise trigger`, `Hook`, `Fail unit`, `Require permission`, `Request approval`, connector activities, `Log`, `Copy fields` / `Move fields` (Server/Contents: source and target item ids, the target defaulting to the payload's ContentItemId or TransactionId, and a JSON mapping of `Part.Field → Part.Field` rows each with a `required` marker; `ContentFieldValueCopier` resolves both sides against the tenant's current definitions, copies a same-type pair's JSON whole, converts text ↔ numeric, refuses other pairs; a required source that is empty or missing ends on Failed with the field named, an optional one is skipped and listed in `Skipped`; Move clears the source; the write goes through the content operations' update path) | — |
+| Grove.Workflows | `flow.raised`; hook slot `flow.hook` | `Registry trigger`, `Raise trigger`, `Hook`, `Fail unit`, `Require permission`, `Request approval`, connector activities, `Log`, `Copy fields` / `Move fields` (Server/Contents: source and target item ids, the target defaulting to the payload's ContentItemId or TransactionId, and a JSON mapping of `FieldSet.Field → FieldSet.Field` rows each with a `required` marker; `ContentFieldValueCopier` resolves both sides against the tenant's current definitions, copies a same-type pair's JSON whole, converts text ↔ numeric, refuses other pairs; a required source that is empty or missing ends on Failed with the field named, an optional one is skipped and listed in `Skipped`; Move clears the source; the write goes through the content operations' update path) | — |
 
 **Approvals** (`Server/Approvals`): `Request approval` records an `ApprovalTask` (YesSql,
 indexed) for a role and/or permission and waits on a bookmark;
@@ -993,7 +1049,7 @@ background action.
 
 ### Design decisions
 
-- **Organization scope on data.** `GroveOrganizationPart` with an index (`OrganizationId`),
+- **Organization scope on data.** `OwningOrganizationFieldSet` with an index (`OrganizationId`),
   carried by every scoped type and filled by the owning module, is the row's owner (in
   Grove.Parties, [access.md](access.md) › Parties). Per-item grants are Sharing's
   ([sharing.md](sharing.md)). The hierarchy's subtree scoping ([parties.md](parties.md) ›
@@ -1057,7 +1113,7 @@ background action.
   Impersonating the system is impossible by construction, and the audit records the definition
   or job that ran as system, never a user. The system actors act as the system accounts
   ([sharing.md](sharing.md) § 1).
-- **Per-part permissions** are scope providers on content parts ([permissions.md](permissions.md)).
+- **Per-field-set permissions** are scope providers on field sets ([permissions.md](permissions.md)).
 
 ### Tasks
 

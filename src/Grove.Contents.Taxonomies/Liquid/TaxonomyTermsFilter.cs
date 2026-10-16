@@ -3,65 +3,53 @@ using Fluid;
 using Fluid.Values;
 using Grove.Contents.Management;
 using Grove.Display.Liquid;
-using Grove.Contents.Taxonomies.Fields;
+using Grove.Fields;
 
 namespace Grove.Contents.Taxonomies.Liquid;
 
-public class TaxonomyTermsFilter : ILiquidFilter
+/// <summary>
+/// <c>taxonomy_terms</c>: the terms an option list field on a taxonomy's terms holds (the field, or
+/// its stored JSON), in the field's order; or the terms of a list of ids in the taxonomy named by
+/// the argument.
+/// </summary>
+public class TaxonomyTermsFilter(IContentManager contentManager, IEmbeddedContentItemResolver embeddedItems) : ILiquidFilter
 {
-    private readonly IContentManager _contentManager;
-
-    public TaxonomyTermsFilter(IContentManager contentManager)
-    {
-        _contentManager = contentManager;
-    }
-
     public async ValueTask<FluidValue> ProcessAsync(FluidValue input, FilterArguments arguments, LiquidTemplateContext ctx)
     {
-        string taxonomyContentItemId = null;
-        string[] termContentItemIds = null;
-
-        if (input.Type == FluidValues.Object && input.ToObjectValue() is TaxonomyField field)
+        string[] termContentItemIds;
+        if (input.Type == FluidValues.Object && input.ToObjectValue() is OptionListField field)
         {
-            taxonomyContentItemId = field.TaxonomyContentItemId;
-            termContentItemIds = field.TermContentItemIds;
+            termContentItemIds = field.SelectedIds ?? [];
         }
         else if (input.Type == FluidValues.Object
-            && input.ToObjectValue() is JsonObject jobj
-            && jobj.ContainsKey(nameof(TaxonomyField.TermContentItemIds))
-            && jobj.ContainsKey(nameof(TaxonomyField.TaxonomyContentItemId)))
+            && input.ToObjectValue() is JsonObject json
+            && json[nameof(OptionListField.SelectedIds)] is JsonArray selected)
         {
-            taxonomyContentItemId = jobj["TaxonomyContentItemId"].Value<string>();
-            termContentItemIds = jobj["TermContentItemIds"].Values<string>().ToArray();
+            termContentItemIds = [.. selected.Select(id => id?.GetValue<string>()).Where(id => !string.IsNullOrEmpty(id))];
         }
         else if (input.Type == FluidValues.Array)
         {
-            taxonomyContentItemId = arguments.At(0).ToStringValue();
-            termContentItemIds = input.Enumerate(ctx).Select(x => x.ToStringValue()).ToArray();
+            var taxonomy = await contentManager.GetAsync(arguments.At(0).ToStringValue());
+            if (taxonomy is null)
+            {
+                return NilValue.Instance;
+            }
+
+            var ids = input.Enumerate(ctx).Select(x => x.ToStringValue());
+            return FluidValue.Create(ids.Select(id => TaxonomyTerms.FindTerm(TaxonomyTerms.Roots(taxonomy), id)).Where(term => term is not null).ToList(), ctx.Options);
         }
         else
         {
             return NilValue.Instance;
         }
 
-        var taxonomy = await _contentManager.GetAsync(taxonomyContentItemId);
-
-        if (taxonomy == null)
-        {
-            return null;
-        }
-
+        // Each term from the taxonomy (its published version) that holds it.
         var terms = new List<ContentItem>();
-
-        foreach (var termContentItemId in termContentItemIds)
+        foreach (var id in termContentItemIds)
         {
-            var term = TaxonomyTerms.FindTerm(
-                (JsonArray)taxonomy.Content["TaxonomyPart"]["Terms"],
-                termContentItemId);
-
-            if (term is not null)
+            if (await embeddedItems.ResolveAsync(id) is { Embedding: Models.TaxonomyFieldSet.TermsEmbedding } reference)
             {
-                terms.Add(term);
+                terms.Add(reference.Item);
             }
         }
 

@@ -24,9 +24,9 @@ public sealed class ReplaceContentDefinitionStep : NamedRecipeStepHandler
         var step = context.Step.ToObject<ReplaceContentDefinitionStepModel>();
 
         // Delete existing parts first, as deleting them later will clear any imported content types using them.
-        foreach (var contentPart in step.ContentParts)
+        foreach (var contentFieldSet in step.ContentFieldSets)
         {
-            await _contentDefinitionManager.DeletePartDefinitionAsync(contentPart.Name);
+            await _contentDefinitionManager.DeleteFieldSetDefinitionAsync(contentFieldSet.Name);
         }
 
         foreach (var contentType in step.ContentTypes)
@@ -35,9 +35,9 @@ public sealed class ReplaceContentDefinitionStep : NamedRecipeStepHandler
             await AlterContentTypeAsync(contentType);
         }
 
-        foreach (var contentPart in step.ContentParts)
+        foreach (var contentFieldSet in step.ContentFieldSets)
         {
-            await AlterContentPartAsync(contentPart);
+            await AlterContentFieldSetAsync(contentFieldSet);
         }
     }
 
@@ -51,20 +51,25 @@ public sealed class ReplaceContentDefinitionStep : NamedRecipeStepHandler
                 builder.MergeSettings(record.Settings);
             }
 
-            foreach (var part in record.ContentTypePartDefinitionRecords)
+            foreach (var part in record.ContentTypeFieldSetDefinitionRecords)
             {
-                builder.WithPart(part.Name, part.PartName, partBuilder => partBuilder.MergeSettings(part.Settings));
+                builder.WithFieldSet(part.Name, part.FieldSetName, partBuilder => partBuilder.MergeSettings(part.Settings));
+            }
+
+            foreach (var embedding in record.EmbeddedContentDefinitionRecords ?? [])
+            {
+                builder.WithEmbedding(embedding.Name, embeddingBuilder => embeddingBuilder.From(embedding));
             }
         });
     }
 
-    private async Task AlterContentPartAsync(ContentPartDefinitionRecord record)
+    private async Task AlterContentFieldSetAsync(ContentFieldSetDefinitionRecord record)
     {
-        await _contentDefinitionManager.AlterPartDefinitionAsync(record.Name, builder =>
+        await _contentDefinitionManager.AlterFieldSetDefinitionAsync(record.Name, builder =>
         {
             builder.MergeSettings(record.Settings);
 
-            foreach (var field in record.ContentPartFieldDefinitionRecords)
+            foreach (var field in record.ContentFieldDefinitionRecords)
             {
                 builder.WithField(field.Name, fieldBuilder =>
                 {
@@ -78,6 +83,6 @@ public sealed class ReplaceContentDefinitionStep : NamedRecipeStepHandler
     private sealed class ReplaceContentDefinitionStepModel
     {
         public ContentTypeDefinitionRecord[] ContentTypes { get; set; } = [];
-        public ContentPartDefinitionRecord[] ContentParts { get; set; } = [];
+        public ContentFieldSetDefinitionRecord[] ContentFieldSets { get; set; } = [];
     }
 }

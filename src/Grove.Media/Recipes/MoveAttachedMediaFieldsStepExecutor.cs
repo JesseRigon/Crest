@@ -61,9 +61,9 @@ public sealed class MoveAttachedMediaFieldsStepExecutor
                 continue;
             }
 
-            var attachedFields = typeDefinition.Parts
-                .SelectMany(part => part.PartDefinition.Fields
-                    .Where(field => field.FieldDefinition?.Name == nameof(MediaField)
+            var attachedFields = typeDefinition.FieldSets
+                .SelectMany(part => part.FieldSetDefinition.Fields
+                    .Where(field => field.FieldTypeDefinition?.Name == nameof(MediaField)
                         && string.Equals(field.Editor(), "Attached", StringComparison.OrdinalIgnoreCase))
                     .Select(field => new AttachedMediaFieldDefinition(part.Name, field.Name)))
                 .ToArray();
@@ -140,7 +140,7 @@ public sealed class MoveAttachedMediaFieldsStepExecutor
 
         foreach (var attachedField in attachedFields)
         {
-            var part = contentItem.Get<ContentPart>(attachedField.PartName);
+            var part = contentItem.Get<ContentFieldSet>(attachedField.FieldSetName);
             if (part is null)
             {
                 continue;
@@ -182,7 +182,7 @@ public sealed class MoveAttachedMediaFieldsStepExecutor
             {
                 field.Paths = updatedPaths;
                 part.Apply(attachedField.FieldName, field);
-                contentItem.Apply(attachedField.PartName, part);
+                contentItem.Apply(attachedField.FieldSetName, part);
                 changed = true;
             }
         }
@@ -230,5 +230,5 @@ public sealed class MoveAttachedMediaFieldsStepExecutor
         return Path.GetFileName(originalPaths[index]);
     }
 
-    private sealed record AttachedMediaFieldDefinition(string PartName, string FieldName);
+    private sealed record AttachedMediaFieldDefinition(string FieldSetName, string FieldName);
 }

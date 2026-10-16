@@ -4,6 +4,7 @@ using Grove.Contents.Localization.Handlers;
 using Grove.Contents.Localization.Models;
 using Grove.Contents.Localization.Records;
 using Grove.Contents.Management;
+using Grove.Contents.Management.Handlers;
 using Grove.Data.Localization;
 using Grove.Modules;
 using YesSql;
@@ -19,6 +20,7 @@ public class DefaultContentLocalizationManager : IContentLocalizationManager
     private readonly ILocalizationService _localizationService;
     private readonly ILogger _logger;
     private readonly Entities.IIdGenerator _iidGenerator;
+    private readonly IContentLifecycle _lifecycle;
 
     public IEnumerable<IContentLocalizationHandler> Handlers { get; private set; }
     public IEnumerable<IContentLocalizationHandler> ReversedHandlers { get; private set; }
@@ -30,8 +32,10 @@ public class DefaultContentLocalizationManager : IContentLocalizationManager
         ILocalizationService localizationService,
         ILogger<DefaultContentLocalizationManager> logger,
         IEnumerable<IContentLocalizationHandler> handlers,
-        Entities.IIdGenerator iidGenerator)
+        Entities.IIdGenerator iidGenerator,
+        IContentLifecycle lifecycle)
     {
+        _lifecycle = lifecycle;
         _contentManager = contentManager;
         _session = session;
         _httpContextAccessor = httpContentAccessor;
@@ -71,17 +75,17 @@ public class DefaultContentLocalizationManager : IContentLocalizationManager
             throw new InvalidOperationException("Cannot localize an unsupported culture");
         }
 
-        var localizationPart = content.GetOrCreate<LocalizationPart>();
-        if (string.IsNullOrEmpty(localizationPart.LocalizationSet))
+        var localizationFieldSet = content.GetOrCreate<LocalizationFieldSet>();
+        if (string.IsNullOrEmpty(localizationFieldSet.LocalizationSet))
         {
             // If the source content item is not yet localized, define its defaults.
-            localizationPart.LocalizationSet = _iidGenerator.GenerateUniqueId();
-            localizationPart.Culture = await _localizationService.GetDefaultCultureAsync();
+            localizationFieldSet.LocalizationSet = _iidGenerator.GenerateUniqueId();
+            localizationFieldSet.Culture = await _localizationService.GetDefaultCultureAsync();
             await _session.SaveAsync(content);
         }
         else
         {
-            var existingContent = await GetContentItemAsync(localizationPart.LocalizationSet, targetCulture);
+            var existingContent = await GetContentItemAsync(localizationFieldSet.LocalizationSet, targetCulture);
 
             if (existingContent != null)
             {
@@ -92,15 +96,23 @@ public class DefaultContentLocalizationManager : IContentLocalizationManager
 
         // Cloning the content item.
         var cloned = await _contentManager.CloneAsync(content);
-        var clonedPart = cloned.GetOrCreate<LocalizationPart>();
+        var clonedPart = cloned.GetOrCreate<LocalizationFieldSet>();
         clonedPart.Culture = targetCulture;
-        clonedPart.LocalizationSet = localizationPart.LocalizationSet;
+        clonedPart.LocalizationSet = localizationFieldSet.LocalizationSet;
         clonedPart.Apply();
 
-        var context = new LocalizationContentContext(cloned, content, localizationPart.LocalizationSet, targetCulture);
+        var context = new LocalizationContentContext(cloned, content, localizationFieldSet.LocalizationSet, targetCulture);
 
         await Handlers.InvokeAsync((handler, context) => handler.LocalizingAsync(context), context, _logger);
+
+        // The localizing point (docs/content-engine.md › Behaviour is workflows): the previous
+        // state of a translation is the item it translates.
+        var source = ContentPreviousState.Copy(content.Snapshot());
+        await _lifecycle.HookAsync(ContentLifecyclePoints.Localizing, cloned, source);
+
         await ReversedHandlers.InvokeAsync((handler, context) => handler.LocalizedAsync(context), context, _logger);
+
+        await _lifecycle.TriggerAsync(ContentLifecyclePoints.Localizing, cloned, source);
 
         return cloned;
     }

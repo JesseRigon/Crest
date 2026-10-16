@@ -5,7 +5,7 @@ namespace Grove.Data.Protocols.GraphQL.Client;
 public class ContentTypeCreateResourceBuilder
 {
     private readonly Dictionary<string, object> _values = [];
-    private readonly List<ContentPartBuilder> _contentPartBuilders = [];
+    private readonly List<ContentFieldSetBuilder> _contentFieldSetBuilders = [];
 
     private string ContentType { get; set; }
 
@@ -14,10 +14,10 @@ public class ContentTypeCreateResourceBuilder
         ContentType = contentType;
     }
 
-    public ContentPartBuilder WithContentPart(string contentPartName)
+    public ContentFieldSetBuilder WithContentFieldSet(string contentFieldSetName)
     {
-        var builder = new ContentPartBuilder(contentPartName.ToGraphQLStringFormat());
-        _contentPartBuilders.Add(builder);
+        var builder = new ContentFieldSetBuilder(contentFieldSetName.ToGraphQLStringFormat());
+        _contentFieldSetBuilders.Add(builder);
         return builder;
     }
 
@@ -52,9 +52,9 @@ public class ContentTypeCreateResourceBuilder
             }
         }
 
-        for (var i = 0; i < _contentPartBuilders.Count; i++)
+        for (var i = 0; i < _contentFieldSetBuilders.Count; i++)
         {
-            sbo.Append(_contentPartBuilders[i].Build()).AppendLine((i == (_contentPartBuilders.Count - 1)) ? string.Empty : ",");
+            sbo.Append(_contentFieldSetBuilders[i].Build()).AppendLine((i == (_contentFieldSetBuilders.Count - 1)) ? string.Empty : ",");
         }
 
         sbo.Append('}').AppendLine();

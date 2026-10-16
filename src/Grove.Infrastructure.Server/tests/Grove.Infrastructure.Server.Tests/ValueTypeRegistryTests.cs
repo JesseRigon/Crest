@@ -14,7 +14,7 @@ public sealed class ValueTypeRegistryTests
 
         Assert.True(registry.TryGet("text", out var text));
         Assert.Equal("TextFieldEditor", text.Editor);
-        Assert.True(registry.TryGetByField("HtmlBodyPart", out var html));
+        Assert.True(registry.TryGetByField("HtmlField", out var html));
         Assert.Equal("Html", html.Name);
     }
 

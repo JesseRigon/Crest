@@ -8,11 +8,10 @@ public class MenuContentHandler : ContentHandlerBase
 {
     public override Task ActivatedAsync(ActivatedContentContext context)
     {
-        // When a Menu is created, we add a MenuPart to it
+        // A menu carries its MenuFieldSet; its items are its MenuItems embedding.
         if (context.ContentItem.ContentType == "Menu")
         {
-            context.ContentItem.Weld<MenuPart>(new { Position = "3" });
-            context.ContentItem.Weld<MenuItemsListPart>(new { Position = "4" });
+            context.ContentItem.Weld<MenuFieldSet>(new { Position = "3" });
         }
 
         return Task.CompletedTask;

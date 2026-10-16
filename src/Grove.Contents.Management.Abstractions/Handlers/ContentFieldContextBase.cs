@@ -11,7 +11,7 @@ public class ContentFieldContextBase
 
     public ContentItem ContentItem { get; private set; }
 
-    public ContentPartFieldDefinition ContentPartFieldDefinition { get; set; }
+    public ContentFieldDefinition ContentFieldDefinition { get; set; }
 
-    public string PartName { get; set; }
+    public string FieldSetName { get; set; }
 }

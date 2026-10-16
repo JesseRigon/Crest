@@ -17,10 +17,8 @@ using Grove.Modules.Manifest;
         "Grove.Workflows",
         "Grove.Contents",
         "Grove.Contents.Fields",
-        "Grove.Contents.Fields.Indexing.SQL.UserPicker",
         "Grove.Contents.Title",
-        "Grove.Contents.BagParts",
-        "Grove.Contents.PartLists",
+        "Grove.Contents.OptionLists",
         "Grove.Contents.OptionPicker",
         "Grove.Data.Regions"
     ],

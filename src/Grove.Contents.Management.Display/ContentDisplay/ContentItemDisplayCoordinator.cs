@@ -17,24 +17,24 @@ namespace Grove.Contents.Management.Display;
 /// </summary>
 public class ContentItemDisplayCoordinator : IContentDisplayHandler
 {
-    private readonly IContentPartDisplayDriverResolver _contentPartDisplayDriverResolver;
+    private readonly IContentFieldSetDisplayDriverResolver _contentFieldSetDisplayDriverResolver;
     private readonly IContentFieldDisplayDriverResolver _contentFieldDisplayDriverResolver;
     private readonly IEnumerable<IContentDisplayDriver> _displayDrivers;
     private readonly IContentDefinitionManager _contentDefinitionManager;
-    private readonly ITypeActivatorFactory<ContentPart> _contentPartFactory;
+    private readonly ITypeActivatorFactory<ContentFieldSet> _contentFieldSetFactory;
     private readonly ILogger _logger;
 
     public ContentItemDisplayCoordinator(
-        IContentPartDisplayDriverResolver contentPartDisplayDriverResolver,
+        IContentFieldSetDisplayDriverResolver contentFieldSetDisplayDriverResolver,
         IContentFieldDisplayDriverResolver contentFieldDisplayDriverResolver,
         IContentDefinitionManager contentDefinitionManager,
         IEnumerable<IContentDisplayDriver> displayDrivers,
-        ITypeActivatorFactory<ContentPart> contentPartFactory,
+        ITypeActivatorFactory<ContentFieldSet> contentFieldSetFactory,
         ILogger<ContentItemDisplayCoordinator> logger)
     {
-        _contentPartDisplayDriverResolver = contentPartDisplayDriverResolver;
+        _contentFieldSetDisplayDriverResolver = contentFieldSetDisplayDriverResolver;
         _contentFieldDisplayDriverResolver = contentFieldDisplayDriverResolver;
-        _contentPartFactory = contentPartFactory;
+        _contentFieldSetFactory = contentFieldSetFactory;
         _contentDefinitionManager = contentDefinitionManager;
         _displayDrivers = displayDrivers;
         _logger = logger;
@@ -42,7 +42,8 @@ public class ContentItemDisplayCoordinator : IContentDisplayHandler
 
     public async Task BuildDisplayAsync(ContentItem contentItem, BuildDisplayContext context)
     {
-        var contentTypeDefinition = await _contentDefinitionManager.GetTypeDefinitionAsync(contentItem.ContentType);
+        // The definition the display was built with (a frozen item's stored schema), else the current one.
+        var contentTypeDefinition = await ContentDisplayDefinitions.DefinitionAsync(context.Shape, contentItem, _contentDefinitionManager);
 
         if (contentTypeDefinition == null)
         {
@@ -67,25 +68,25 @@ public class ContentItemDisplayCoordinator : IContentDisplayHandler
 
         var hasStereotype = contentTypeDefinition.TryGetStereotype(out var stereotype);
 
-        foreach (var contentTypePartDefinition in contentTypeDefinition.Parts)
+        foreach (var contentTypeFieldSetDefinition in contentTypeDefinition.FieldSets)
         {
-            var partName = contentTypePartDefinition.Name;
-            var partTypeName = contentTypePartDefinition.PartDefinition.Name;
-            var partActivator = _contentPartFactory.GetTypeActivator(partTypeName);
-            var part = contentItem.Get(partActivator.Type, partName) as ContentPart;
+            var partName = contentTypeFieldSetDefinition.Name;
+            var fieldSetTypeName = contentTypeFieldSetDefinition.FieldSetDefinition.Name;
+            var partActivator = _contentFieldSetFactory.GetTypeActivator(fieldSetTypeName);
+            var part = contentItem.Get(partActivator.Type, partName) as ContentFieldSet;
 
             if (part == null)
             {
                 continue;
             }
 
-            var contentType = contentTypePartDefinition.ContentTypeDefinition.Name;
-            var partDisplayDrivers = _contentPartDisplayDriverResolver.GetDisplayModeDrivers(partTypeName, contentTypePartDefinition.DisplayMode());
+            var contentType = contentTypeFieldSetDefinition.ContentTypeDefinition.Name;
+            var partDisplayDrivers = _contentFieldSetDisplayDriverResolver.GetDisplayModeDrivers(fieldSetTypeName, contentTypeFieldSetDefinition.DisplayMode());
             foreach (var partDisplayDriver in partDisplayDrivers)
             {
                 try
                 {
-                    var result = await partDisplayDriver.BuildDisplayAsync(part, contentTypePartDefinition, context);
+                    var result = await partDisplayDriver.BuildDisplayAsync(part, contentTypeFieldSetDefinition, context);
                     if (result != null)
                     {
                         await result.ApplyAsync(context);
@@ -98,12 +99,12 @@ public class ContentItemDisplayCoordinator : IContentDisplayHandler
             }
             var tempContext = context;
 
-            // Create a custom ContentPart shape that will hold the fields for dynamic content part (not implicit parts)
+            // Create a custom ContentFieldSet shape that will hold the fields for dynamic field set (not implicit parts)
             // This allows its fields to be grouped and templated
 
-            if (part.GetType() == typeof(ContentPart) && partTypeName != contentTypePartDefinition.ContentTypeDefinition.Name)
+            if (part.GetType() == typeof(ContentFieldSet) && fieldSetTypeName != contentTypeFieldSetDefinition.ContentTypeDefinition.Name)
             {
-                var shapeType = context.DisplayType != PlatformConstants.DisplayType.Detail ? "ContentPart_" + context.DisplayType : "ContentPart";
+                var shapeType = context.DisplayType != PlatformConstants.DisplayType.Detail ? "ContentFieldSet_" + context.DisplayType : "ContentFieldSet";
 
                 var shapeResult = ShapeResult.Create(
                     shapeType,
@@ -126,9 +127,9 @@ public class ContentItemDisplayCoordinator : IContentDisplayHandler
                     var displayType = ctx.Shape.Metadata.DisplayType;
 
                     // Get cached alternates and add them efficiently
-                    var cachedAlternates = ContentPartShapeAlternatesFactory.GetDisplayAlternates(
+                    var cachedAlternates = ContentFieldSetShapeAlternatesFactory.GetDisplayAlternates(
                         contentType,
-                        partTypeName,
+                        fieldSetTypeName,
                         partName,
                         stereotype,
                         hasStereotype,
@@ -139,17 +140,17 @@ public class ContentItemDisplayCoordinator : IContentDisplayHandler
 
                 await shapeResult.ApplyAsync(context);
 
-                var contentPartShape = shapeResult.Shape;
+                var contentFieldSetShape = shapeResult.Shape;
 
-                if (contentPartShape == null)
+                if (contentFieldSetShape == null)
                 {
                     // Part is explicitly hidden in placement.
                     continue;
                 }
 
-                // Make the ContentPart property available on the shape
-                contentPartShape.Properties[partTypeName] = part.Content;
-                contentPartShape.Properties["ContentItem"] = part.ContentItem;
+                // Make the ContentFieldSet property available on the shape
+                contentFieldSetShape.Properties[fieldSetTypeName] = part.Content;
+                contentFieldSetShape.Properties["ContentItem"] = part.ContentItem;
 
                 context = new BuildDisplayContext(shapeResult.Shape, context.DisplayType, context.GroupId, context.ShapeFactory, context.Layout)
                 {
@@ -158,14 +159,20 @@ public class ContentItemDisplayCoordinator : IContentDisplayHandler
                 };
             }
 
-            foreach (var contentPartFieldDefinition in contentTypePartDefinition.PartDefinition.Fields)
+            foreach (var contentFieldDefinition in contentTypeFieldSetDefinition.FieldSetDefinition.Fields)
             {
-                var fieldDisplayDrivers = _contentFieldDisplayDriverResolver.GetDisplayModeDrivers(contentPartFieldDefinition.FieldDefinition.Name, contentPartFieldDefinition.DisplayMode());
+                // A field its field set's display shows, or that a module keeps, has no display of its own.
+                if (string.Equals(contentFieldDefinition.DisplayMode(), Grove.Contents.Management.Metadata.Settings.ContentFieldDisplayModes.None, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                var fieldDisplayDrivers = _contentFieldDisplayDriverResolver.GetDisplayModeDrivers(contentFieldDefinition.FieldTypeDefinition.Name, contentFieldDefinition.DisplayMode());
                 foreach (var fieldDisplayDriver in fieldDisplayDrivers)
                 {
                     try
                     {
-                        var result = await fieldDisplayDriver.BuildDisplayAsync(part, contentPartFieldDefinition, contentTypePartDefinition, context);
+                        var result = await fieldDisplayDriver.BuildDisplayAsync(part, contentFieldDefinition, contentTypeFieldSetDefinition, context);
                         if (result != null)
                         {
                             await result.ApplyAsync(context);

@@ -6,6 +6,7 @@ using Grove.Access;
 using Grove.Api;
 using Grove.Contents.Management;
 using Grove.Contents.Management.Display;
+using Grove.Contents.Management.Handlers;
 using Grove.Contents;
 using Grove.Display.Management.Components;
 using Grove.Modules;
@@ -23,7 +24,10 @@ namespace Grove.Contents.Preview.Api;
 /// placement and templates, mapped to the display tree, filtered for the caller) and answered as
 /// HTML, or as the display tree with <c>?format=tree</c>. Nothing is stored: the item exists for
 /// the request only, under the edited item's id so that what reads the item by id (its route,
-/// its relationships) sees the preview. The native editor's preview pane calls it.
+/// its relationships) sees the preview. The item's before hooks (creating or updating, then
+/// publishing) run first, so the preview shows the values its flows would write (its display text,
+/// its URL); their refusals do not stop the preview, and the request's unit of work is rolled back
+/// (docs/content-engine.md › Behaviour is workflows). The native editor's preview pane calls it.
 /// </summary>
 public sealed class ContentPreviewApi : ApiContributor
 {
@@ -44,6 +48,8 @@ public sealed record ContentPreviewRequest(string? ContentType, string? ContentI
 public sealed class ContentPreviewHandlers(
     IContentManager contentManager,
     IContentManagerSession contentManagerSession,
+    IContentLifecycle lifecycle,
+    Grove.Data.Documents.IDocumentStore documentStore,
     IContentItemDisplayManager displayManager,
     IDisplayTreeBuilder trees,
     IDisplayTreeFilter filter,
@@ -66,10 +72,11 @@ public sealed class ContentPreviewHandlers(
         }
 
         var item = await contentManager.NewAsync(request.ContentType);
+        ContentItem? stored = null;
         if (!string.IsNullOrWhiteSpace(request.ContentItemId))
         {
             // An existing item is previewed under its own id, decided as itself.
-            var stored = await contentManager.GetAsync(request.ContentItemId, VersionOptions.Latest);
+            stored = await contentManager.GetAsync(request.ContentItemId, VersionOptions.Latest);
             if (stored is null || stored.ContentType != request.ContentType)
             {
                 return NotFound();
@@ -115,6 +122,26 @@ public sealed class ContentPreviewHandlers(
         // by id in this request gets the preview.
         HttpContext.Features.Set(ContentPreviewFeature.Instance);
         contentManagerSession.Store(item);
+
+        try
+        {
+            return await RenderAsync(item, stored, displayType, format);
+        }
+        finally
+        {
+            // Nothing the preview's hooks wrote commits, and nothing they queued for after the
+            // commit (cache evictions, route entries) runs.
+            await documentStore.CancelAsync();
+        }
+    }
+
+    private async Task<IResult> RenderAsync(ContentItem item, ContentItem? stored, string displayType, string? format)
+    {
+        // The before hooks write what the item would hold once saved and published; a refusal
+        // leaves the preview as edited.
+        var previous = stored is null ? ContentPreviousState.None : ContentPreviousState.Copy(stored);
+        await lifecycle.CheckAsync(stored is null ? ContentLifecyclePoints.Creating : ContentLifecyclePoints.Updating, item, previous);
+        await lifecycle.CheckAsync(ContentLifecyclePoints.Publishing, item, previous);
 
         var cancellationToken = HttpContext.RequestAborted;
         var shape = await displayManager.BuildDisplayAsync(item, displayType);

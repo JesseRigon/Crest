@@ -9,10 +9,10 @@ using Grove.Contents.Management.Metadata.Models;
 namespace Grove.Workflows.Contents;
 
 /// <summary>
-/// A field on a content item, as a flow names it: <c>Part.Field</c>, where Part is the
-/// type's part name (a type's own fields sit under a part named like the type).
+/// A field on a content item, as a flow names it: <c>FieldSet.Field</c>, where FieldSet is the
+/// field set's attachment name on the type (a type's own fields sit under the set named like the type).
 /// </summary>
-public readonly record struct FieldPath(string Part, string Field)
+public readonly record struct FieldPath(string FieldSet, string Field)
 {
     public static bool TryParse(string? text, out FieldPath path)
     {
@@ -27,7 +27,7 @@ public readonly record struct FieldPath(string Part, string Field)
         return true;
     }
 
-    public override string ToString() => $"{Part}.{Field}";
+    public override string ToString() => $"{FieldSet}.{Field}";
 }
 
 /// <summary>
@@ -60,21 +60,31 @@ public sealed class ContentFieldValueCopier(IContentDefinitionManager definition
     private const string TextFieldType = "TextField";
     private const string NumericFieldType = "NumericField";
 
-    public async Task<FieldCopyResult> CopyAsync(ContentItem source, ContentItem target, IReadOnlyList<FieldMapping> mappings, bool move)
+    public async Task<FieldCopyResult> CopyAsync(ContentItem source, ContentItem target, IReadOnlyList<FieldMapping> mappings, bool move) =>
+        await CopyAsync(source, await definitions.GetTypeDefinitionAsync(source.ContentType), target, await definitions.GetTypeDefinitionAsync(target.ContentType), mappings, move);
+
+    /// <summary>
+    /// The copy with each side read through the definition given: an embedded item's comes from
+    /// <see cref="IEmbeddedContentReader"/> (a frozen item's stored schema), never from its type name.
+    /// </summary>
+    public Task<FieldCopyResult> CopyAsync(ContentItem source, ContentTypeDefinition? sourceType, ContentItem target, ContentTypeDefinition? targetType, IReadOnlyList<FieldMapping> mappings, bool move)
     {
-        var sourceType = await definitions.GetTypeDefinitionAsync(source.ContentType);
-        var targetType = await definitions.GetTypeDefinitionAsync(target.ContentType);
         if (sourceType is null || targetType is null)
         {
-            return new($"Unknown content type '{(sourceType is null ? source.ContentType : target.ContentType)}'.", []);
+            return Task.FromResult(new FieldCopyResult($"Unknown content type '{(sourceType is null ? source.ContentType : target.ContentType)}'.", []));
         }
 
+        return Task.FromResult(Copy(source, sourceType, target, targetType, mappings, move));
+    }
+
+    private FieldCopyResult Copy(ContentItem source, ContentTypeDefinition sourceType, ContentItem target, ContentTypeDefinition targetType, IReadOnlyList<FieldMapping> mappings, bool move)
+    {
         var outcomes = new List<FieldCopyOutcome>();
         foreach (var mapping in mappings)
         {
             if (!FieldPath.TryParse(mapping.From, out var from) || !FieldPath.TryParse(mapping.To, out var to))
             {
-                return new($"A mapping must read Part.Field → Part.Field; got '{mapping.From}' → '{mapping.To}'.", outcomes);
+                return new($"A mapping must read FieldSet.Field → FieldSet.Field; got '{mapping.From}' → '{mapping.To}'.", outcomes);
             }
 
             var sourceField = Resolve(sourceType, from);
@@ -96,7 +106,7 @@ public sealed class ContentFieldValueCopier(IContentDefinitionManager definition
             }
 
             var value = Read(source, from);
-            if (IsEmpty(sourceField.FieldDefinition.Name, value))
+            if (IsEmpty(sourceField.FieldTypeDefinition.Name, value))
             {
                 if (mapping.Required)
                 {
@@ -107,16 +117,16 @@ public sealed class ContentFieldValueCopier(IContentDefinitionManager definition
                 continue;
             }
 
-            var converted = Convert(sourceField.FieldDefinition.Name, targetField.FieldDefinition.Name, value!);
+            var converted = Convert(sourceField.FieldTypeDefinition.Name, targetField.FieldTypeDefinition.Name, value!);
             if (converted is null)
             {
-                return new($"{from} ({sourceField.FieldDefinition.Name}) cannot be copied into {to} ({targetField.FieldDefinition.Name}).", outcomes);
+                return new($"{from} ({sourceField.FieldTypeDefinition.Name}) cannot be copied into {to} ({targetField.FieldTypeDefinition.Name}).", outcomes);
             }
 
-            WriteField(target, to, targetField.FieldDefinition.Name, converted);
+            WriteField(target, to, targetField.FieldTypeDefinition.Name, converted);
             if (move)
             {
-                WriteField(source, from, sourceField.FieldDefinition.Name, null);
+                WriteField(source, from, sourceField.FieldTypeDefinition.Name, null);
             }
 
             outcomes.Add(new(from.ToString(), to.ToString(), true, null));
@@ -126,17 +136,17 @@ public sealed class ContentFieldValueCopier(IContentDefinitionManager definition
     }
 
     /// <summary>The field definition a path names on a type, or null.</summary>
-    public static ContentPartFieldDefinition? Resolve(ContentTypeDefinition type, FieldPath path)
+    public static ContentFieldDefinition? Resolve(ContentTypeDefinition type, FieldPath path)
     {
-        var part = type.Parts.FirstOrDefault(p => string.Equals(p.Name, path.Part, StringComparison.OrdinalIgnoreCase));
-        return part?.PartDefinition.Fields.FirstOrDefault(f => string.Equals(f.Name, path.Field, StringComparison.OrdinalIgnoreCase));
+        var part = type.FieldSets.FirstOrDefault(p => string.Equals(p.Name, path.FieldSet, StringComparison.OrdinalIgnoreCase));
+        return part?.FieldSetDefinition.Fields.FirstOrDefault(f => string.Equals(f.Name, path.Field, StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>The field's JSON node on an item, or null when the part or field is absent.</summary>
     public static JsonObject? Read(ContentItem item, FieldPath path)
     {
         JsonObject root = (JsonDynamicObject)item.Content;
-        return root[path.Part] is JsonObject part && part[path.Field] is JsonObject field ? field : null;
+        return root[path.FieldSet] is JsonObject part && part[path.Field] is JsonObject field ? field : null;
     }
 
     /// <summary>
@@ -153,7 +163,7 @@ public sealed class ContentFieldValueCopier(IContentDefinitionManager definition
             ? (ContentElement)Activator.CreateInstance(type)!
             : (ContentElement)value.Deserialize(type, JOptions.Default)!;
 
-        var part = item.GetOrCreate<ContentPart>(path.Part);
+        var part = item.GetOrCreate<ContentFieldSet>(path.FieldSet);
         JsonObject partData = (JsonDynamicObject)part.Content;
         partData[path.Field] = value?.DeepClone() ?? new JsonObject();
         part.Apply(path.Field, element);
@@ -170,9 +180,7 @@ public sealed class ContentFieldValueCopier(IContentDefinitionManager definition
         return fieldType switch
         {
             TextFieldType => string.IsNullOrEmpty(field["Text"]?.GetValue<string>()),
-            "OptionPickerField" => field["SelectedIds"] is not JsonArray { Count: > 0 },
-            "UserPickerField" => field["UserIds"] is not JsonArray { Count: > 0 },
-            "TaxonomyField" => field["TermContentItemIds"] is not JsonArray { Count: > 0 },
+            "OptionListField" => field["SelectedIds"] is not JsonArray { Count: > 0 },
             _ => field.All(p => p.Value is null || (p.Value is JsonArray array && array.Count == 0)),
         };
     }

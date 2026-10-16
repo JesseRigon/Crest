@@ -7,7 +7,7 @@ namespace Grove.Contents.Management;
 
 public static class ContentExtensions
 {
-    public const string WeldedPartSettingsName = "@WeldedPartSettings";
+    public const string WeldedFieldSetSettingsName = "@WeldedFieldSetSettings";
 
     /// <summary>
     /// These settings instruct merge to replace current value, even for null values.
@@ -44,7 +44,7 @@ public static class ContentExtensions
             return te;
         }
 
-        throw new InvalidCastException($"Failed casting content to '{typeof(TElement).Name}', check you have registered your content part with AddContentPart?");
+        throw new InvalidCastException($"Failed casting content to '{typeof(TElement).Name}', check you have registered your field set with AddContentFieldSet?");
     }
 
     /// <summary>
@@ -54,7 +54,7 @@ public static class ContentExtensions
     /// <typeparam name="TElement">The expected type of the content element.</typeparam>
     public static bool Has<TElement>(this ContentElement contentElement) where TElement : ContentElement
     {
-        return contentElement.Has(typeof(TElement).Name);
+        return contentElement.Has(ContentFieldSetName.Of<TElement>());
     }
 
     /// <summary>
@@ -161,7 +161,7 @@ public static class ContentExtensions
     /// <typeparam name="TElement">The type of the part to be welded.</typeparam>
     public static ContentElement Weld<TElement>(this ContentElement contentElement, object settings = null) where TElement : ContentElement, new()
     {
-        var elementName = typeof(TElement).Name;
+        var elementName = ContentFieldSetName.Of<TElement>();
 
         var elementData = contentElement.Data[elementName] as JsonObject;
         if (elementData == null)
@@ -172,14 +172,14 @@ public static class ContentExtensions
         }
 
         JsonNode result;
-        if (!contentElement.Data.TryGetPropertyValue(WeldedPartSettingsName, out result))
+        if (!contentElement.Data.TryGetPropertyValue(WeldedFieldSetSettingsName, out result))
         {
-            contentElement.Data[WeldedPartSettingsName] = result = new JsonObject();
+            contentElement.Data[WeldedFieldSetSettingsName] = result = new JsonObject();
         }
 
-        var weldedPartSettings = result.AsObject();
+        var weldedFieldSetSettings = result.AsObject();
 
-        weldedPartSettings[elementName] = settings is not null
+        weldedFieldSetSettings[elementName] = settings is not null
             ? JObject.FromObject(settings)
             : [];
 
@@ -196,13 +196,29 @@ public static class ContentExtensions
     public static ContentElement Apply(this ContentElement contentElement, string name, ContentElement element)
     {
         var elementData = contentElement.Data[name] as JsonObject;
+
+        // A field set whose values are fields (a typed accessor over its fields) keeps them in its
+        // own data, not in serialized properties: data held apart from the item's is carried over.
+        var ownData = element.Data is { Count: > 0 } data && !ReferenceEquals(data, elementData) ? data : null;
         if (elementData is not null)
         {
+            if (ownData is not null)
+            {
+                elementData.Merge(ownData.DeepClone(), _jsonMergeSettings);
+            }
+
             elementData.Merge(JObject.FromObject(element, s_jsonReadExistingObjectSettings), _jsonMergeSettings);
         }
         else
         {
             elementData = JObject.FromObject(element);
+            if (ownData is not null)
+            {
+                var serialized = elementData;
+                elementData = (JsonObject)ownData.DeepClone();
+                elementData.Merge(serialized, _jsonMergeSettings);
+            }
+
             contentElement.Data[name] = elementData;
         }
 
@@ -280,11 +296,11 @@ public static class ContentExtensions
     /// <summary>
     /// Updates the content item data.
     /// </summary>
-    /// <returns>The current <see cref="ContentPart"/> instance.</returns>
-    public static ContentPart Apply(this ContentPart contentPart)
+    /// <returns>The current <see cref="ContentFieldSet"/> instance.</returns>
+    public static ContentFieldSet Apply(this ContentFieldSet contentFieldSet)
     {
-        contentPart.ContentItem.Apply(contentPart.GetType().Name, contentPart);
-        return contentPart;
+        contentFieldSet.ContentItem.Apply(ContentFieldSetName.Of(contentFieldSet.GetType()), contentFieldSet);
+        return contentFieldSet;
     }
 
     /// <summary>

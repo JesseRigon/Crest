@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Grove.Workflows.Caching;
 using Grove.Workflows.Management;
 using Grove.Workflows.Management.Stores;
-using Grove.Workflows.Parts;
+using Grove.Workflows.FieldSets;
 using Grove.Workflows.Registry;
 using Grove.Workflows.Services;
 using Grove;
@@ -163,7 +163,7 @@ public sealed class WorkflowDefinitionAccessService(
     IAccessDecision decision,
     IContentManager contentManager,
     ISession session,
-    WorkflowDefinitionPartMapper partMapper,
+    WorkflowDefinitionFieldSetMapper partMapper,
     IWorkflowDefinitionCacheManager definitionCacheManager,
     ICacheManager cacheManager,
     IWorkflowDefinitionStore definitions) : IWorkflowDefinitionAccessReader, IWorkflowDefinitionAuthorizer
@@ -178,7 +178,7 @@ public sealed class WorkflowDefinitionAccessService(
     public async Task<WorkflowDefinitionAccessResource?> GetAsync(string definitionId)
     {
         var contentItem = await contentManager.GetAsync(definitionId, VersionOptions.Latest);
-        var part = contentItem?.Get<WorkflowDefinitionPart>(typeof(WorkflowDefinitionPart).Name);
+        var part = contentItem?.Get<WorkflowDefinitionFieldSet>(ContentFieldSetName.Of<WorkflowDefinitionFieldSet>());
         return part is null || part.SerializedData is null ? null : WorkflowDefinitionAccessResource.From(definitionId, partMapper.MapModel(part).CustomProperties);
     }
 
@@ -206,10 +206,10 @@ public sealed class WorkflowDefinitionAccessService(
         var clean = new WorkflowDefinitionAccessModel(WorkflowDefinitionAccessResource.Clean(access.Edit), WorkflowDefinitionAccessResource.Clean(access.Run), WorkflowDefinitionAccessResource.Clean(access.View));
         foreach (var version in versions)
         {
-            var model = partMapper.MapModel(version.Get<WorkflowDefinitionPart>(typeof(WorkflowDefinitionPart).Name));
+            var model = partMapper.MapModel(version.Get<WorkflowDefinitionFieldSet>(ContentFieldSetName.Of<WorkflowDefinitionFieldSet>()));
             model.CustomProperties ??= new Dictionary<string, object>();
             WorkflowDefinitionAccessResource.Stamp(model.CustomProperties, clean);
-            version.Alter<WorkflowDefinitionPart>(part => partMapper.Map(model, part));
+            version.Alter<WorkflowDefinitionFieldSet>(part => partMapper.Map(model, part));
             await session.SaveAsync(version, cancellationToken: cancellationToken);
         }
 

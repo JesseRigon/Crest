@@ -1,3 +1,3 @@
 namespace Grove.Contents.Types.Events;
 
-public class ContentFieldDetachedContext : ContentPartFieldContext { }
+public class ContentFieldDetachedContext : ContentFieldContext { }

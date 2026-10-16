@@ -28,16 +28,16 @@ public sealed class DeleteContentDefinitionStep : NamedRecipeStepHandler
             await _contentDefinitionManager.DeleteTypeDefinitionAsync(contentType);
         }
 
-        foreach (var contentPart in step.ContentParts)
+        foreach (var contentFieldSet in step.ContentFieldSets)
         {
             // The content definition manager tests existence before trying to delete.
-            await _contentDefinitionManager.DeletePartDefinitionAsync(contentPart);
+            await _contentDefinitionManager.DeleteFieldSetDefinitionAsync(contentFieldSet);
         }
     }
 
     private sealed class DeleteContentDefinitionStepModel
     {
         public string[] ContentTypes { get; set; } = [];
-        public string[] ContentParts { get; set; } = [];
+        public string[] ContentFieldSets { get; set; } = [];
     }
 }

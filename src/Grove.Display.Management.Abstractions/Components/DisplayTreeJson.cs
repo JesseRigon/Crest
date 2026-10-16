@@ -4,7 +4,7 @@ using System.Text.Json.Nodes;
 namespace Grove.Display.Management.Components;
 
 /// <summary>
-/// A display tree authored as data (docs/widgets.md, the <c>DisplayTreePart</c>): the same JSON
+/// A display tree authored as data (docs/widgets.md, the <c>DisplayTreeFieldSet</c>): the same JSON
 /// the server sends, read back from an item. A node without an id gets one from its position,
 /// so an author writes <c>{ "component": "RichText", "properties": { "Html": "..." } }</c>; the
 /// ids are what bindings and overrides refer to, so an author who needs them writes them.

@@ -5,7 +5,7 @@ namespace Grove.Contents.Management;
 /// </summary>
 public interface ITypeActivatorFactory<TInstance>
 {
-    ITypeActivator<TInstance> GetTypeActivator(string partName);
+    ITypeActivator<TInstance> GetTypeActivator(string fieldSetName);
 }
 
 /// <summary>

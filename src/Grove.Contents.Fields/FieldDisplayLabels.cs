@@ -1,4 +1,5 @@
 using Grove.Contents.Management.Metadata.Models;
+using Grove.Contents.Management.Metadata.Settings;
 using Grove.Display.Management.Descriptors;
 using Grove.Data.Localization.Data;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,7 +10,9 @@ namespace Grove.Contents.Fields;
 /// The field displays' labels, data-localized as the Razor views localized them (the field's
 /// display name under <see cref="DataLocalizationContext.ContentField"/>): set on each field
 /// shape while it is displayed, ahead of the view model's plain display name, so the display
-/// components read the localized label (docs/blazor-display.md rework step 7).
+/// components read the localized label (docs/blazor-display.md rework step 7). A field the
+/// attachment marks as not affected by culture (<see cref="Grove.Contents.Management.Metadata.Settings.FieldCultureSettings"/>)
+/// is displayed culture-invariant.
 /// </summary>
 public sealed class FieldDisplayLabels : ShapeTableProvider
 {
@@ -17,8 +20,8 @@ public sealed class FieldDisplayLabels : ShapeTableProvider
     public static readonly string[] FieldShapes =
     [
         "TextField", "HtmlField", "MarkdownField", "NumericField", "BooleanField", "DateField", "DateTimeField",
-        "TimeField", "LinkField", "LocalizationSetContentPickerField", "UserPickerField",
-        "MultiTextField", "YoutubeField", "MediaField", "TaxonomyField", "GeoPointField",
+        "TimeField", "LinkField",
+        "MultiTextField", "YoutubeField", "MediaField", "GeoPointField",
     ];
 
     public override ValueTask DiscoverAsync(ShapeTableBuilder builder)
@@ -35,6 +38,12 @@ public sealed class FieldDisplayLabels : ShapeTableProvider
                     }
 
                     context.Shape.Properties["Label"] = Localize(localizer, definition);
+
+                    // A field culture does not affect (its attachment says so) formats the same in every culture.
+                    if (!definition.IsCultureAffected())
+                    {
+                        context.Shape.Properties["CultureInvariant"] = true;
+                    }
                 });
             }
         }
@@ -43,14 +52,15 @@ public sealed class FieldDisplayLabels : ShapeTableProvider
     }
 
     /// <summary>The label a field display shows: its display name, data-localized.</summary>
-    public static string Localize(IDataLocalizer localizer, ContentPartFieldDefinition definition)
+    public static string Localize(IDataLocalizer localizer, ContentFieldDefinition definition)
     {
         var name = definition.DisplayName();
-        var localized = localizer[name, DataLocalizationContext.ContentField(definition.PartDefinition.Name)];
+        var attachment = definition.ContentTypeFieldSetDefinition?.Name ?? definition.FieldSetDefinition.Name;
+        var localized = localizer[name, DataLocalizationContext.ContentField(attachment)];
         return string.IsNullOrEmpty(localized?.Value) ? name : localized.Value;
     }
 
-    // The view models expose the field's definition as PartFieldDefinition.
-    private static ContentPartFieldDefinition? Definition(object shape) =>
-        shape.GetType().GetProperty("PartFieldDefinition")?.GetValue(shape) as ContentPartFieldDefinition;
+    // The view models expose the field's definition as FieldDefinition.
+    private static ContentFieldDefinition? Definition(object shape) =>
+        shape.GetType().GetProperty("FieldDefinition")?.GetValue(shape) as ContentFieldDefinition;
 }

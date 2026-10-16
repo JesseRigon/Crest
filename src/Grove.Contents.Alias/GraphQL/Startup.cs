@@ -13,9 +13,9 @@ public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddObjectGraphType<AliasPart, AliasQueryObjectType>();
-        services.AddInputObjectGraphType<AliasPart, AliasInputObjectType>();
-        services.AddTransient<IIndexAliasProvider, AliasPartIndexAliasProvider>();
-        services.AddWhereInputIndexPropertyProvider<AliasPartIndex>();
+        services.AddObjectGraphType<AliasFieldSet, AliasQueryObjectType>();
+        services.AddInputObjectGraphType<AliasFieldSet, AliasInputObjectType>();
+        services.AddTransient<IIndexAliasProvider, AliasIndexAliasProvider>();
+        services.AddWhereInputIndexPropertyProvider<AliasIndex>();
     }
 }

@@ -23,10 +23,12 @@
     <ProjectReference Include="..\Grove.Contents.Management.Display\Grove.Contents.Management.Display.csproj" />
     <ProjectReference Include="..\Grove.Contents.Types.Abstractions\Grove.Contents.Types.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Contents.Management.Abstractions\Grove.Contents.Management.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Contents.Fields.Abstractions\Grove.Contents.Fields.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Deployment.Abstractions\Grove.Deployment.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
     <ProjectReference Include="..\Grove.Display.Navigation\Grove.Display.Navigation.csproj" />
     <ProjectReference Include="..\Grove.Display.Resources.Management\Grove.Display.Resources.Management.csproj" />
+    <ProjectReference Include="..\Grove.Display.Management.Abstractions\Grove.Display.Management.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

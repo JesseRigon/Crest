@@ -17,11 +17,11 @@ public class DateTimeFieldHandler : ContentFieldHandler<DateTimeField>
 
     public override Task ValidatingAsync(ValidateContentFieldContext context, DateTimeField field)
     {
-        var settings = context.ContentPartFieldDefinition.GetSettings<DateTimeFieldSettings>();
+        var settings = context.ContentFieldDefinition.GetSettings<DateTimeFieldSettings>();
 
         if (settings.Required && !field.Value.HasValue)
         {
-            context.Fail(S["A value is required for {0}.", context.ContentPartFieldDefinition.DisplayName()], nameof(field.Value));
+            context.Fail(S["A value is required for {0}.", context.ContentFieldDefinition.DisplayName()], nameof(field.Value));
         }
 
         return Task.CompletedTask;

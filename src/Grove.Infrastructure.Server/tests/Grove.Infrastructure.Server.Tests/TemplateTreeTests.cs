@@ -167,7 +167,7 @@ public sealed class TemplateTreeTests
         var services = Services(Registry());
         var validator = new TemplateValidator(services.GetRequiredService<TemplateTreeEvaluator>(), Registry(), []);
 
-        var diagnostics = await validator.ValidateAsync(new Grove.Display.Templates.Models.TemplatePart
+        var diagnostics = await validator.ValidateAsync(new Grove.Display.Templates.Models.TemplateFieldSet
         {
             Name = "Picker",
             Source = """{% component "List", id: "list" %}{% component "Label", text: Model.Title %}""",
@@ -397,17 +397,17 @@ public sealed class TemplateTreeTests
               { "component": "Markup", "properties": { "html": "<p>Hi</p><script>alert(1)</script>" } }
             ] } }
             """);
-        var binding = new DisplayTreePartBinding(
+        var binding = new DisplayTreeFieldSetBinding(
             services.GetRequiredService<TemplateTreeEvaluator>(), Registry(), Options.Create(new DisplayTreeOptions()), services);
 
-        var root = await binding.BindAsync(new DisplayTemplateRequest(shape, "item.body", "DisplayTreePart", [], "Detail"), TestContext.Current.CancellationToken);
+        var root = await binding.BindAsync(new DisplayTemplateRequest(shape, "item.body", "DisplayTree", [], "Detail"), TestContext.Current.CancellationToken);
 
         Assert.Equal("Card", root!.Component);
         var children = root.Zones["ChildContent"];
         Assert.Equal("item.body.country", children[0].Id);
         Assert.Equal("item.body.country", children[1].Bindings!["Visible"].Node);
         Assert.DoesNotContain("script", children[2].Properties[DisplayNode.MarkupProperty]!.GetValue<string>(), StringComparison.Ordinal);
-        Assert.Null(await binding.BindAsync(new DisplayTemplateRequest(shape, "x", "TitlePart", [], null), TestContext.Current.CancellationToken));
+        Assert.Null(await binding.BindAsync(new DisplayTemplateRequest(shape, "x", "Title", [], null), TestContext.Current.CancellationToken));
     }
 
     [Fact]

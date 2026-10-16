@@ -17,11 +17,11 @@ using Shortcodes;
 
 namespace Grove.Contents.Markdown.GraphQL;
 
-public class MarkdownBodyQueryObjectType : ObjectGraphType<MarkdownBodyPart>
+public class MarkdownBodyQueryObjectType : ObjectGraphType<MarkdownBodyFieldSet>
 {
     public MarkdownBodyQueryObjectType(IStringLocalizer<MarkdownBodyQueryObjectType> S)
     {
-        Name = nameof(MarkdownBodyPart);
+        Name = nameof(MarkdownBodyFieldSet);
         Description = S["Content stored as Markdown. You can also query the HTML interpreted version of Markdown."];
 
         Field("markdown", x => x.Markdown, nullable: true)
@@ -31,7 +31,7 @@ public class MarkdownBodyQueryObjectType : ObjectGraphType<MarkdownBodyPart>
             .ResolveLockedAsync(ToHtml);
     }
 
-    private static async ValueTask<object> ToHtml(IResolveFieldContext<MarkdownBodyPart> ctx)
+    private static async ValueTask<object> ToHtml(IResolveFieldContext<MarkdownBodyFieldSet> ctx)
     {
         if (string.IsNullOrEmpty(ctx.Source.Markdown))
         {
@@ -44,19 +44,19 @@ public class MarkdownBodyQueryObjectType : ObjectGraphType<MarkdownBodyPart>
         var contentDefinitionManager = serviceProvider.GetRequiredService<IContentDefinitionManager>();
 
         var contentTypeDefinition = await contentDefinitionManager.GetTypeDefinitionAsync(ctx.Source.ContentItem.ContentType);
-        var contentTypePartDefinition = contentTypeDefinition.Parts
-            .FirstOrDefault(x => string.Equals(x.PartDefinition.Name, "MarkdownBodyPart", StringComparison.Ordinal));
-        var settings = contentTypePartDefinition.GetSettings<MarkdownBodyPartSettings>();
+        var contentTypeFieldSetDefinition = contentTypeDefinition.FieldSets
+            .FirstOrDefault(x => string.Equals(x.FieldSetDefinition.Name, "MarkdownBody", StringComparison.Ordinal));
+        var settings = contentTypeFieldSetDefinition.GetSettings<MarkdownBodyFieldSetSettings>();
 
         var markdown = ctx.Source.Markdown ?? string.Empty;
         if (settings.RenderLiquid)
         {
             var liquidTemplateManager = serviceProvider.GetService<ILiquidTemplateManager>();
             var htmlEncoder = serviceProvider.GetService<HtmlEncoder>();
-            var model = new MarkdownBodyPartViewModel()
+            var model = new MarkdownBodyFieldSetViewModel()
             {
                 Markdown = markdown,
-                MarkdownBodyPart = ctx.Source,
+                MarkdownBodyFieldSet = ctx.Source,
                 ContentItem = ctx.Source.ContentItem,
             };
 
@@ -72,7 +72,7 @@ public class MarkdownBodyQueryObjectType : ObjectGraphType<MarkdownBodyPart>
             new Context
             {
                 ["ContentItem"] = ctx.Source.ContentItem,
-                ["PartFieldDefinition"] = contentTypePartDefinition,
+                ["FieldDefinition"] = contentTypeFieldSetDefinition,
             });
 
         if (settings.SanitizeHtml)

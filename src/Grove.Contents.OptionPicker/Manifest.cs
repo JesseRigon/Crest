@@ -9,7 +9,7 @@ using Grove.Modules.Manifest;
     Category = "Content"
 )]
 
-// Modules that bind fields to option sources (content part lists, parties, money, the ERP
+// Modules that bind fields to option sources (option lists, parties, money, the ERP
 // modules) declare this feature in their own dependencies, so enabling them enables it.
 //   Grove.Contents.Fields.Indexing.SQL -> the text, numeric and boolean field index rows
 //     ContentItemOptionSourceProvider joins for Field: path sort and filter pushdown.
@@ -17,7 +17,7 @@ using Grove.Modules.Manifest;
 [assembly: Feature(
     Id = "Grove.Contents.OptionPicker",
     Name = "Option Picker",
-    Description = "A content field that references options drawn from a source (content part lists, users, content items, cultures, time zones), with cascading filters and its API.",
+    Description = "A content field that references options drawn from a source (option lists, users, content items, cultures, time zones), with cascading filters and its API.",
     Category = "Content",
     Dependencies = ["Grove.Access", "Grove.Contents.Fields", "Grove.Contents.Fields.Indexing.SQL", "Grove.Contents", "Grove.Contents.Types", "Grove.Access.Users"]
 )]

@@ -5,16 +5,15 @@
 @inject NotificationService Notifications
 @inject Grove.Display.Components.Theme.GroveApiLocalizer T
 
-@* Declarative show/hide condition for ANY field type: the field renders only while
-   a controlling sibling field's value satisfies the condition; the server clears a
-   hidden field's value on save. Definition work, gated server-side by
-   EditContentTypes, stored on the part's field definition (shared across every
-   type carrying the part - same rule as the field itself). *@
+@* Declarative show/hide condition for any field type: the field renders only while its
+   condition over sibling fields holds; the server clears a hidden field's value on save.
+   Definition work, gated server-side by EditContentTypes, stored on the field set's field
+   definition (shared across every type carrying the field set, like the field itself). *@
 <GroveCard data-testid="field-visibility-editor">
     <GroveStack Gap="1rem">
         <GroveStack Gap="0.25rem">
             <GroveText TextStyle="TextStyle.H6" Text="@T["Visibility: {0}", FieldName]" />
-            <GroveText TextStyle="TextStyle.Caption" Text="@($"{PartName} · {FieldName}")" />
+            <GroveText TextStyle="TextStyle.Caption" Text="@($"{FieldSetName} · {FieldName}")" />
         </GroveStack>
 
         @if (!string.IsNullOrWhiteSpace(ErrorMessage))
@@ -28,36 +27,8 @@
         }
         else
         {
-            <GroveText TextStyle="TextStyle.Caption" Text="@T["The field shows only while the controlling field's value satisfies the condition. While hidden it is exempt from required-validation, and its value is cleared when the item is saved."]" />
-            <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
-                <GroveFormField Text="@T["Controlled by"]">
-                    <GroveDropDown @bind-Value="Path" TValue="string" Data="@SiblingFieldChoices" TextProperty="Label" ValueProperty="Value"
-                                   AllowClear="true" Placeholder="@T["Always visible"]" Disabled="@IsBusy" Style="width: 12rem;" data-testid="visibility-path" />
-                </GroveFormField>
-                @if (!string.IsNullOrWhiteSpace(Path))
-                {
-                    <GroveFormField Text="@T["Condition"]">
-                        <GroveDropDown @bind-Value="Operator" TValue="string" Data="@OperatorChoices" TextProperty="Label" ValueProperty="Value"
-                                       Disabled="@IsBusy" Style="width: 14rem;" data-testid="visibility-operator" />
-                    </GroveFormField>
-                }
-            </GroveStack>
-
-            @if (!string.IsNullOrWhiteSpace(Path) && Operator != "Any")
-            {
-                <GroveFormField Text="@T["Matching keys (option keys, not labels)"]">
-                    <GroveStack Orientation="Orientation.Horizontal" Gap="0.35rem" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" data-testid="visibility-keys">
-                        @foreach (var key in Keys.ToArray())
-                        {
-                            var entry = key;
-                            <GroveBadge Text="@entry" BadgeStyle="BadgeStyle.Secondary" />
-                            <GroveButton Icon="close" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => Keys.Remove(entry))" Disabled="@IsBusy" />
-                        }
-                        <GroveTextBox @bind-Value="NewKey" Placeholder="@T["e.g. Voided"]" Disabled="@IsBusy" Style="width: 9rem;" />
-                        <GroveButton Icon="add" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="AddKey" Disabled="@(IsBusy || string.IsNullOrWhiteSpace(NewKey))" data-testid="visibility-add-key" />
-                    </GroveStack>
-                </GroveFormField>
-            }
+            <GroveText TextStyle="TextStyle.Caption" Text="@T["The field shows only while its condition holds; with no condition it is always visible. While hidden it is exempt from required-validation, and its value is cleared when the item is saved."]" />
+            <FieldConditionEditor @bind-Value="When" Fields="@SiblingFieldChoices" Disabled="@IsBusy" />
 
             <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End">
                 <GroveButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => OnClose.InvokeAsync())" Disabled="@IsBusy" />
@@ -68,43 +39,33 @@
 </GroveCard>
 
 @code {
-    [Parameter] public string PartName { get; set; } = string.Empty;
+    [Parameter] public string FieldSetName { get; set; } = string.Empty;
     [Parameter] public string FieldName { get; set; } = string.Empty;
 
-    /// <summary>Sibling field names on the same part, offered as controlling fields.</summary>
+    /// <summary>The names of the field set's fields, offered to the condition.</summary>
     [Parameter] public string[] SiblingFields { get; set; } = [];
 
     [Parameter] public EventCallback OnSaved { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
 
-    private string? Path;
-    private string Operator = "Any";
-    private List<string> Keys = [];
-    private string NewKey = string.Empty;
+    private DisplayBinding? When;
 
     private bool IsLoading;
     private bool IsSaving;
     private bool IsBusy => IsLoading || IsSaving;
     private string? ErrorMessage;
 
-    private sealed record Choice(string Label, string Value);
     private sealed record VisibilityModel(bool FieldExists, VisibilitySettings Settings);
     private sealed class VisibilitySettings
     {
-        public string? Path { get; set; }
-        public string Operator { get; set; } = "Any";
-        public string[] Keys { get; set; } = [];
+        public DisplayBinding? When { get; set; }
     }
 
-    private Choice[] SiblingFieldChoices => [.. SiblingFields
+    // The field set is shared: its conditions name siblings by bare name, read from the same
+    // attachment wherever the field set is attached.
+    private FieldConditionEditor.FieldChoice[] SiblingFieldChoices => [.. SiblingFields
         .Where(name => !string.Equals(name, FieldName, StringComparison.OrdinalIgnoreCase))
-        .Select(name => new Choice(name, name))];
-
-    private Choice[] OperatorChoices =>
-    [
-        new(T["Has any value"], "Any"),
-        new(T["Matches one of the keys"], "In"),
-    ];
+        .Select(name => new FieldConditionEditor.FieldChoice(name, name))];
 
     protected override async Task OnInitializedAsync()
     {
@@ -112,11 +73,8 @@
         try
         {
             var model = await Http.GetFromJsonAsync<VisibilityModel>(
-                $"api/grove/field-visibility?part={Uri.EscapeDataString(PartName)}&field={Uri.EscapeDataString(FieldName)}");
-            Path = model?.Settings.Path;
-            // Equals and In are the same test server-side; the editor shows one entry.
-            Operator = model?.Settings.Operator is "Equals" or "In" ? "In" : "Any";
-            Keys = [.. model?.Settings.Keys ?? []];
+                $"api/grove/field-visibility?fieldSet={Uri.EscapeDataString(FieldSetName)}&field={Uri.EscapeDataString(FieldName)}");
+            When = model?.Settings.When;
         }
         catch (Exception exception)
         {
@@ -128,17 +86,6 @@
         }
     }
 
-    private void AddKey()
-    {
-        var key = NewKey.Trim();
-        if (key.Length > 0 && !Keys.Contains(key, StringComparer.OrdinalIgnoreCase))
-        {
-            Keys.Add(key);
-        }
-
-        NewKey = string.Empty;
-    }
-
     private async Task SaveAsync()
     {
         IsSaving = true;
@@ -147,14 +94,9 @@
         {
             using var response = await Http.PutAsJsonAsync("api/grove/field-visibility", new
             {
-                Part = PartName,
+                FieldSet = FieldSetName,
                 Field = FieldName,
-                Settings = new
-                {
-                    Path = string.IsNullOrWhiteSpace(Path) ? null : Path,
-                    Operator,
-                    Keys = Keys.ToArray(),
-                },
+                Settings = new { When },
             });
 
             if (!response.IsSuccessStatusCode)

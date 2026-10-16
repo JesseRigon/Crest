@@ -38,12 +38,12 @@ public sealed class ContentDefinitionStep : NamedRecipeStepHandler
             await UpdateContentTypeAsync(newType, contentType, context);
         }
 
-        foreach (var contentPart in step.ContentParts)
+        foreach (var contentFieldSet in step.ContentFieldSets)
         {
-            var newPart = await _contentDefinitionManager.LoadPartDefinitionAsync(contentPart.Name)
-                ?? new ContentPartDefinition(contentPart.Name);
+            var newPart = await _contentDefinitionManager.LoadFieldSetDefinitionAsync(contentFieldSet.Name)
+                ?? new ContentFieldSetDefinition(contentFieldSet.Name);
 
-            await UpdateContentPartAsync(newPart, contentPart, context);
+            await UpdateContentFieldSetAsync(newPart, contentFieldSet, context);
         }
     }
 
@@ -57,27 +57,32 @@ public sealed class ContentDefinitionStep : NamedRecipeStepHandler
                 builder.MergeSettings(record.Settings);
             }
 
-            foreach (var part in record.ContentTypePartDefinitionRecords)
+            foreach (var part in record.ContentTypeFieldSetDefinitionRecords)
             {
-                if (string.IsNullOrEmpty(part.PartName))
+                if (string.IsNullOrEmpty(part.FieldSetName))
                 {
                     context.Errors.Add(S["Unable to add content-part to the '{0}' content-type. The part name cannot be null or empty.", type.Name]);
 
                     continue;
                 }
 
-                builder.WithPart(part.Name, part.PartName, partBuilder => partBuilder.MergeSettings(part.Settings));
+                builder.WithFieldSet(part.Name, part.FieldSetName, partBuilder => partBuilder.MergeSettings(part.Settings));
+            }
+
+            foreach (var embedding in record.EmbeddedContentDefinitionRecords ?? [])
+            {
+                builder.WithEmbedding(embedding.Name, embeddingBuilder => embeddingBuilder.From(embedding));
             }
         });
     }
 
-    private Task UpdateContentPartAsync(ContentPartDefinition part, ContentPartDefinitionRecord record, RecipeExecutionContext context)
+    private Task UpdateContentFieldSetAsync(ContentFieldSetDefinition part, ContentFieldSetDefinitionRecord record, RecipeExecutionContext context)
     {
-        return _contentDefinitionManager.AlterPartDefinitionAsync(part.Name, builder =>
+        return _contentDefinitionManager.AlterFieldSetDefinitionAsync(part.Name, builder =>
         {
             builder.MergeSettings(record.Settings);
 
-            foreach (var field in record.ContentPartFieldDefinitionRecords)
+            foreach (var field in record.ContentFieldDefinitionRecords)
             {
                 if (string.IsNullOrEmpty(field.Name))
                 {
@@ -99,6 +104,6 @@ public sealed class ContentDefinitionStep : NamedRecipeStepHandler
     {
         public ContentTypeDefinitionRecord[] ContentTypes { get; set; } = [];
 
-        public ContentPartDefinitionRecord[] ContentParts { get; set; } = [];
+        public ContentFieldSetDefinitionRecord[] ContentFieldSets { get; set; } = [];
     }
 }

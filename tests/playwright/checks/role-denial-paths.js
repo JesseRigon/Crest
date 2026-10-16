@@ -46,7 +46,7 @@ module.exports = async function run(page, ctx) {
     // gate's Access-denied panel only appears on CLIENT-side navigation). The
     // probe route must sit behind a permission NO non-admin role can plausibly
     // hold: /Admin/Tenants (ManageTenants). What a stock role holds elsewhere
-    // (Editor legitimately Views content part lists, and this tenant's Editor
+    // (Editor legitimately Views option lists, and this tenant's Editor
     // even manages admin menus) is tenant policy, not this check's contract.
     {
       const response = await session.page.goto(`${ctx.baseUrl}/Admin/Tenants`, { waitUntil: 'domcontentloaded' }).catch(() => null);
@@ -62,15 +62,15 @@ module.exports = async function run(page, ctx) {
     }
 
     // (c) The server is the authority: a security-critical API 403s outright.
-    // LockContentPartLists is Administrator-only by design (deliberately NOT
-    // implied by ManageContentPartLists), and the probe key does not exist -
+    // LockOptionLists is Administrator-only by design (deliberately NOT
+    // implied by ManageOptionLists), and the probe key does not exist -
     // authorization runs before resolution, so even a misconfigured tenant
     // where the role somehow held the permission could only 4xx, never mutate.
     await session.page.goto(`${ctx.baseUrl}/Admin`, { waitUntil: 'networkidle' });
     const antiforgery = await fetchAntiforgeryToken(session.page, ctx.baseUrl);
     const statuses = await session.page.evaluate(async ({ antiforgery }) => {
       const results = {};
-      results.lockWrite = (await fetch('/api/grove/content-part-lists/zz.denial.probe/locks', {
+      results.lockWrite = (await fetch('/api/grove/option-lists/zz.denial.probe/locks', {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', [antiforgery.headerName]: antiforgery.requestToken },

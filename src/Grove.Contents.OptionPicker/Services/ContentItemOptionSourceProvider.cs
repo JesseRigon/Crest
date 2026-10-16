@@ -27,7 +27,7 @@ namespace Grove.Services;
 /// types and stereotypes ("contentitem:Article,@Widget") or of every type without a stereotype
 /// ("contentitem:*"); see <see cref="ContentItemSourceScope"/>. This is the source behind entity
 /// dropdowns (customers, vendors, sites) and every content item reference, as opposed to the
-/// fixed named choices a content part list holds. Labels can come from a Liquid title pattern,
+/// fixed named choices an option list holds. Labels can come from a Liquid title pattern,
 /// lookups carry edit links where the caller may edit, and the source offers a create link per
 /// allowed creatable type the caller may create.
 /// </summary>
@@ -414,7 +414,7 @@ public sealed class ContentItemOptionSourceProvider(
     /// <summary>
     /// Resolves Field: paths against the type's definition: which part carries the
     /// field, and which stock field-index table (Text/Numeric/Boolean) holds its
-    /// value. Paths accept "Part.Field" or a bare "Field" (first match wins); a path
+    /// value. Paths accept "FieldSet.Field" or a bare "Field" (first match wins); a path
     /// that resolves to no field, or to a field type without a stock SQL index, maps
     /// to null and stays in-memory.
     /// </summary>
@@ -456,12 +456,12 @@ public sealed class ContentItemOptionSourceProvider(
             return null;
         }
 
-        foreach (var typePart in type.Parts)
+        foreach (var typeFieldSet in type.FieldSets)
         {
-            foreach (var field in typePart.PartDefinition.Fields)
+            foreach (var field in typeFieldSet.FieldSetDefinition.Fields)
             {
                 var matches = segments.Length == 2
-                    ? string.Equals(typePart.Name, segments[0], StringComparison.OrdinalIgnoreCase)
+                    ? string.Equals(typeFieldSet.Name, segments[0], StringComparison.OrdinalIgnoreCase)
                         && string.Equals(field.Name, segments[1], StringComparison.OrdinalIgnoreCase)
                     : string.Equals(field.Name, segments[0], StringComparison.OrdinalIgnoreCase);
                 if (!matches)
@@ -471,11 +471,11 @@ public sealed class ContentItemOptionSourceProvider(
 
                 // The index rows record the TYPE part's name (which is also the part
                 // definition name for non-reusable parts) - see TextFieldIndexProvider.
-                return field.FieldDefinition.Name switch
+                return field.FieldTypeDefinition.Name switch
                 {
-                    "TextField" => new FieldIndexTarget(typePart.Name, field.Name, FieldIndexKind.Text),
-                    "NumericField" => new FieldIndexTarget(typePart.Name, field.Name, FieldIndexKind.Numeric),
-                    "BooleanField" => new FieldIndexTarget(typePart.Name, field.Name, FieldIndexKind.Boolean),
+                    "TextField" => new FieldIndexTarget(typeFieldSet.Name, field.Name, FieldIndexKind.Text),
+                    "NumericField" => new FieldIndexTarget(typeFieldSet.Name, field.Name, FieldIndexKind.Numeric),
+                    "BooleanField" => new FieldIndexTarget(typeFieldSet.Name, field.Name, FieldIndexKind.Boolean),
                     _ => null,
                 };
             }
@@ -588,17 +588,17 @@ public sealed class ContentItemOptionSourceProvider(
             {
                 FieldIndexKind.Numeric => query
                     .With<NumericFieldIndex>(index => index.ContentType == qualifier && index.Latest
-                        && index.ContentPart == target.PartName && index.ContentField == target.FieldName)
+                        && index.ContentFieldSet == target.FieldSetName && index.ContentField == target.FieldName)
                     .OrderBy(index => index.Numeric)
                     .ThenBy(index => index.ContentItemId),
                 FieldIndexKind.Boolean => query
                     .With<BooleanFieldIndex>(index => index.ContentType == qualifier && index.Latest
-                        && index.ContentPart == target.PartName && index.ContentField == target.FieldName)
+                        && index.ContentFieldSet == target.FieldSetName && index.ContentField == target.FieldName)
                     .OrderBy(index => index.Boolean)
                     .ThenBy(index => index.ContentItemId),
                 _ => query
                     .With<TextFieldIndex>(index => index.ContentType == qualifier && index.Latest
-                        && index.ContentPart == target.PartName && index.ContentField == target.FieldName)
+                        && index.ContentFieldSet == target.FieldSetName && index.ContentField == target.FieldName)
                     .OrderBy(index => index.Text)
                     .ThenBy(index => index.ContentItemId),
             };
@@ -645,15 +645,15 @@ public sealed class ContentItemOptionSourceProvider(
                     {
                         OptionFilterOperators.GreaterThan => query.With<NumericFieldIndex>(index =>
                             index.ContentType == qualifier && index.Latest
-                            && index.ContentPart == target.PartName && index.ContentField == target.FieldName
+                            && index.ContentFieldSet == target.FieldSetName && index.ContentField == target.FieldName
                             && index.Numeric > number),
                         OptionFilterOperators.LessThan => query.With<NumericFieldIndex>(index =>
                             index.ContentType == qualifier && index.Latest
-                            && index.ContentPart == target.PartName && index.ContentField == target.FieldName
+                            && index.ContentFieldSet == target.FieldSetName && index.ContentField == target.FieldName
                             && index.Numeric < number),
                         _ => query.With<NumericFieldIndex>(index =>
                             index.ContentType == qualifier && index.Latest
-                            && index.ContentPart == target.PartName && index.ContentField == target.FieldName
+                            && index.ContentFieldSet == target.FieldSetName && index.ContentField == target.FieldName
                             && index.Numeric == number),
                     };
                     break;
@@ -661,7 +661,7 @@ public sealed class ContentItemOptionSourceProvider(
                     var flag = bool.Parse(filter.Values[0]);
                     query = query.With<BooleanFieldIndex>(index =>
                         index.ContentType == qualifier && index.Latest
-                        && index.ContentPart == target.PartName && index.ContentField == target.FieldName
+                        && index.ContentFieldSet == target.FieldSetName && index.ContentField == target.FieldName
                         && index.Boolean == flag);
                     break;
             }
@@ -760,7 +760,7 @@ internal enum FieldIndexKind
 
 /// <summary>A Field: path resolved against the type definition: the part carrying
 /// the field, the field's name, and the field-index table holding its value.</summary>
-internal sealed record FieldIndexTarget(string PartName, string FieldName, FieldIndexKind Kind);
+internal sealed record FieldIndexTarget(string FieldSetName, string FieldName, FieldIndexKind Kind);
 
 /// <summary>How much of the instance sort SQL expresses: a chain of
 /// ContentItemIndex paths, OR one field-index primary sort, OR nothing (the

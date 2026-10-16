@@ -7,7 +7,7 @@ namespace Grove.Routing;
 /// A module client library is named for its module ("Grove.Access.Members.Member.BlazorWasm"
 /// belongs to "Grove.Access.Members"), the convention the lazy-module generator, the server's
 /// route table and the shell contracts all rely on. A library named for one feature of a
-/// module ("Grove.Contents.PartLists.BlazorWasm") belongs to that feature. An assembly belongs
+/// module ("Grove.Contents.OptionLists.BlazorWasm") belongs to that feature. An assembly belongs
 /// to the LONGEST matching id, so a library of "Grove.Access.Members" is never credited to "Grove".
 /// </remarks>
 public static class ModuleClientAssemblies

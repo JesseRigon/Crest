@@ -15,9 +15,10 @@ public class MenuItemContentTypeBuilder : IContentTypeBuilder
             return;
         }
 
+        // A menu item's child items: the menu's nested MenuItems embedding, under the item.
         contentItemType
-            .Field<MenuItemsListQueryObjectType>(nameof(MenuItemsListPart).ToFieldName())
-            .Resolve(context => context.Source.TryGet<MenuItemsListPart>(out var menuItemsListPart) ? menuItemsListPart : null);
+            .Field<ListGraphType<MenuItemInterface>>("menuItems")
+            .Resolve(context => MenuItemsEmbedding.Items(context.Source));
 
         contentItemType.Interface<MenuItemInterface>();
     }

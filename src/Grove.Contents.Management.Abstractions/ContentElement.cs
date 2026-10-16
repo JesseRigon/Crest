@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 namespace Grove.Contents.Management;
 
 /// <summary>
-/// Common traits of <see cref="ContentItem"/>, <see cref="ContentPart"/>
+/// Common traits of <see cref="ContentItem"/>, <see cref="ContentFieldSet"/>
 /// and <see cref="ContentField"/>.
 /// </summary>
 public class ContentElement : IContent

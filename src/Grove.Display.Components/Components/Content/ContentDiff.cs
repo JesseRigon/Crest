@@ -8,7 +8,7 @@ namespace Grove.Display.Components.Content;
 
 /// <summary>
 /// Two versions of an item side by side (docs/MVC/parity.md › New components): every value that
-/// differs, by its path in the content (<c>TitlePart.Title</c>, <c>BagPart.ContentItems[0]...</c>),
+/// differs, by its path in the content (<c>TitleFieldSet.Title</c>, <c>Lines.ContentItems[0]...</c>),
 /// with the value before and after, added and removed values marked. The bookkeeping values that
 /// change with every version (ids, dates) are left out.
 /// </summary>

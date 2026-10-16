@@ -1,7 +1,7 @@
 // Content groups (api/grove/content-groups): module-declared sets of content
 // SOURCES (types, option lists) merged with the tenant's document. Asserts the
 // Parties and Members providers surface (Person is a "type" entry, the honorifics
-// list is a "list" entry), that ?group= on the content-items list returns only
+// list is an "optionlist" entry), that ?group= on the content-items list returns only
 // what the group covers, that a tenant override (rename, add/remove entry) round
 // trips and is undone, and that the auto-menu-pages setting round trips - with the
 // menu entry appearing (deferred sync, so reload-and-retry) and disappearing.
@@ -80,18 +80,18 @@ module.exports = async function run(page, ctx) {
     check('parties-group-declared', !!parties && parties.source === 'Module', parties ? `${parties.entries.length} entries` : 'missing');
     check('members-group-declared', !!members && members.source === 'Module', members ? `${members.entries.length} entries` : 'missing');
     check('parties-has-person-type', !!parties?.entries.find(entry => entry.kind === 'type' && entry.key === 'Person' && entry.resolved), 'type:Person resolved');
-    check('parties-has-honorifics-list', !!parties?.entries.find(entry => entry.kind === 'list' && entry.key === 'global.honorifics' && entry.resolved), 'list:global.honorifics resolved');
-    check('members-has-perk-list', !!members?.entries.find(entry => entry.kind === 'list' && entry.key === 'members.perk'), 'list:members.perk');
+    check('parties-has-honorifics-list', !!parties?.entries.find(entry => entry.kind === 'optionlist' && entry.key === 'global.honorifics' && entry.resolved), 'optionlist:global.honorifics resolved');
+    check('members-has-perk-list', !!members?.entries.find(entry => entry.kind === 'optionlist' && entry.key === 'members.perk'), 'optionlist:members.perk');
 
     // A group filter returns only what the group covers: every row is either one
-    // of the group's types or one of its list items (a list item is typed ContentPartList).
+    // of the group's types or one of its list items (a list item is typed OptionList).
     const filtered = await api('GET', '/api/grove/content-items?group=members&pageSize=100', null);
     const items = filtered.json?.items || [];
     const allowedTypes = new Set(members?.entries.filter(entry => entry.kind === 'type').map(entry => entry.key) || []);
-    const outside = items.filter(item => !allowedTypes.has(item.contentType) && item.contentType !== 'ContentPartList');
+    const outside = items.filter(item => !allowedTypes.has(item.contentType) && item.contentType !== 'OptionList');
     check('group-filter-ok', filtered.ok, `HTTP ${filtered.status} ${items.length} rows`);
     check('group-filter-confined', outside.length === 0, outside.length ? `outside: ${outside.map(item => item.contentType).join(',')}` : 'all rows in group');
-    check('group-filter-includes-lists', items.some(item => item.contentType === 'ContentPartList'), 'members lists present');
+    check('group-filter-includes-lists', items.some(item => item.contentType === 'OptionList'), 'members lists present');
 
     const unknown = await api('GET', `/api/grove/content-items?group=no-such-group-${stamp}`, null);
     check('unknown-group-404', unknown.status === 404, `HTTP ${unknown.status}`);
@@ -101,8 +101,8 @@ module.exports = async function run(page, ctx) {
     check('rename-group', renamed.ok && renamed.json?.displayName === `Members ${stamp}`, `HTTP ${renamed.status}`);
     const removed = await api('DELETE', '/api/grove/content-groups/members/entries/type/Perk', null);
     check('remove-module-entry', removed.ok && !removed.json?.entries.find(entry => entry.kind === 'type' && entry.key === 'Perk'), `HTTP ${removed.status}`);
-    const added = await api('POST', '/api/grove/content-groups/members/entries', { kind: 'list', key: 'global.honorifics' });
-    check('add-tenant-entry', added.ok && added.json?.entries.find(entry => entry.kind === 'list' && entry.key === 'global.honorifics')?.source === 'Tenant', `HTTP ${added.status} ${added.text}`);
+    const added = await api('POST', '/api/grove/content-groups/members/entries', { kind: 'optionlist', key: 'global.honorifics' });
+    check('add-tenant-entry', added.ok && added.json?.entries.find(entry => entry.kind === 'optionlist' && entry.key === 'global.honorifics')?.source === 'Tenant', `HTTP ${added.status} ${added.text}`);
     const badKind = await api('POST', '/api/grove/content-groups/members/entries', { kind: 'nope', key: 'x' });
     check('unknown-kind-400', badKind.status === 400, `HTTP ${badKind.status}`);
 

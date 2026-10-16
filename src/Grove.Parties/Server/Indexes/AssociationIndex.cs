@@ -36,11 +36,11 @@ public sealed class AssociationIndexProvider : IndexProvider<ContentItem>
                     return null;
                 }
 
-                var part = contentItem.Get<ContentPart>(PartiesConstants.ContentTypes.Association);
+                var part = contentItem.Get<ContentFieldSet>(PartiesConstants.ContentTypes.Association);
                 return new AssociationIndex
                 {
                     ContentItemId = contentItem.ContentItemId,
-                    TypeId = part?.Get<OptionPickerField>(AssociationFields.Type)?.SelectedIds.FirstOrDefault(),
+                    TypeId = part?.Get<OptionListField>(AssociationFields.Type)?.SelectedIds.FirstOrDefault(),
                     FromPersonId = First(part, AssociationFields.FromPerson),
                     FromOrganizationId = First(part, AssociationFields.FromOrganization),
                     ToPersonId = First(part, AssociationFields.ToPerson),
@@ -51,8 +51,8 @@ public sealed class AssociationIndexProvider : IndexProvider<ContentItem>
             });
     }
 
-    private static string? First(ContentPart? part, string field) =>
-        part?.Get<OptionPickerField>(field)?.SelectedIds.FirstOrDefault();
+    private static string? First(ContentFieldSet? part, string field) =>
+        part?.Get<OptionListField>(field)?.SelectedIds.FirstOrDefault();
 }
 
 /// <summary>Field names on the Association part.</summary>

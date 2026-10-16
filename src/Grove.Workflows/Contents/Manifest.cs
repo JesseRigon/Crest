@@ -10,7 +10,10 @@ using Grove.Modules.Manifest;
 [assembly: Feature(
     Id = "Grove.Workflows.Contents",
     Name = "Content Activities",
-    Description = "Content triggers (created, published, ...) carrying the acting user, and content tasks.",
+    Description = "The content lifecycle's hooks and triggers (created, published, ...) carrying the acting user, and content tasks.",
     Category = "Grove.Workflows",
-    Dependencies = ["Grove.Access", "Grove.Workflows", "Grove.Contents", "Grove.Contents.Title"]
+    Dependencies = ["Grove.Access", "Grove.Workflows", "Grove.Contents"],
+    // The field sets' system flows run on the content lifecycle's hooks (docs/content-engine.md ›
+    // Behaviour is workflows), so it is never off.
+    IsAlwaysEnabled = true
 )]

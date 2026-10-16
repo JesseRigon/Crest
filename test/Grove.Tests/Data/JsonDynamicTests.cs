@@ -970,7 +970,7 @@ public class JsonDynamicTests
         return contentItem;
     }
 
-    public sealed class TestPart : ContentPart
+    public sealed class TestPart : ContentFieldSet
     {
         public TextField TextFieldProp { get; set; }
 

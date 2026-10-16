@@ -1,3 +1,7 @@
+using Grove.Contents.Fields;
+using Grove.Contents.Management.Handlers;
+using Grove.Contents.Markdown.Handlers;
+using Grove.Workflows.Extensions;
 using Fluid;
 using Markdig;
 using Microsoft.Extensions.Configuration;
@@ -11,7 +15,6 @@ using Grove.Display.Liquid;
 using Grove.Contents.Markdown.Drivers;
 using Grove.Contents.Markdown.Fields;
 using Grove.Contents.Markdown.Filters;
-using Grove.Contents.Markdown.Handlers;
 using Grove.Contents.Markdown.Indexing;
 using Grove.Contents.Markdown.Models;
 using Grove.Contents.Markdown.Services;
@@ -36,21 +39,22 @@ public sealed class Startup : StartupBase
     {
         services.Configure<TemplateOptions>(o =>
         {
-            o.MemberAccessStrategy.Register<MarkdownBodyPartViewModel>();
+            o.MemberAccessStrategy.Register<MarkdownBodyFieldSetViewModel>();
             o.MemberAccessStrategy.Register<MarkdownFieldViewModel>();
         })
         .AddLiquidFilter<Markdownify>("markdownify");
 
         // Markdown Part
-        services.AddContentPart<MarkdownBodyPart>()
-            .UseDisplayDriver<MarkdownBodyPartDisplayDriver>()
-            .AddHandler<MarkdownBodyPartHandler>();
+        services.AddContentFieldSet<MarkdownBodyFieldSet>()
+            .UseDisplayDriver<MarkdownBodyFieldSetDisplayDriver>();
+        services.AddScoped<Services.MarkdownBodyBehaviour>();
+        services.AddContentFieldSetProjection<Projections.MarkdownBodyProjection>();
 
         services.AddDataMigration<Migrations>();
-        services.AddScoped<IContentPartIndexHandler, MarkdownBodyPartIndexHandler>();
+        services.AddScoped<IContentFieldSetIndexHandler, MarkdownBodyFieldSetIndexHandler>();
 
         // Markdown Field
-        services.AddContentField<MarkdownField>()
+        services.AddFieldType<MarkdownField, Grove.Contents.Markdown.Settings.MarkdownFieldSettings>()
             .UseDisplayDriver<MarkdownFieldDisplayDriver>()
             .AddHandler<MarkdownFieldHandler>();
 
@@ -64,5 +68,18 @@ public sealed class Startup : StartupBase
         });
 
         services.AddScoped<IMarkdownService, DefaultMarkdownService>();
+    }
+}
+
+/// <summary>The field set's system flows and their activities (docs/content-engine.md › Behaviour is workflows).</summary>
+[RequireFeatures(Grove.Workflows.WorkflowsConstants.ContentsFeatureId)]
+public sealed class WorkflowsStartup : StartupBase
+{
+    public override void ConfigureServices(IServiceCollection services)
+    {
+        services.AddScoped<Grove.Workflows.IWorkflowActivityProvider, Workflows.MarkdownBodyWorkflowProvider>();
+        services.AddScoped<Grove.Workflows.IWorkflowFlowProvider, Workflows.MarkdownBodyWorkflowProvider>();
+        services.AddScoped<Grove.Workflows.IWorkflowFieldSetHookAttachmentProvider, Workflows.MarkdownBodyWorkflowProvider>();
+        services.ConfigureGroveWorkflows(workflows => workflows.AddActivitiesFrom<WorkflowsStartup>());
     }
 }

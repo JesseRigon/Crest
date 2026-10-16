@@ -27,7 +27,7 @@ public sealed class PartyRoleWorkflowHandler(PartyTypeCatalog catalog, IWorkflow
             return;
         }
 
-        var partyId = item.Get<ContentPart>(item.ContentType)?.Get<OptionPickerField>("Party")?.SelectedIds?.FirstOrDefault();
+        var partyId = item.Get<ContentFieldSet>(item.ContentType)?.Get<OptionListField>("Party")?.SelectedIds?.FirstOrDefault();
 
         await triggers.PublishAsync(trigger, item.ContentItemId, new Dictionary<string, object>
         {

@@ -13,9 +13,9 @@ public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddInputObjectGraphType<AutoroutePart, AutorouteInputObjectType>();
-        services.AddObjectGraphType<AutoroutePart, AutorouteQueryObjectType>();
-        services.AddTransient<IIndexAliasProvider, AutoroutePartIndexAliasProvider>();
-        services.AddWhereInputIndexPropertyProvider<AutoroutePartIndex>();
+        services.AddInputObjectGraphType<AutorouteFieldSet, AutorouteInputObjectType>();
+        services.AddObjectGraphType<AutorouteFieldSet, AutorouteQueryObjectType>();
+        services.AddTransient<IIndexAliasProvider, AutorouteIndexAliasProvider>();
+        services.AddWhereInputIndexPropertyProvider<AutorouteIndex>();
     }
 }

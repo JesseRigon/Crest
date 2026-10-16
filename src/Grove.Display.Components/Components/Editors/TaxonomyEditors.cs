@@ -10,38 +10,71 @@ using Microsoft.AspNetCore.Components.Web;
 namespace Grove.Display.Components.Editors;
 
 /// <summary>
-/// A taxonomy's term tree (docs/MVC/parity.md › New components): the terms in order and nested,
-/// each edited through its term type's editor tree (as a contained item is in
-/// <see cref="BagPartEditor"/>), added at the root or under a term, renamed, moved up, down, in
-/// and out, and removed. The terms are the taxonomy's content (<c>TaxonomyPart.Terms</c>, a term's
-/// children under its <c>Terms</c>), saved with the taxonomy; the server names the taxonomy on
-/// every term it saves (<c>TermPart.TaxonomyContentItemId</c>).
+/// A taxonomy's own value: the type its terms are created as (its terms are edited by
+/// <see cref="TaxonomyTermsEditor"/>, on the taxonomy's Terms embedding). Fixed once the
+/// taxonomy has terms.
 /// </summary>
-[BlazorComponent("TaxonomyPartEditor", DisplayName = "Taxonomy terms", Category = "Editors", Icon = "account_tree", Edits = ["TaxonomyPart"])]
-public sealed class TaxonomyPartEditor : FieldEditorBase
+[BlazorComponent("TaxonomyFieldSetEditor", DisplayName = "Category term type", Category = "Editors", Icon = "account_tree", Edits = ["Taxonomy"])]
+public sealed class TaxonomyFieldSetEditor : FieldEditorBase
+{
+    protected override void RenderInput(RenderTreeBuilder builder)
+    {
+        var hasTerms = Context?.Get("Terms", null)?["ContentItems"] is JsonArray { Count: > 0 };
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "grove-editor__pair");
+        builder.OpenComponent<GroveTextBox>(2);
+        builder.AddComponentParameter(3, nameof(GroveTextBox.Value), Text("TermContentType.Text"));
+        builder.AddComponentParameter(4, nameof(GroveTextBox.Placeholder), "Term content type");
+        builder.AddComponentParameter(5, nameof(GroveTextBox.Change), EventCallback.Factory.Create<string>(this, value => Set("TermContentType.Text", JsonValue.Create(value?.Trim()))));
+        builder.AddComponentParameter(6, nameof(GroveTextBox.Disabled), Disabled || hasTerms);
+        builder.CloseComponent();
+        builder.CloseElement();
+    }
+}
+
+/// <summary>
+/// A taxonomy's term tree (docs/MVC/parity.md › New components): the terms in order and nested,
+/// each edited through its term type's editor tree (as an embedded item is in
+/// <see cref="EmbeddedContentItemsEditor"/>), added at the root or under a term, renamed, moved up,
+/// down, in and out, and removed. The terms are the taxonomy's nested <c>Terms</c> embedding (a
+/// term's children under its own <c>Terms</c>), saved with the taxonomy; the server names the
+/// taxonomy on every term it saves (<c>TermFieldSet.TaxonomyContentItemId</c>). The editor tree
+/// places it for the embedding in place of the generic embedding editor.
+/// </summary>
+[BlazorComponent("TaxonomyTermsEditor", DisplayName = "Category terms", Category = "Editors", Icon = "account_tree", Edits = ["Taxonomy.Terms"])]
+public sealed class TaxonomyTermsEditor : FieldEditorBase
 {
     private readonly Dictionary<string, DisplayNode> _trees = new(StringComparer.Ordinal);
     private readonly Dictionary<string, TermState> _open = new(StringComparer.Ordinal);
     private string? _error;
     private bool _adding;
 
-    private string? TermType => Text("TermContentType");
+    // The type the taxonomy names for its terms (its Taxonomy field set).
+    private string? TermType => Context?.Get("Taxonomy", null)?["TermContentType"]?["Text"]?.ToString();
+
+    // A term's children: under its own Terms embedding.
+    private static JsonArray? Children(JsonObject term) => term["Terms"]?["ContentItems"] as JsonArray;
+
+    private static JsonArray ChildrenOrCreate(JsonObject term)
+    {
+        if (term["Terms"] is not JsonObject embedding)
+        {
+            term["Terms"] = embedding = [];
+        }
+
+        if (embedding["ContentItems"] is not JsonArray children)
+        {
+            embedding["ContentItems"] = children = [];
+        }
+
+        return children;
+    }
 
     protected override void RenderInput(RenderTreeBuilder builder)
     {
         var terms = Terms();
         builder.OpenElement(0, "div");
         builder.AddAttribute(1, "class", "grove-taxonomy-editor");
-
-        builder.OpenElement(2, "div");
-        builder.AddAttribute(3, "class", "grove-editor__pair");
-        builder.OpenComponent<GroveTextBox>(4);
-        builder.AddComponentParameter(5, nameof(GroveTextBox.Value), TermType);
-        builder.AddComponentParameter(6, nameof(GroveTextBox.Placeholder), "Term content type");
-        builder.AddComponentParameter(7, nameof(GroveTextBox.Change), EventCallback.Factory.Create<string>(this, value => Set("TermContentType", JsonValue.Create(value?.Trim()))));
-        builder.AddComponentParameter(8, nameof(GroveTextBox.Disabled), Disabled || terms.Count > 0);
-        builder.CloseComponent();
-        builder.CloseElement();
 
         builder.OpenElement(10, "ul");
         builder.AddAttribute(11, "class", "grove-taxonomy-editor__terms");
@@ -121,7 +154,7 @@ public sealed class TaxonomyPartEditor : FieldEditorBase
                 builder.CloseElement();
             }
 
-            if (term["Terms"] is JsonArray { Count: > 0 } children)
+            if (Children(term) is { Count: > 0 } children)
             {
                 builder.OpenElement(30, "ul");
                 RenderTerms(builder, children, term);
@@ -149,23 +182,24 @@ public sealed class TaxonomyPartEditor : FieldEditorBase
 
     private JsonArray Terms()
     {
-        var part = Context!.GetOrCreate(PartName, null);
-        if (part["Terms"] is not JsonArray terms)
+        var embedding = Context!.GetOrCreate(FieldSetName, null);
+        if (embedding["ContentItems"] is not JsonArray terms)
         {
-            part["Terms"] = terms = [];
+            embedding["ContentItems"] = terms = [];
         }
 
         return terms;
     }
 
-    private void Changed() => Context?.Touch(PartName, null);
+    private void Changed() => Context?.Touch(FieldSetName, null);
 
     private void Rename(JsonObject term, string? name)
     {
         term["DisplayText"] = name?.Trim();
-        if (term["TitlePart"] is JsonObject title)
+        // A term's title is its Title field set's Title text field.
+        if (term["Title"] is JsonObject title)
         {
-            title["Title"] = name?.Trim();
+            title["Title"] = new JsonObject { ["Text"] = name?.Trim() };
         }
 
         Changed();
@@ -202,12 +236,7 @@ public sealed class TaxonomyPartEditor : FieldEditorBase
 
         var term = terms[index];
         terms.RemoveAt(index);
-        if (above["Terms"] is not JsonArray children)
-        {
-            above["Terms"] = children = [];
-        }
-
-        children.Add(term);
+        ChildrenOrCreate(above).Add(term);
         Changed();
     }
 
@@ -241,7 +270,7 @@ public sealed class TaxonomyPartEditor : FieldEditorBase
 
         foreach (var child in terms.OfType<JsonObject>())
         {
-            if (child["Terms"] is JsonArray children && FindContainer(children, term) is { } found)
+            if (Children(child) is { } children && FindContainer(children, term) is { } found)
             {
                 return found;
             }
@@ -273,7 +302,7 @@ public sealed class TaxonomyPartEditor : FieldEditorBase
         try
         {
             var template = await TreeAsync(type);
-            var term = ContainedItems.New(type, template);
+            var term = EmbeddedItems.New(type, template);
             term["DisplayText"] = "New term";
             if (parent is null)
             {
@@ -281,12 +310,7 @@ public sealed class TaxonomyPartEditor : FieldEditorBase
             }
             else
             {
-                if (parent["Terms"] is not JsonArray children)
-                {
-                    parent["Terms"] = children = [];
-                }
-
-                children.Add(term);
+                ChildrenOrCreate(parent).Add(term);
             }
 
             Changed();
@@ -310,7 +334,7 @@ public sealed class TaxonomyPartEditor : FieldEditorBase
         var state = new TermState(new DisplayState());
         if (await TreeAsync(type) is { } template)
         {
-            state.Tree = BagPartEditor.WithContent(template, ContainedItems.Parts(term));
+            state.Tree = EmbeddedContentItemsEditor.WithContent(template, EmbeddedItems.Parts(term));
         }
 
         state.State.Changed += () => OnTermChanged(term, state);
@@ -326,8 +350,8 @@ public sealed class TaxonomyPartEditor : FieldEditorBase
             return;
         }
 
-        ContainedItems.ApplyParts(term, edited);
-        if (edited["TitlePart"]?["Title"]?.ToString() is { Length: > 0 } title)
+        EmbeddedItems.ApplyParts(term, edited);
+        if (edited["Title"]?["Title"]?["Text"]?.ToString() is { Length: > 0 } title)
         {
             term["DisplayText"] = title;
         }
@@ -373,253 +397,10 @@ public sealed class TaxonomyPartEditor : FieldEditorBase
 }
 
 /// <summary>
-/// A taxonomy field's terms (docs/MVC/parity.md › New components): the taxonomy's term tree with
-/// a check box per term (a radio when the field takes one term; only leaves when the settings say
-/// so), or, with the <c>Tags</c> editor, the terms as a list to pick from with the creation of a
-/// new tag by name when the field is open. The terms come from Grove.Contents.Taxonomies'
-/// <c>api/grove/taxonomies/{id}/terms</c>; the field stores the taxonomy's id, the selected term
-/// ids and, for tags, their names.
+/// Items held inside another item's content (an embedding's items, a taxonomy's terms): a new one
+/// from a type's editor tree, and the split between the item's own values and its parts.
 /// </summary>
-[BlazorComponent("TaxonomyFieldEditor", DisplayName = "Taxonomy terms", Category = "Editors", Icon = "sell", Edits = ["TaxonomyField"])]
-public sealed class TaxonomyFieldEditor : FieldEditorBase
-{
-    private static readonly JsonSerializerOptions s_web = new(JsonSerializerDefaults.Web);
-
-    private TaxonomyTermsModel? _taxonomy;
-    private bool _loaded;
-    private string? _error;
-    private string? _newTag;
-    private bool _creating;
-
-    private string? TaxonomyId => Setting("TaxonomyFieldSettings", "TaxonomyContentItemId")?.ToString();
-
-    private bool Unique => Setting("TaxonomyFieldSettings", "Unique") is JsonValue value && value.TryGetValue<bool>(out var unique) && unique;
-
-    private bool LeavesOnly => Setting("TaxonomyFieldSettings", "LeavesOnly") is JsonValue value && value.TryGetValue<bool>(out var leaves) && leaves;
-
-    private bool Open => IsMode("Tags")
-        ? !(Setting("TaxonomyFieldTagsEditorSettings", "Open") is JsonValue tags && tags.TryGetValue<bool>(out var openTags) && !openTags)
-        : Setting("TaxonomyFieldSettings", "Open") is JsonValue value && value.TryGetValue<bool>(out var open) && open;
-
-    private IReadOnlyList<string> Selected => Value?["TermContentItemIds"] is JsonArray ids
-        ? [.. ids.Select(id => id?.ToString()).OfType<string>()]
-        : [];
-
-    protected override async Task OnParametersSetAsync()
-    {
-        if (_loaded || Context?.Http is not { } http || string.IsNullOrEmpty(TaxonomyId))
-        {
-            return;
-        }
-
-        _loaded = true;
-        try
-        {
-            using var response = await http.GetAsync($"api/grove/taxonomies/{Uri.EscapeDataString(TaxonomyId)}/terms");
-            if (response.IsSuccessStatusCode)
-            {
-                _taxonomy = await response.Content.ReadFromJsonAsync<TaxonomyTermsModel>(s_web);
-            }
-            else
-            {
-                _error = "The taxonomy's terms could not be loaded.";
-            }
-        }
-        catch (Exception exception) when (exception is HttpRequestException or JsonException)
-        {
-            _error = "The taxonomy's terms could not be loaded.";
-        }
-    }
-
-    protected override void RenderInput(RenderTreeBuilder builder)
-    {
-        if (string.IsNullOrEmpty(TaxonomyId))
-        {
-            builder.AddContent(0, "The field's settings name no taxonomy.");
-            return;
-        }
-
-        if (_error is not null)
-        {
-            builder.OpenElement(1, "div");
-            builder.AddAttribute(2, "class", "grove-editor__error rz-color-danger");
-            builder.AddContent(3, _error);
-            builder.CloseElement();
-        }
-
-        if (_taxonomy is null)
-        {
-            return;
-        }
-
-        if (IsMode("Tags"))
-        {
-            RenderTags(builder);
-            return;
-        }
-
-        builder.OpenElement(10, "ul");
-        builder.AddAttribute(11, "class", "grove-taxonomy-field");
-        RenderTerms(builder, _taxonomy.Terms);
-        builder.CloseElement();
-    }
-
-    private void RenderTerms(RenderTreeBuilder builder, IReadOnlyList<TaxonomyTermModel> terms)
-    {
-        var selected = Selected;
-        foreach (var term in terms)
-        {
-            var selectable = !LeavesOnly || term.Children.Count == 0;
-            builder.OpenElement(0, "li");
-            builder.SetKey(term.ContentItemId);
-            builder.OpenElement(1, "label");
-            if (selectable)
-            {
-                builder.OpenElement(2, "input");
-                builder.AddAttribute(3, "type", Unique ? "radio" : "checkbox");
-                builder.AddAttribute(4, "name", Id);
-                builder.AddAttribute(5, "checked", selected.Contains(term.ContentItemId));
-                builder.AddAttribute(6, "disabled", Disabled);
-                builder.AddAttribute(7, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this, change => Toggle(term.ContentItemId, change.Value is true || change.Value is string text && (text == "on" || text == "true"))));
-                builder.CloseElement();
-            }
-
-            builder.AddContent(8, " " + term.DisplayText);
-            builder.CloseElement();
-            if (term.Children.Count > 0)
-            {
-                builder.OpenElement(9, "ul");
-                RenderTerms(builder, term.Children);
-                builder.CloseElement();
-            }
-
-            builder.CloseElement();
-        }
-    }
-
-    private void Toggle(string termId, bool on)
-    {
-        var selected = Unique ? [] : Selected.ToList();
-        selected.Remove(termId);
-        if (on)
-        {
-            selected.Add(termId);
-        }
-
-        Write(selected);
-    }
-
-    private void RenderTags(RenderTreeBuilder builder)
-    {
-        var options = Flatten(_taxonomy!.Terms).Where(term => !LeavesOnly || term.Children.Count == 0).ToList();
-        builder.OpenComponent<GroveDropDown<IEnumerable<string>>>(20);
-        builder.AddComponentParameter(21, "Data", options);
-        builder.AddComponentParameter(22, "TextProperty", nameof(TaxonomyTermModel.DisplayText));
-        builder.AddComponentParameter(23, "ValueProperty", nameof(TaxonomyTermModel.ContentItemId));
-        builder.AddComponentParameter(24, "Multiple", !Unique);
-        builder.AddComponentParameter(25, "Chips", true);
-        builder.AddComponentParameter(26, "AllowFiltering", true);
-        builder.AddComponentParameter(27, "Value", (IEnumerable<string>)Selected);
-        builder.AddComponentParameter(28, "ValueChanged", EventCallback.Factory.Create<IEnumerable<string>>(this, ids => Write([.. ids ?? []])));
-        builder.AddComponentParameter(29, "Disabled", Disabled);
-        builder.AddComponentParameter(30, "Placeholder", Setting("TaxonomyFieldSettings", "Placeholder")?.ToString());
-        builder.AddComponentParameter(31, "Style", "width: 100%;");
-        builder.CloseComponent();
-
-        if (!Open || Disabled)
-        {
-            return;
-        }
-
-        builder.OpenElement(40, "div");
-        builder.AddAttribute(41, "class", "grove-editor__pair");
-        builder.OpenComponent<GroveTextBox>(42);
-        builder.AddComponentParameter(43, nameof(GroveTextBox.Value), _newTag);
-        builder.AddComponentParameter(44, nameof(GroveTextBox.Placeholder), "New tag");
-        builder.AddComponentParameter(45, nameof(GroveTextBox.Change), EventCallback.Factory.Create<string>(this, value => _newTag = value));
-        builder.CloseComponent();
-        builder.OpenComponent<GroveButton>(46);
-        builder.AddComponentParameter(47, nameof(GroveButton.Text), "Add tag");
-        builder.AddComponentParameter(48, nameof(GroveButton.Icon), "add");
-        builder.AddComponentParameter(49, nameof(GroveButton.Size), ButtonSize.Small);
-        builder.AddComponentParameter(50, nameof(GroveButton.ButtonStyle), ButtonStyle.Light);
-        builder.AddComponentParameter(51, nameof(GroveButton.IsBusy), _creating);
-        builder.AddComponentParameter(52, nameof(GroveButton.Click), EventCallback.Factory.Create<MouseEventArgs>(this, CreateTagAsync));
-        builder.CloseComponent();
-        builder.CloseElement();
-    }
-
-    private async Task CreateTagAsync()
-    {
-        if (string.IsNullOrWhiteSpace(_newTag) || Context?.Http is not { } http || TaxonomyId is null)
-        {
-            return;
-        }
-
-        // A tag of that name already in the taxonomy is picked, not created again.
-        if (Flatten(_taxonomy!.Terms).FirstOrDefault(term => string.Equals(term.DisplayText, _newTag.Trim(), StringComparison.OrdinalIgnoreCase)) is { } existing)
-        {
-            Write(Unique ? [existing.ContentItemId] : [.. Selected.Where(id => id != existing.ContentItemId), existing.ContentItemId]);
-            _newTag = null;
-            return;
-        }
-
-        _creating = true;
-        try
-        {
-            using var response = await http.PostAsJsonAsync($"api/grove/taxonomies/{Uri.EscapeDataString(TaxonomyId)}/tags", new { DisplayText = _newTag.Trim() });
-            if (response.IsSuccessStatusCode && await response.Content.ReadFromJsonAsync<TaxonomyTermModel>(s_web) is { } created)
-            {
-                _taxonomy = _taxonomy! with { Terms = [.. _taxonomy.Terms, created] };
-                Write(Unique ? [created.ContentItemId] : [.. Selected, created.ContentItemId]);
-                _newTag = null;
-                _error = null;
-            }
-            else
-            {
-                _error = "The tag could not be created.";
-            }
-        }
-        catch (Exception exception) when (exception is HttpRequestException or JsonException)
-        {
-            _error = "The tag could not be created.";
-        }
-        finally
-        {
-            _creating = false;
-        }
-    }
-
-    // The field names its taxonomy, and a tags field keeps its terms' names for its display.
-    private void Write(IReadOnlyList<string> ids)
-    {
-        var field = Context!.GetOrCreate(PartName, FieldName);
-        field["TaxonomyContentItemId"] = TaxonomyId;
-        field["TermContentItemIds"] = new JsonArray([.. ids.Select(id => (JsonNode?)JsonValue.Create(id))]);
-        if (IsMode("Tags"))
-        {
-            var names = Flatten(_taxonomy?.Terms ?? []).ToDictionary(term => term.ContentItemId, term => term.DisplayText, StringComparer.Ordinal);
-            field["TagNames"] = new JsonArray([.. ids.Where(names.ContainsKey).Select(id => (JsonNode?)JsonValue.Create(names[id]))]);
-        }
-
-        Context.Touch(PartName, FieldName);
-    }
-
-    private static IEnumerable<TaxonomyTermModel> Flatten(IEnumerable<TaxonomyTermModel> terms) =>
-        terms.SelectMany(term => new[] { term }.Concat(Flatten(term.Children)));
-
-    /// <summary>A taxonomy's terms as the taxonomies API serves them.</summary>
-    public sealed record TaxonomyTermsModel(string ContentItemId, string? DisplayText, string? TermContentType, IReadOnlyList<TaxonomyTermModel> Terms);
-
-    /// <summary>A term and its children.</summary>
-    public sealed record TaxonomyTermModel(string ContentItemId, string DisplayText, IReadOnlyList<TaxonomyTermModel> Children);
-}
-
-/// <summary>
-/// Items held inside another item's content (a bag's items, a taxonomy's terms): a new one from a
-/// type's editor tree, and the split between the item's own values and its parts.
-/// </summary>
-public static class ContainedItems
+public static class EmbeddedItems
 {
     private static readonly HashSet<string> s_itemProperties = new(StringComparer.Ordinal)
     {

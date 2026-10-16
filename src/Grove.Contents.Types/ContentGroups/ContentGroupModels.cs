@@ -10,7 +10,7 @@ namespace Grove.ContentGroups;
 /// "Reference data". Groups are declared by modules through
 /// <see cref="IContentGroupProvider"/> (many modules may feed one group, like admin
 /// menu providers feeding one section) and reshaped by the tenant through
-/// <see cref="GroveContentGroupsDocument"/>. The item itself carries nothing: the
+/// <see cref="ContentGroupsDocument"/>. The item itself carries nothing: the
 /// group is a property of the KIND of content, never of an instance.
 /// </summary>
 public static class ContentGroupEntryKinds
@@ -18,8 +18,8 @@ public static class ContentGroupEntryKinds
     /// <summary>A content type, by name.</summary>
     public const string Type = "type";
 
-    /// <summary>A Content Part List, by its logical key (resolved by the lists feature).</summary>
-    public const string List = "list";
+    /// <summary>An option list, by its logical key (resolved by the lists feature).</summary>
+    public const string OptionList = "optionlist";
 }
 
 /// <summary>Who put a group or entry there: module code or the tenant.</summary>
@@ -81,7 +81,7 @@ public sealed class GroveContentGroupsSettings
 /// and a tenant's edits survive them - the same relationship the admin-menu layout
 /// document has to navigation providers.
 /// </summary>
-public sealed class GroveContentGroupsDocument : Document
+public sealed class ContentGroupsDocument : Document
 {
     public Dictionary<string, ContentGroupOverride> Groups { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 }

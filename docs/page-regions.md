@@ -6,7 +6,7 @@ A downstream module often must appear on screens it does not own: a tax module's
 tax and document summary on a transaction editor, an exemption panel on the party editor.
 The dependency rule applies — **the page's module must not reference the downstream module
 to render its contribution** — so the UI contribution is injected the way a downstream
-module's content parts are. `RenderFragment` slots do not do this: they are caller-supplied,
+module's field sets are. `RenderFragment` slots do not do this: they are caller-supplied,
 letting a page pass content into a component it uses, not letting a foreign module push
 content into a page.
 

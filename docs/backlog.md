@@ -8,7 +8,7 @@ Left out on purpose, because a question is still open against them: the
 Queries API (queries.md Q6, Q7; workflows.md "what the platform offers for connections"),
 audit feeds at volume (A4), the designer UI and its move (blazordesigner.md, workflows.md W6),
 design systems as content (part vs fields), cross-tenant translation suggestions, the global
-editing UI (which UI first), the geocoder, Regions and Spatial (regions.md), merging Grove.Routes and Grove.Routes.Auto, the content model's naming (content types, fields, parts; bags and part lists, today Grove.Contents.BagParts and the `Grove.Contents.PartLists` feature), approvals, theme storage and switching
+editing UI (which UI first), the geocoder, Regions and Spatial (regions.md), merging Grove.Routes and Grove.Routes.Auto, the content model's naming (content types, fields, parts; embeddings and part lists, the `Grove.Contents.OptionLists` feature), approvals, theme storage and switching
 (shells-and-themes.md), shells on their own hostnames, user settings, and the parked security audit and sandboxed custom elements (blazor-display.md).
 
 Status: ☐ open, ◐ partial, ☑ done.
@@ -111,7 +111,7 @@ Status: ☐ open, ◐ partial, ☑ done.
 
 ## Display (blazor-display.md, widgets.md)
 
-- ☑ Widget replacements (widgets.md): rich text, figure, forms, validation, search box, the per-item page body (`DisplayTreePart`), visibility rules, the captcha, `FacebookPlugin` and the media picker editor
+- ☑ Widget replacements (widgets.md): rich text, figure, forms, validation, search box, the per-item page body (`DisplayTreeFieldSet`), visibility rules, the captcha, `FacebookPlugin` and the media picker editor
 - ☑ Step 1 leftovers: route scanner reads the catalogs, page regions as zone keys, editor facet entries, primitives annotated (icon, markdown, layout hosts, colour and media editors; the form editors stay unregistered as a parallel set, reason in blazor-display.md)
 - ◐ Step 2 leftovers: tree cache (versioned and validated, see decision 12; the unfiltered cache is left); display events for bound nodes ☑
 - ☐ Razor → Blazor component parity audit: every Razor view, shape template and widget has a Blazor component equivalent, reusing `Grove.Display.Components` (blazor-display.md step 7; MVC/views.md, MVC/shape-engine.md, widgets.md; tracker: [MVC/parity.md](MVC/parity.md))
@@ -189,13 +189,13 @@ Status: ☐ open, ◐ partial, ☑ done.
 - ☑ Native tests of the Access APIs (`Grove.Tests/Modules/Grove.Access.Users/AccessApiTests.cs`: sign-in with and without two factors, the challenge and a recovery code, registration, forgot and reset password, the gate's setup-required rule); the test host maps the declared API route groups as Grove.Infrastructure.Server does. Left: the user audit settings group's filter
 - ☑ The member portal's second sign-in step and captcha section: `TwoFactorChallenge` and `AccessFormExtensions` on the portal login (shells-and-themes.md › The member portal)
 - ☑ A user who must set up two-factor authentication reaches only the setup, enforced by the access gate (`IPendingSignInStepProvider`, access.md › Authentication); one source for the sign-in paths (`UserOptions.LoginPath`; the other path options and the "use the site theme" settings removed)
-- ☑ Kept modules ported to Blazor: Taxonomies, Lists, Seo, the content-part modules (their editors on the tree over the modules' APIs, `ContentPreviewPane`, `CulturePicker`, `HeadLink`, `IconPicker`, `ContentDiff`, `SitemapPartEditor`); Sitemaps, Shortcodes templates, the SMS test page, feature profiles and GraphiQL as a static page; Grove.Display.Rules' condition editors as `RuleEditor` and its condition editors on the Layers page over `api/grove/rules`; Grove.Infrastructure.Server.ReverseProxy and Grove.Data.Protocols.Https as settings groups; every module display template replaced by its registered component and deleted (MVC/views.md, MVC/parity.md)
+- ☑ Kept modules ported to Blazor: Taxonomies, Lists, Seo, the content-part modules (their editors on the tree over the modules' APIs, `ContentPreviewPane`, `CulturePicker`, `HeadLink`, `IconPicker`, `ContentDiff`, `SitemapFieldSetEditor`); Sitemaps, Shortcodes templates, the SMS test page, feature profiles and GraphiQL as a static page; Grove.Display.Rules' condition editors as `RuleEditor` and its condition editors on the Layers page over `api/grove/rules`; Grove.Infrastructure.Server.ReverseProxy and Grove.Data.Protocols.Https as settings groups; every module display template replaced by its registered component and deleted (MVC/views.md, MVC/parity.md)
 - ☑ The head contribution seam (`IDocumentContributor`): Google Analytics, Tag Manager, the Meta Pixel, the Facebook SDK and MiniProfiler's includes in the shell documents; the MVC layout filters and the last module view deleted (MVC/views.md › Themes, layouts and layout filters)
 - ☑ Grove.Search as the search seam (`ISiteSearch`, `api/grove/search`, the site search page) with Lucene, Elasticsearch and Azure AI Search as providers (MVC/views.md › Search, queries.md)
 - ☐ The site search through the engines' query sources with the caller's scope injected (queries.md › Search engines are connections)
 - ☑ Grove.Routes: the tenant's route management page (page registry routes, Autoroute, alias and home routes, rewrite rules); Grove.UrlRewriting folded into Grove.Routes and its MVC admin deleted (MVC/views.md › Routes)
 - ☐ Grove.HomeRoute merged into Grove.Routes (MVC/views.md › Routes)
-- ☑ `LiquidPart` bodies migrated to `DisplayTreePart`, the part retired (MVC/shape-engine.md › Component coverage)
+- ☑ `LiquidPart` bodies migrated to `DisplayTreeFieldSet`, the part retired (MVC/shape-engine.md › Component coverage)
 - ☑ Tenant Liquid without `Request` and `HttpContext` (MVC/shape-engine.md L3)
 - ☑ The shape engine without MVC: renderers, `[Shape]` bindings, tag helpers, `IHtmlDisplay`, the editor halves and `IUpdateModel` deleted; a shape without a component is an error node; the coverage report `api/grove/components/coverage` (MVC/shape-engine.md)
 - ☑ The validation sink (`IValidationSink`) as the content manager's error sink, answered by the APIs as `errors` (MVC/shape-engine.md › The validation sink, MVC/api.md E3)
@@ -206,28 +206,30 @@ Status: ☐ open, ◐ partial, ☑ done.
 
 ## Content engine (content-engine.md)
 
-- ☐ Parts renamed to field sets in code, the definition store and screens, same function: `ContentFieldSetDefinition`, `ContentTypeFieldSetDefinition`, `ContentFieldDefinition`, `ContentFieldSet` (content-engine.md › Definitions and data in code)
-- ☐ `BagPart` replaced by `EmbeddedContentDefinition` on the parent type and `EmbeddedContentItems` in the item (content-engine.md › Embedded content items)
-- ☐ Code parts split into a field set for their data and system flows for their behaviour, attached as hooks (inside the saving unit of work) and triggers (after commit) on per-type lifecycle slots with old and new values, with field locks for fields system flows require (content-engine.md › Behaviour is workflows)
-- ☐ Validation, visibility and hook conditions on the one expression engine; one field-path error contract answered as 400 (content-engine.md › Validation and conditions)
-- ☐ Embedded content items with stable ids, referenceable embeddings, and live and snapshot embeddings (content-engine.md › Live and snapshot embeddings)
-- ☐ Field paths, permission scopes and localization keys renamed from parts to field sets; the "Content Parts" page renamed "Field groups" (content-engine.md › Code that still has to change)
-- ☐ Definition labels as localization sources; a culture-affected setting per field on the attachment (content-engine.md › Localization)
-- ☐ Preview runs before hooks in a rolled-back unit of work (content-engine.md › Behaviour is workflows)
+- ☑ Field sets in code, the definition store and screens, same function as the parts they replace: `ContentFieldSetDefinition`, `ContentTypeFieldSetDefinition`, `ContentFieldDefinition`, `ContentFieldSet`, their builders, records, events and handlers; field-set classes named `…FieldSet` and stored without the suffix (content-engine.md › Definitions and data in code)
+- ☑ `BagPart` replaced by `EmbeddedContentDefinition` on the parent type and `EmbeddedContentItems` in the item (content-engine.md › Embedded content items)
+- ☑ Per-type content lifecycle slots: a hook (inside the saving unit of work, refusing with errors by field path) and a trigger (after commit) at every lifecycle point, with old and new values; system flows attached through the field sets that carry them (content-engine.md › Behaviour is workflows, workflows.md › Hook slots)
+- ☑ The modules' field sets split into fields for their data (typed accessors, module locks on fields system flows require), system flows for their behaviour on the lifecycle slots, and read projections for their read-time values; their field-set handlers deleted (content-engine.md › Behaviour is workflows, Module field sets)
+- ☑ Validation, visibility and hook conditions on the one expression engine; one field-path error contract answered as 400 (content-engine.md › Validation and conditions)
+- ☑ Embedded content items with stable ids, referenceable embeddings, and live and snapshot embeddings (content-engine.md › Live and snapshot embeddings)
+- ☑ Field paths `FieldSet.Field`, permission scopes `ContentFieldSet:{type}.{fieldSet}` and localization keys `Content Fields:{FieldSetAttachment}`; the Field groups page (content-engine.md › Names: code and screens)
+- ☑ Definition labels as localization sources (field-set, attachment, field description and embedding names beside type names and field labels), read by the editor tree; a culture-affected setting per field on the attachment, on the Content types page and in the field displays (content-engine.md › Localization)
+- ☑ Preview runs before hooks in a rolled-back unit of work (content-engine.md › Behaviour is workflows)
 - ☑ content-items.md merged into content-engine.md and deleted
 - ☐ A compiled execution mode per flow, after the content engine work (workflows.md › Performance dials)
-- ☐ Content part lists renamed to option lists (`OptionList`, `Option`; feature, field sets, routes, permissions, source prefix, client library) and `OptionPickerField` renamed `OptionListField`; taxonomies labelled "Categories" in screens (content-engine.md › Code that still has to change)
-- ☐ `TaxonomyField`, `UserPickerField` and `LocalizationSetContentPickerField` replaced by option list field sources (content-engine.md › Picking is one field type)
-- ☐ Every field type registers through Grove.Contents.Fields' registry from its own module (content-engine.md › Fields and field types)
-- ☐ Grove.Contents.Lists renamed Grove.Contents.Hierarchy, with `ChildContentItemsFieldSet` and `ParentContentItemFieldSet` (content-engine.md › Code that still has to change)
-- ☐ Project name out of type names: `GroveContentPartListPart`, `GroveOptionPart`, `GroveRegionalProfilePart`, `GroveRegionalProfileReferencePart`, `GroveOrganizationPart`, `GroveContentGroupsDocument`
+- ☑ Option lists (`OptionList`, `Option`; the `Grove.Contents.OptionLists` feature, `OptionListFieldSet` and `OptionEntryFieldSet`, `api/grove/option-lists`, the `*OptionLists` permissions, the `optionlist` source prefix and content-group kind, `Grove.Contents.OptionLists.BlazorWasm`) and the `OptionListField` (content-engine.md › Option lists)
+- ☑ Taxonomies labelled "Categories" in screens: the type, the field set, the feature, the permission, the settings group, the editors, the system flows (content-engine.md › The concepts)
+- ☑ `TaxonomyField`, `UserPickerField` and `LocalizationSetContentPickerField` retired: option list fields on `embedded:Taxonomy.Terms`, `users` and `localization-set:`; term pages and taxonomy filters over the option list field index; recipes convert on import (content-engine.md › Picking is one field type)
+- ☑ Every field type registers through Grove.Contents.Fields' registry from its own module (`AddFieldType`); the type editor offers and accepts only registered types (content-engine.md › Fields and field types)
+- ☑ Grove.Contents.Hierarchy, with `ChildContentItemsFieldSet` and `ParentContentItemFieldSet` (content-engine.md › Module field sets)
+- ☑ Project name out of type names: `OptionListFieldSet`, `OptionEntryFieldSet`, `RegionalProfileFieldSet`, `RegionalProfileReferenceFieldSet`, `OwningOrganizationFieldSet`, `ContentGroupsDocument`, `DefinitionLockSettings`, `FieldVisibilitySettings`, `OptionFieldSettings`
 
 ## Content items (content-engine.md)
 
 - ☑ Picker relationship handlers; hierarchical Category; Fluid sandboxing with data scope
 - ☑ The option picker field family to Grove.Contents.OptionPicker, contracts and DTOs in Grove.Contents.OptionPicker.Abstractions; field visibility in Grove.Contents.Types over `IFieldComparisonValueResolver` (server.md § 3, S2)
-- ☑ Content Part Lists as the `Grove.Contents.PartLists` feature of Grove.Contents (its page the `Grove.Contents.PartLists.BlazorWasm` library, served while the feature is on); the option sources API gated by Grove.Contents.OptionPicker's `QueryOptionSources` (content-engine.md › Option lists, server.md § 3)
-- ☑ The option picker's UI in its module's client library, `Grove.Contents.OptionPicker.BlazorWasm`: the `OptionPicker` component and the `OptionPickerField` editor facet in the component registry (server.md § 3)
+- ☑ Option lists as the `Grove.Contents.OptionLists` feature of Grove.Contents (its page the `Grove.Contents.OptionLists.BlazorWasm` library, served while the feature is on); the option sources API gated by Grove.Contents.OptionPicker's `QueryOptionSources` (content-engine.md › Option lists, server.md § 3)
+- ☑ The option picker's UI in its module's client library, `Grove.Contents.OptionPicker.BlazorWasm`: the `OptionPicker` component and the `OptionListField` editor facet in the component registry (server.md § 3)
 - ☑ ContentPickerField merged into the option picker: the content items source gained types/stereotypes/all, the Liquid title pattern, edit and create links and ordered selection; definitions and stored values converted by migration and on recipe import; the display, GraphQL, Liquid, index, save guard, workflows, Menu, Parties and Fruitful moved over; the field, its settings, drivers, index, result providers (Default, Lucene, Elasticsearch, and their `*.ContentPicker` features) and the content-items endpoint of `ContentPickerApi` deleted (content-engine.md › The option list field, server.md § 3)
 
 ## Architecture (architecture.md)

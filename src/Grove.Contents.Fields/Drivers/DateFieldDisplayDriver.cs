@@ -23,8 +23,8 @@ public sealed class DateFieldDisplayDriver : ContentFieldDisplayDriver<DateField
         return Initialize<DisplayDateFieldViewModel>(GetDisplayShapeType(context), model =>
         {
             model.Field = field;
-            model.Part = context.ContentPart;
-            model.PartFieldDefinition = context.PartFieldDefinition;
+            model.FieldSet = context.ContentFieldSet;
+            model.FieldDefinition = context.FieldDefinition;
         })
         .Location(PlatformConstants.DisplayType.Detail, "Content")
         .Location(PlatformConstants.DisplayType.Summary, "Content");

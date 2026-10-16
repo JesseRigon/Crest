@@ -17,7 +17,10 @@ using Grove.Modules.Manifest;
     Name = "Grove Workflows",
     Description = "Grove.Workflows 3 as the tenant's workflow engine: definitions as content items, per-shell stores, the Grove.Workflows API behind Grove permissions.",
     Category = "Grove.Workflows",
-    Dependencies = ["Grove.Access", "Grove.Contents", "Grove.Display.Liquid", "Grove.Scripting", "Grove.Data.Connectors", "Grove"]
+    Dependencies = ["Grove.Access", "Grove.Contents", "Grove.Display.Liquid", "Grove.Scripting", "Grove.Data.Connectors", "Grove"],
+    // Content behaviour is workflows (docs/content-engine.md › Behaviour is workflows): the
+    // field sets' system flows run on it, so it is never off.
+    IsAlwaysEnabled = true
 )]
 
 [assembly: Feature(

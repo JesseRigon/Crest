@@ -28,14 +28,14 @@ public class LuceneRecipeEventHandler : IRecipeEventHandler
 
             foreach (var contentType in step.ContentTypes)
             {
-                foreach (var partDefinition in contentType.ContentTypePartDefinitionRecords)
+                foreach (var partDefinition in contentType.ContentTypeFieldSetDefinitionRecords)
                 {
                     if (partDefinition.Settings != null)
                     {
-                        if (partDefinition.Settings.TryGetPropertyValue("ContentIndexSettings", out var existingPartSettings) &&
+                        if (partDefinition.Settings.TryGetPropertyValue("ContentIndexSettings", out var existingFieldSetSettings) &&
                             !partDefinition.Settings.ContainsKey("LuceneContentIndexSettings"))
                         {
-                            partDefinition.Settings.Add("LuceneContentIndexSettings", existingPartSettings?.DeepClone());
+                            partDefinition.Settings.Add("LuceneContentIndexSettings", existingFieldSetSettings?.DeepClone());
                         }
 
                         partDefinition.Settings.Remove("ContentIndexSettings");
@@ -43,18 +43,18 @@ public class LuceneRecipeEventHandler : IRecipeEventHandler
                 }
             }
 
-            foreach (var partDefinition in step.ContentParts)
+            foreach (var partDefinition in step.ContentFieldSets)
             {
                 if (partDefinition.Settings != null)
                 {
-                    if (partDefinition.Settings.TryGetPropertyValue("ContentIndexSettings", out var existingPartSettings))
+                    if (partDefinition.Settings.TryGetPropertyValue("ContentIndexSettings", out var existingFieldSetSettings))
                     {
-                        partDefinition.Settings["LuceneContentIndexSettings"] = existingPartSettings?.DeepClone();
+                        partDefinition.Settings["LuceneContentIndexSettings"] = existingFieldSetSettings?.DeepClone();
                     }
 
                     partDefinition.Settings.Remove("ContentIndexSettings");
 
-                    foreach (var fieldDefinition in partDefinition.ContentPartFieldDefinitionRecords)
+                    foreach (var fieldDefinition in partDefinition.ContentFieldDefinitionRecords)
                     {
                         if (fieldDefinition.Settings != null)
                         {
@@ -79,6 +79,6 @@ public class LuceneRecipeEventHandler : IRecipeEventHandler
     {
         public string Name { get; set; }
         public ContentTypeDefinitionRecord[] ContentTypes { get; set; } = [];
-        public ContentPartDefinitionRecord[] ContentParts { get; set; } = [];
+        public ContentFieldSetDefinitionRecord[] ContentFieldSets { get; set; } = [];
     }
 }

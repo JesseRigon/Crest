@@ -121,7 +121,7 @@ public class ContentItemTests
     }
 
     [Fact]
-    public void Serialize_Parts_Succeeds()
+    public void Serialize_FieldSets_Succeeds()
     {
         var contentItem = new ContentItem();
         var myPart = new MyPart { Text = "test" };
@@ -136,7 +136,7 @@ public class ContentItemTests
     }
 
     [Fact]
-    public void Alter_Part_Succeeds()
+    public void Alter_FieldSet_Succeeds()
     {
         var contentItem = CreateContentItemWithMyPart();
 
@@ -149,7 +149,7 @@ public class ContentItemTests
     }
 
     [Fact]
-    public void Content_Default_OnlyContainParts()
+    public void Content_Default_OnlyContainFieldSets()
     {
         var contentItem = CreateContentItemWithMyPart();
 
@@ -178,19 +178,19 @@ public class ContentItemTests
     {
         var contentItem = CreateContentItemWithMyPart();
         JsonNode contentItemJson = contentItem.Content;
-        JsonNode contentPartJson = contentItem.GetOrCreate<MyPart>().Content;
+        JsonNode contentFieldSetJson = contentItem.GetOrCreate<MyPart>().Content;
 
-        // The content part should be selectable from the content item.
+        // The field set should be selectable from the content item.
         var selectedItemNode = contentItemJson.SelectNode("MyPart");
         Assert.NotNull(selectedItemNode);
-        Assert.Equal(selectedItemNode.ToJsonString(), contentPartJson.ToJsonString());
+        Assert.Equal(selectedItemNode.ToJsonString(), contentFieldSetJson.ToJsonString());
 
         // Verify that SelectNode queries the subtree of the node it's called on (not the document root).
         var textPropertyNode = selectedItemNode.SelectNode("Text");
         AssertJsonEqual(textPropertyNode, JObject.Parse(selectedItemNode.ToJsonString()).SelectNode("Text"));
 
         // Verify consistent results when targeting the same node in different ways.
-        AssertJsonEqual(textPropertyNode, contentPartJson.SelectNode("Text"));
+        AssertJsonEqual(textPropertyNode, contentFieldSetJson.SelectNode("Text"));
         AssertJsonEqual(textPropertyNode, contentItemJson.SelectNode("MyPart.Text"));
         AssertJsonEqual(textPropertyNode, contentItemJson.SelectNode("$..Text"));
     }
@@ -353,7 +353,7 @@ public class ContentItemTests
     }
 }
 
-public sealed class MyPart : ContentPart
+public sealed class MyPart : ContentFieldSet
 {
     public string Text { get; set; }
 }
@@ -373,7 +373,7 @@ public sealed class MyTextField : ContentField
     public string Text { get; set; }
 }
 
-public sealed class GetOnlyListPart : ContentPart
+public sealed class GetOnlyChildContentItemsFieldSet : ContentFieldSet
 {
     public IList<string> Texts { get; } = [];
 }

@@ -15,13 +15,13 @@ public sealed class ContentAutorouteShapeTableProvider : ShapeTableProvider
                 var shape = displaying.Shape;
                 var contentItem = shape.GetProperty<ContentItem>("ContentItem");
 
-                if (contentItem is not null && contentItem.TryGet<AutoroutePart>(out var autoroutePart))
+                if (contentItem is not null && contentItem.TryGet<AutorouteFieldSet>(out var autorouteFieldSet))
                 {
                     var displayType = displaying.Shape.Metadata.DisplayType;
 
                     // Get cached alternates and add them efficiently
                     var cachedAlternates = AutorouteAlternatesFactory.GetAlternates(
-                        autoroutePart.Path,
+                        autorouteFieldSet.Path,
                         displayType);
 
                     displaying.Shape.Metadata.Alternates.AddRange(cachedAlternates);

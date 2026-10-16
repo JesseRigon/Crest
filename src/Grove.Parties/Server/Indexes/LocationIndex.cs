@@ -28,7 +28,7 @@ public sealed class LocationIndexProvider : IndexProvider<ContentItem>
                 return new LocationIndex
                 {
                     ContentItemId = contentItem.ContentItemId,
-                    IsPrimary = contentItem.Get<ContentPart>(PartiesConstants.ContentTypes.Location)?.Get<BooleanField>("IsPrimary")?.Value ?? false,
+                    IsPrimary = contentItem.Get<ContentFieldSet>(PartiesConstants.ContentTypes.Location)?.Get<BooleanField>("IsPrimary")?.Value ?? false,
                     Published = contentItem.Published,
                     Latest = contentItem.Latest,
                 };

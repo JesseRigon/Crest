@@ -5,12 +5,12 @@ using Grove.Data.Protocols.GraphQL.Queries;
 
 namespace Grove.Contents.Alias.GraphQL;
 
-public class AliasInputObjectType : WhereInputObjectGraphType<AliasPart>
+public class AliasInputObjectType : WhereInputObjectGraphType<AliasFieldSet>
 {
     public AliasInputObjectType(IStringLocalizer<AliasInputObjectType> stringLocalizer)
         : base(stringLocalizer)
     {
-        Name = "AliasPartInput";
+        Name = "AliasFieldSetInput";
         Description = S["the alias part of the content item"];
 
         AddScalarFilterFields<StringGraphType>("alias", S["the alias of the content item"]);

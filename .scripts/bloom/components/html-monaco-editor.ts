@@ -4,7 +4,7 @@ import waitForMonaco from "../helpers/monaco";
 
 // The "Monaco-based HTML source editor with an Insert Shortcode action" pattern is shared by
 // every HTML field/part editor that offers Monaco instead of CodeMirror/Trumbowyg/Wysiwyg
-// (identical between HtmlField-Monaco and HtmlBodyPart-Monaco) - reads its container/value
+// (identical between HtmlField-Monaco and HtmlBodyFieldSet-Monaco) - reads its container/value
 // elements and its per-view Monaco options (as JSON) off data-* attributes.
 const initHtmlMonacoEditor = (element: HTMLElement) => {
     const editorContainer = element.querySelector<HTMLElement>(".html-monaco-editor-container");

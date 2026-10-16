@@ -33,8 +33,21 @@ public sealed class TemplateStep(TemplateStore store) : NamedRecipeStepHandler("
 
             // The declaration reads straight off the step (Source, Theme, DisplayType, Description,
             // IsComposite, DisplayName, Category, Icon, Inputs, Outputs); "Content" is the old name of Source.
-            var part = template.Deserialize<TemplatePart>(s_json) ?? new TemplatePart();
-            part.Name = name;
+            var declaration = template.Deserialize<Declaration>(s_json) ?? new Declaration();
+            var part = new TemplateFieldSet
+            {
+                Name = name,
+                Source = declaration.Source ?? string.Empty,
+                Theme = declaration.Theme,
+                DisplayType = declaration.DisplayType,
+                Description = declaration.Description,
+                IsComposite = declaration.IsComposite,
+                DisplayName = declaration.DisplayName,
+                Category = declaration.Category,
+                Icon = declaration.Icon,
+                Inputs = declaration.Inputs ?? [],
+                Outputs = declaration.Outputs ?? [],
+            };
             if (string.IsNullOrEmpty(part.Source) && template["Content"]?.GetValue<string>() is { } content)
             {
                 part.Source = content;
@@ -48,5 +61,29 @@ public sealed class TemplateStep(TemplateStore store) : NamedRecipeStepHandler("
             var saved = await store.SaveDraftAsync(match?.ContentItemId, part);
             await store.PublishAsync(saved.ContentItemId);
         }
+    }
+
+    // A template as the step declares it; the field set's values are fields, read through its accessors.
+    private sealed class Declaration
+    {
+        public string? Source { get; set; }
+
+        public string? Theme { get; set; }
+
+        public string? DisplayType { get; set; }
+
+        public string? Description { get; set; }
+
+        public bool IsComposite { get; set; }
+
+        public string? DisplayName { get; set; }
+
+        public string? Category { get; set; }
+
+        public string? Icon { get; set; }
+
+        public List<TemplateInput>? Inputs { get; set; }
+
+        public List<TemplateOutput>? Outputs { get; set; }
     }
 }

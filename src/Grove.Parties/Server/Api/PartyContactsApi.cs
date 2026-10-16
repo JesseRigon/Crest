@@ -15,7 +15,7 @@ namespace Grove.Parties.Api;
 
 /// <summary>
 /// <c>api/grove/parties/{partyId}</c>: contact points and addresses of one party. These live
-/// INSIDE the party document (BagParts), which the generic content-items editor round-trips but
+/// INSIDE the party document (embedded content items), which the generic content-items editor round-trips but
 /// cannot edit, so this is the write surface. Authorization is Grove's own content permissions
 /// evaluated against the PARTY item: a caller who may edit the party may edit its contact data,
 /// nothing more granular.

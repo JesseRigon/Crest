@@ -5,7 +5,6 @@ using Grove.Parties.Indexes;
 using Grove.Parties.ViewModels;
 using Grove.Contents.Fields.Fields;
 using Grove.Contents.Management;
-using Grove.Contents.BagParts.Models;
 using YesSql;
 using Grove.Fields;
 
@@ -51,7 +50,7 @@ public sealed class PartyPositionsService(IContentManager contentManager, PartyB
         var element = await contentManager.NewAsync(PartiesConstants.ContentTypes.OrgPosition);
         Apply(element, write, organization);
 
-        person.Alter<BagPart>(PartiesConstants.Bags.Positions, bag =>
+        person.Alter<EmbeddedContentItems>(PartiesConstants.Bags.Positions, bag =>
         {
             if (write.Primary)
             {
@@ -70,7 +69,7 @@ public sealed class PartyPositionsService(IContentManager contentManager, PartyB
         var organization = await RequireOrganizationAsync(write.OrganizationId, person.ContentItemId);
         ContentItem? updated = null;
 
-        person.Alter<BagPart>(PartiesConstants.Bags.Positions, bag =>
+        person.Alter<EmbeddedContentItems>(PartiesConstants.Bags.Positions, bag =>
         {
             updated = bag.ContentItems.FirstOrDefault(item => item.ContentItemId == positionId);
             if (updated is null)
@@ -97,7 +96,7 @@ public sealed class PartyPositionsService(IContentManager contentManager, PartyB
     public async Task<bool> RemoveAsync(ContentItem person, string positionId, CancellationToken cancellationToken = default)
     {
         var removed = false;
-        person.Alter<BagPart>(PartiesConstants.Bags.Positions, bag => removed = bag.ContentItems.RemoveAll(item => item.ContentItemId == positionId) > 0);
+        person.Alter<EmbeddedContentItems>(PartiesConstants.Bags.Positions, bag => removed = bag.ContentItems.RemoveAll(item => item.ContentItemId == positionId) > 0);
 
         if (removed)
         {
@@ -185,9 +184,9 @@ public sealed class PartyPositionsService(IContentManager contentManager, PartyB
     private static void Apply(ContentItem element, PositionWriteModel write, ContentItem organization)
     {
         element.DisplayText = string.Join(" @ ", new[] { write.Title, organization.DisplayText }.Where(value => !string.IsNullOrWhiteSpace(value)));
-        element.Alter<ContentPart>(Part, part =>
+        element.Alter<ContentFieldSet>(Part, part =>
         {
-            part.Alter<OptionPickerField>("Organization", field => field.SelectedIds = [organization.ContentItemId]);
+            part.Alter<OptionListField>("Organization", field => field.SelectedIds = [organization.ContentItemId]);
             part.Alter<TextField>("Title", field => field.Text = Clean(write.Title));
             part.Alter<TextField>("Department", field => field.Text = Clean(write.Department));
             part.Alter<BooleanField>("Primary", field => field.Value = write.Primary);
@@ -195,17 +194,17 @@ public sealed class PartyPositionsService(IContentManager contentManager, PartyB
     }
 
     // One primary position per person.
-    private static void ClearOtherPrimary(BagPart bag, string exceptId)
+    private static void ClearOtherPrimary(EmbeddedContentItems bag, string exceptId)
     {
         foreach (var sibling in bag.ContentItems.Where(item => item.ContentItemId != exceptId))
         {
-            sibling.Alter<ContentPart>(Part, part => part.Alter<BooleanField>("Primary", field => field.Value = false));
+            sibling.Alter<ContentFieldSet>(Part, part => part.Alter<BooleanField>("Primary", field => field.Value = false));
         }
     }
 
     private static PositionModel ToModel(ContentItem element, IReadOnlyDictionary<string, string> organizationNames)
     {
-        var part = element.Get<ContentPart>(Part);
+        var part = element.Get<ContentFieldSet>(Part);
         var organizationId = OrganizationId(element) ?? string.Empty;
 
         return new PositionModel(
@@ -218,10 +217,10 @@ public sealed class PartyPositionsService(IContentManager contentManager, PartyB
     }
 
     private static IReadOnlyList<ContentItem> Elements(ContentItem person) =>
-        person.Get<BagPart>(PartiesConstants.Bags.Positions)?.ContentItems ?? [];
+        person.Get<EmbeddedContentItems>(PartiesConstants.Bags.Positions)?.ContentItems ?? [];
 
     private static string? OrganizationId(ContentItem element) =>
-        element.Get<ContentPart>(Part)?.Get<OptionPickerField>("Organization")?.SelectedIds.FirstOrDefault();
+        element.Get<ContentFieldSet>(Part)?.Get<OptionListField>("Organization")?.SelectedIds.FirstOrDefault();
 
     private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

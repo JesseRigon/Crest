@@ -53,30 +53,30 @@
               "Securable": true
             }
           },
-          "ContentTypePartDefinitionRecords": [
+          "ContentTypeFieldSetDefinitionRecords": [
             {
-              "PartName": "TitlePart",
-              "Name": "TitlePart",
+              "FieldSetName": "Title",
+              "Name": "Title",
               "Settings": {
-                "ContentTypePartSettings": {
+                "ContentTypeFieldSetSettings": {
                   "Position": "0"
                 }
               }
             },
             {
-              "PartName": "HtmlBodyPart",
-              "Name": "HtmlBodyPart",
+              "FieldSetName": "HtmlBody",
+              "Name": "HtmlBody",
               "Settings": {
-                "ContentTypePartSettings": {
+                "ContentTypeFieldSetSettings": {
                   "Position": "1"
                 }
               }
             },
             {
-              "PartName": "AutoroutePart",
-              "Name": "AutoroutePart",
+              "FieldSetName": "Autoroute",
+              "Name": "Autoroute",
               "Settings": {
-                "ContentTypePartSettings": {
+                "ContentTypeFieldSetSettings": {
                   "Position": "2"
                 }
               }

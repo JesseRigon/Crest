@@ -23,8 +23,8 @@ public static class GroveContentTypeMetadata
             return null;
         }
 
-        var parts = new List<GroveContentPartMetadata>();
-        foreach (var partEntry in definition["parts"] as JsonArray ?? new JsonArray())
+        var parts = new List<GroveContentFieldSetMetadata>();
+        foreach (var partEntry in definition["fieldSets"] as JsonArray ?? new JsonArray())
         {
             if (partEntry is null)
             {
@@ -37,8 +37,8 @@ public static class GroveContentTypeMetadata
                 continue;
             }
 
-            var part = partEntry["part"];
-            var partDisplayName = part?["settings"]?["ContentPartSettings"]?["DisplayName"]?.GetValue<string>();
+            var part = partEntry["fieldSet"];
+            var partDisplayName = part?["settings"]?["ContentFieldSetSettings"]?["DisplayName"]?.GetValue<string>();
 
             var fields = new List<GroveContentFieldMetadata>();
             foreach (var fieldEntry in part?["fields"] as JsonArray ?? new JsonArray())
@@ -49,14 +49,14 @@ public static class GroveContentTypeMetadata
                 }
 
                 var fieldName = fieldEntry["name"]?.GetValue<string>();
-                var fieldType = fieldEntry["field"]?["name"]?.GetValue<string>();
+                var fieldType = fieldEntry["fieldType"]?["name"]?.GetValue<string>();
                 if (string.IsNullOrWhiteSpace(fieldName) || string.IsNullOrWhiteSpace(fieldType))
                 {
                     continue;
                 }
 
                 var settings = fieldEntry["settings"];
-                var common = settings?["ContentPartFieldSettings"];
+                var common = settings?["ContentFieldSettings"];
                 fields.Add(new GroveContentFieldMetadata(
                     fieldName,
                     fieldType,
@@ -67,7 +67,7 @@ public static class GroveContentTypeMetadata
                     settings?.DeepClone()));
             }
 
-            parts.Add(new GroveContentPartMetadata(
+            parts.Add(new GroveContentFieldSetMetadata(
                 partName,
                 partDisplayName ?? partName,
                 [.. fields],

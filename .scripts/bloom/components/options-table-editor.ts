@@ -8,7 +8,7 @@ import { getTranslations, setTranslations } from "../helpers/localizations";
 //     "default" column in checkbox mode)
 //   - Grove.Access.OpenId's OpenIdClientSettings.Edit.cshtml (2 columns, name/value, no "default"
 //     column)
-//   - Grove.Seo's SeoMetaPart.Edit.cshtml (5 columns: content/name/property/httpEquiv/
+//   - Grove.Seo's SeoMetaFieldSet.Edit.cshtml (5 columns: content/name/property/httpEquiv/
 //     charset, no "default" column)
 //
 // Follows this repo's established plain-.ts bloom-component shape (Vue.createApp + template

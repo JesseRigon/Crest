@@ -22,8 +22,8 @@ public sealed class Startup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddDataMigration<Migrations>();
-        // The version comment is edited on the editor tree (TextFieldEditor edits AuditTrailPart).
-        services.AddContentPart<AuditTrailPart>();
+        // The version comment is edited on the editor tree (TextFieldEditor edits AuditTrailFieldSet).
+        services.AddContentFieldSet<AuditTrailFieldSet>();
 
 
         services.AddTransient<IConfigureOptions<AuditTrailOptions>, ContentAuditTrailEventConfiguration>();

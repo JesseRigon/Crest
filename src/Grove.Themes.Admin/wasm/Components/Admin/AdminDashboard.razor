@@ -77,7 +77,7 @@
                         <ul>
                             @foreach (var contentType in AdminShellState.ContentTypes)
                             {
-                                <li>@contentType.DisplayName (@contentType.Name) · @contentType.Parts.Length @T["Parts"]</li>
+                                <li>@contentType.DisplayName (@contentType.Name) · @contentType.FieldSets.Length @T["Field groups"]</li>
                             }
                         </ul>
                     }

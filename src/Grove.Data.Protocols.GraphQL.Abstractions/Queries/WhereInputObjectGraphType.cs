@@ -65,15 +65,15 @@ public abstract class WhereInputObjectGraphType<TSourceType> : InputObjectGraphT
     public void AddScalarFilterFields<TGraphType>(string fieldName, string description)
         => AddScalarFilterFields<TGraphType>(fieldName, description, null, null, null);
 
-    public virtual void AddScalarFilterFields<TGraphType>(string fieldName, string description, string aliasName, string contentPart, string contentField)
+    public virtual void AddScalarFilterFields<TGraphType>(string fieldName, string description, string aliasName, string contentFieldSet, string contentField)
     {
-        AddScalarFilterFields(typeof(TGraphType), fieldName, description, aliasName, contentPart, contentField);
+        AddScalarFilterFields(typeof(TGraphType), fieldName, description, aliasName, contentFieldSet, contentField);
     }
 
     public void AddScalarFilterFields(Type graphType, string fieldName, string description)
         => AddScalarFilterFields(graphType, fieldName, description, null, null, null);
 
-    public virtual void AddScalarFilterFields(Type graphType, string fieldName, string description, string aliasName, string contentPart, string contentField)
+    public virtual void AddScalarFilterFields(Type graphType, string fieldName, string description, string aliasName, string contentFieldSet, string contentField)
     {
         if (!typeof(ScalarGraphType).IsAssignableFrom(graphType) &&
             !typeof(IInputObjectGraphType).IsAssignableFrom(graphType))
@@ -81,16 +81,16 @@ public abstract class WhereInputObjectGraphType<TSourceType> : InputObjectGraphT
             return;
         }
 
-        AddEqualityFilters(graphType, fieldName, description, aliasName, contentPart, contentField);
+        AddEqualityFilters(graphType, fieldName, description, aliasName, contentFieldSet, contentField);
 
         if (graphType == typeof(StringGraphType))
         {
-            AddMultiValueFilters(graphType, fieldName, description, aliasName, contentPart, contentField);
-            AddStringFilters(graphType, fieldName, description, aliasName, contentPart, contentField);
+            AddMultiValueFilters(graphType, fieldName, description, aliasName, contentFieldSet, contentField);
+            AddStringFilters(graphType, fieldName, description, aliasName, contentFieldSet, contentField);
         }
         else if (graphType == typeof(IdGraphType))
         {
-            AddMultiValueFilters(graphType, fieldName, description, aliasName, contentPart, contentField);
+            AddMultiValueFilters(graphType, fieldName, description, aliasName, contentFieldSet, contentField);
         }
         else if (graphType == typeof(DateTimeGraphType) ||
             graphType == typeof(DateGraphType) ||
@@ -102,30 +102,30 @@ public abstract class WhereInputObjectGraphType<TSourceType> : InputObjectGraphT
             graphType == typeof(FloatGraphType) ||
             graphType == typeof(BigIntGraphType))
         {
-            AddMultiValueFilters(graphType, fieldName, description, aliasName, contentPart, contentField);
-            AddNonStringFilters(graphType, fieldName, description, aliasName, contentPart, contentField);
+            AddMultiValueFilters(graphType, fieldName, description, aliasName, contentFieldSet, contentField);
+            AddNonStringFilters(graphType, fieldName, description, aliasName, contentFieldSet, contentField);
         }
     }
 
-    private void AddEqualityFilters(Type graphType, string fieldName, string description, string aliasName, string contentPart, string contentField)
+    private void AddEqualityFilters(Type graphType, string fieldName, string description, string aliasName, string contentFieldSet, string contentField)
     {
-        AddFilterFields(graphType, EqualityOperators, fieldName, description, aliasName, contentPart, contentField);
+        AddFilterFields(graphType, EqualityOperators, fieldName, description, aliasName, contentFieldSet, contentField);
     }
 
-    private void AddStringFilters(Type graphType, string fieldName, string description, string aliasName, string contentPart, string contentField)
+    private void AddStringFilters(Type graphType, string fieldName, string description, string aliasName, string contentFieldSet, string contentField)
     {
-        AddFilterFields(graphType, StringComparisonOperators, fieldName, description, aliasName, contentPart, contentField);
+        AddFilterFields(graphType, StringComparisonOperators, fieldName, description, aliasName, contentFieldSet, contentField);
     }
 
-    private void AddNonStringFilters(Type graphType, string fieldName, string description, string aliasName, string contentPart, string contentField)
+    private void AddNonStringFilters(Type graphType, string fieldName, string description, string aliasName, string contentFieldSet, string contentField)
     {
-        AddFilterFields(graphType, NonStringValueComparisonOperators, fieldName, description, aliasName, contentPart, contentField);
+        AddFilterFields(graphType, NonStringValueComparisonOperators, fieldName, description, aliasName, contentFieldSet, contentField);
     }
 
-    private void AddMultiValueFilters(Type graphType, string fieldName, string description, string aliasName, string contentPart, string contentField)
+    private void AddMultiValueFilters(Type graphType, string fieldName, string description, string aliasName, string contentFieldSet, string contentField)
     {
         var wrappedType = typeof(ListGraphType<>).MakeGenericType(graphType);
-        AddFilterFields(wrappedType, MultiValueComparisonOperators, fieldName, description, aliasName, contentPart, contentField);
+        AddFilterFields(wrappedType, MultiValueComparisonOperators, fieldName, description, aliasName, contentFieldSet, contentField);
     }
 
     private void AddFilterFields(
@@ -134,7 +134,7 @@ public abstract class WhereInputObjectGraphType<TSourceType> : InputObjectGraphT
         string fieldName,
         string description,
         string aliasName,
-        string contentPart,
+        string contentFieldSet,
         string contentField)
     {
         foreach (var filter in filters)
@@ -145,7 +145,7 @@ public abstract class WhereInputObjectGraphType<TSourceType> : InputObjectGraphT
                 Description = filter.Value(S, description),
                 Type = graphType,
             }.WithAliasNameMetaData(aliasName)
-             .WithContentPartMetaData(contentPart)
+             .WithContentFieldSetMetaData(contentFieldSet)
              .WithContentFieldMetaData(contentField));
         }
     }

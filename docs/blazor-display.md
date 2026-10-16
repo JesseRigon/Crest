@@ -36,7 +36,7 @@ unusable), and a second, Blazor-only display system beside the platform's.
 | **Template** | A tenant-editable component tree bound to a shape name, stored as content, authored in Liquid (§ 5). A template *is* a binding whose target is a tree instead of a compiled component. |
 | **Layout** | The template bound to the `Layout` shape for a shell and theme: the page frame, placing the zones. |
 | **Zone** | A named list of child nodes; a `RenderFragment` parameter on the component that renders it (the word is "zone", never "slot"). A zone is **closed** (only the template that declares it fills it) or **open**: a registered key (`Navigation`, `Content`, `Footer`, a module's `prefix:*` keys) that other modules fill without owning the component, through placement, code contributions or layer rules (decision 6). A `Zone` node may be placed anywhere, any number of times. Page regions ([page-regions.md](page-regions.md)) are zone contributions. |
-| **Slot** | A data binding on a component: a parameter whose value comes from data (the item, a query, the context) rather than a literal. A picker's `source` is a slot; a heading bound to `TitlePart.Title` is a slot. Slots are what overrides may rebind (§ 5a). |
+| **Slot** | A data binding on a component: a parameter whose value comes from data (the item, a query, the context) rather than a literal. A picker's `source` is a slot; a heading bound to `TitleFieldSet.Title` is a slot. Slots are what overrides may rebind (§ 5a). |
 | **Page** | The unit that owns a URL: its route, shell bucket, route authorization and document concerns. Three kinds (module page, content page, designed page) share one route table; § 6a. Distinct from a component and from a template. |
 | **Editor kind** | Not an enum: the editor components in the registry, each declaring the value types (CLR types, content field types) it edits. The designer's property pane, the content field editors and a template's inputs all draw from this one set; these are what blazordesigner.md calls custom data types. |
 | **Expression** | A Liquid expression in a node property, evaluated on the server at build time by the one expression engine (§ 12). |
@@ -264,7 +264,10 @@ browser.
   fixed list (`==`, `!=`, `empty`, `not empty`, `contains`, `starts_with`, `ends_with`, `>`, `<`);
   the right side is a literal or another binding source; `and` / `or` join comparisons, `not`
   negates. Nothing else: no calls, no filters, no arbitrary expressions. Any parameter may bind
-  this way.
+  this way. Text compares ordinally, numbers as numbers, and a list equals each value it holds.
+  The same predicates, with fields as their sources, are a content type's field conditions
+  ([content-engine.md](content-engine.md) › Validation and conditions run on the one expression
+  engine); a display tree does not read fields.
 - **Event payloads.** An event carries a payload (the selected row, the right-clicked row, the
   submitted values). Actions bound to the event may read it as `event` (`event.item.id`).
 - **Client actions** join the server actions of decision 5 (run a workflow, navigate, submit):
@@ -297,7 +300,7 @@ positioned context-menu event), `ContextMenu` and `Dialog` (overlays), `MenuActi
 
 ### 5. Templates
 
-A template is content (`Template` content type, `TemplatePart`, in the Templates module):
+A template is content (`Template` content type, `TemplateFieldSet`, in the Templates module):
 
 ```text
 Template
@@ -340,7 +343,7 @@ Template
   children, each `run_workflow` against the workflow's declared inputs.
 - **Composites.** A template need not bind a driver-produced shape. A template named `Header`
   with no driver behind it is a composite: a reusable node any other template places by name.
-  A composite template (`TemplatePart.IsComposite`) declares its inputs (name, type
+  A composite template (`TemplateFieldSet.IsComposite`) declares its inputs (name, type
   `string`/`number`/`boolean`/`choice`/`object`/`array`, required, default, choices), its outputs
   (name → an inner node's output) and its palette entry (display name, category, icon); it is
   validated like a coded component (save validation samples the inputs and checks each output
@@ -446,7 +449,7 @@ drafts, the setting for instances on inaccessible pages, and the designer UI.
   keys are registry entries (decision 6), so Layers rules, the Placements editor and the designer
   target keys, not a layout's markup. `ILayoutAccessor` is how the layout shape is reached while a
   page is built.
-- **Page content** is a content item (any type with `AutoroutePart`, or a type a module routes)
+- **Page content** is a content item (any type with `AutorouteFieldSet`, or a type a module routes)
   built by `IContentItemDisplayManager` into the `Content` zone; layer placements into their
   zones; menus as `Menu` shapes.
 - **Routing a content page:** one content route component in the site shell (`ContentPage`,
@@ -507,7 +510,7 @@ Three kinds of page, one route table:
 | Kind | Route comes from | Tree comes from |
 | --- | --- | --- |
 | **Module page** (`@page` component in a `blazor-wasm/`, `member-wasm/` or `site-wasm/` library) | the `[Route]` attribute, described by the assembly's catalog (`IComponentCatalog.DescribePages`, `PageDescriptor`) and read per bucket into the route table | code: the component renders itself, or builds a tree with `IDisplayManager<T>` and hands it to the renderer |
-| **Content page** (a content item with `AutoroutePart`, or a type a module routes) | Autoroute, through the site's content route component | the item's template (decision 10) |
+| **Content page** (a content item with `AutorouteFieldSet`, or a type a module routes) | Autoroute, through the site's content route component | the item's template (decision 10) |
 | **Designed page** (a tenant-authored tree with its own URL: a landing page, a dashboard, a per-type admin page) | data: a page record with route pattern + bucket (decision 9) | its stored tree |
 
 The third kind is what blazordesigner.md's page editor and content-engine.md's per-type designed
@@ -527,30 +530,30 @@ tree inline, but the route, the bucket and the authorization are the page's.
 
 - Rendering is driver-driven: a part's display driver emits a shape, placement puts it in a
   zone, a binding picks the component. A component is placed by a template, a page's tree, an
-  item's own tree (`DisplayTreePart`, below) or a layer rule.
+  item's own tree (`DisplayTreeFieldSet`, below) or a layer rule.
 - **Field and part displays are components** bound by shape name: every content field (`TextField`
   and its `Header` display mode, `HtmlField`, `MarkdownField`, `NumericField`, `BooleanField`,
-  `DateField`, `DateTimeField`, `TimeField`, `LinkField`, `OptionPickerField`,
-  `LocalizationSetContentPickerField`, `UserPickerField` in both display modes, `MultiTextField`,
-  `YoutubeField`, `MediaField`, `TaxonomyField`, `GeoPointField`), `TitlePart` (with its summary),
-  `HtmlBodyPart`, `MarkdownBodyPart` (a sanitized markup parameter), `BagPart` and `ListPart`
-  (their drivers add the contained items' displays while the shape is processed, so the tree maps
-  them as children; the list adds its `Pager`/`PagerSlim` after its items), `TaxonomyPart` (the
-  term tree, linked), `ListPartFeed` (a `HeadLink`: the list's RSS link in the page head). The
+  `DateField`, `DateTimeField`, `TimeField`, `LinkField`, `OptionListField` and its `Tags` display
+  mode (badges, linked where the source gives a page), `MultiTextField`,
+  `YoutubeField`, `MediaField`, `GeoPointField`), `TitleFieldSet` (with its summary),
+  `HtmlBodyFieldSet`, `MarkdownBodyFieldSet` (a sanitized markup parameter), `EmbeddedContentItems` (one per
+  embedding) and `ChildContentItemsFieldSet` (their drivers add the contained items' displays while the shape is processed, so the tree maps
+  them as children; the list adds its `Pager`/`PagerSlim` after its items), `TaxonomyFieldSet` (the
+  term tree, linked), `ChildContentItemsFieldSetFeed` (a `HeadLink`: the list's RSS link in the page head). The
   site's culture switcher is `CulturePicker`, placed by a template or a layer. The drivers' view models expose what the components read (`Label`,
   `FieldClass`, resolved `Items` for pickers and taxonomies, the link text, the YouTube size, the
   title's link). Field labels are data-localized: `FieldDisplayLabels` sets each field shape's
   `Label` from `IDataLocalizer` under the field's data localization context.
-- **An item's own body** is a `DisplayTreePart` (Templates module): it stores the item's display
+- **An item's own body** is a `DisplayTreeFieldSet` (Templates module): it stores the item's display
   tree - the node format templates produce (components, properties, zones, bindings) - as JSON on
   the item (`Tree`; a node without an id gets one from its position, `DisplayTreeJson`).
-  `DisplayTreePartBinding`, an `IDisplayTemplateBinding`, maps it into the item's shape zone like
+  `DisplayTreeFieldSetBinding`, an `IDisplayTemplateBinding`, maps it into the item's shape zone like
   any other part, so the builder fills, filters and overrides it like a template's tree: ids and
   references are scoped under the part's instance id, markup leaves are sanitized, a node naming
   a published template is expanded as a composite under the template limits, and the node budget
-  counts. Saving validates it (`DisplayTreePartHandler`: `DisplayTreeValidator.ValidateStored`,
+  counts. Saving validates it (its system flow's `DisplayTreeBehaviour`: `DisplayTreeValidator.ValidateStored`,
   the schema check of stored properties, zones and required parameters, plus the workflow action
-  validators). Its editor is `DisplayTreeEditor` (`Edits = ["DisplayTreePart"]`), JSON validated
+  validators). Its editor is `DisplayTreeEditor` (`Edits = ["DisplayTreeFieldSet"]`), JSON validated
   as you type, until the designer canvas scoped to one item replaces it.
 - **Field editors** are components too: the editor tree resolves to editor components, and
   `UpdateEditorAsync` consumes the posted values. The generic content-item editor in the admin
@@ -563,14 +566,14 @@ tree inline, but the route, the bucket and the authorization are the page's.
   Editor components: text, number, yes/no, date, option picker, HTML, Markdown, link, title,
   permalink; the option picker field's editor (Grove.Contents.OptionPicker's client library; for content
   items the selection in order with edit links, a search by title, a create link per allowed
-  creatable type); `BagPartEditor` (each contained item through its type's editor tree;
-  add from the allowed types, remove, reorder), `UserPickerFieldEditor` (searching
-  `api/grove/content-fields/users`); `TaxonomyPartEditor` (the term tree, each term through its
-  type's editor tree) and `TaxonomyFieldEditor` (check boxes, radios or tags); `ListPartEditor`
+  creatable type); `EmbeddedContentItemsEditor` (each embedded item through its type's editor tree;
+  add from the allowed types, remove, reorder; a snapshot's frozen items read-only), `OwnerEditor`
+  (the `Common` field set's owner, a user from the `users` source); `TaxonomyFieldSetEditor` (the term type) and `TaxonomyTermsEditor` (the
+  `Terms` embedding's tree, each term through its type's editor tree); `ChildContentItemsFieldSetEditor`
   (the list's children, their order, a child created on the native create page with the list as
-  its container, the feed values); `SeoMetaPartEditor`; `GeoPointFieldEditor` (a Leaflet/OpenStreetMap
+  its container, the feed values); `SeoMetaFieldSetEditor`; `GeoPointFieldEditor` (a Leaflet/OpenStreetMap
   map, Google Maps when the field names a key);
-  `LocalizationPartEditor` (the item's translations, opened or created); `IconPicker` (Grove.Display.Icons).
+  `LocalizationFieldSetEditor` (the item's translations, opened or created); `IconPicker` (Grove.Display.Icons).
   An editor may declare a field's editor setting (`Edits = ["TextField-IconPicker"]`), which the
   editor tree prefers to the field type's own. The editors that act on the stored item (a list's
   children, translations) read its id from the context (`ContentEditorContext.ContentItemId`,
@@ -581,11 +584,11 @@ tree inline, but the route, the bucket and the authorization are the page's.
   ranges, URLs, Liquid that must parse, permalink and alias uniqueness, the right to set the home
   page, the canonical address, the SEO schema, media extensions, a taxonomy's term type) before
   create, update and draft, and refuses with the error contract's map keyed as the editor tree
-  keys its editors (`Part.Field`, `Part`; the empty key for the item). The editor page puts the
+  keys its editors (`FieldSet.Field`, `Part`; the empty key for the item). The editor page puts the
   map under the tree's `ContentEditor` node (`DisplayState.SetErrors`), which shows each error
   under its editor. Markup a type's settings ask to sanitize (HTML field and body, HTML menu item)
   is sanitized by the handlers on create, update, draft and import.
-- **An item's page body is searchable**: `DisplayTreePartIndexHandler` indexes the text its tree
+- **An item's page body is searchable**: `DisplayTreeFieldSetIndexHandler` indexes the text its tree
   holds (`DisplayTreeText`, a migrated Liquid body's composite source included), and the part
   answers the body aspect with it.
 - **The editor's preview** is `ContentPreviewPane` beside the editor tree: the unsaved item
@@ -892,7 +895,7 @@ or instance override chain; the components under it keep the full § 5a model. T
 designed page's tree is the page record itself, rendered through the layout decision 7 resolves
 for it.
 
-Built: the `DesignedPage` content type (`DesignedPagePart`: name, route pattern, bucket, title,
+Built: the `DesignedPage` content type (`DesignedPageFieldSet`: name, route pattern, bucket, title,
 meta description, anonymous access, Liquid source) in the Templates module, read through
 `DesignedPageStore` (the published set cached and re-read on publish). Its tree is the shipped
 template `DesignedPage__{Name}` (`DesignedPageTemplates`), evaluated with the route's values as
@@ -1039,7 +1042,7 @@ publish. The design system is the visual language and branding; the theme is str
 | Overrides | `ComponentOverridesDocument` | Variants and instance overrides (§ 5a). |
 | Placement | `placement.json` per feature + the Placements module's document | `api/grove/placements` and the admin Placements page edit it. |
 | Page | `@page` component, content item (Autoroute) or `DesignedPage` | § 6a. |
-| Item body | `DisplayTreePart` on the item | § 7. |
+| Item body | `DisplayTreeFieldSet` on the item | § 7. |
 | Layer rules | Layers module documents | A rule places a component instance into a zone key while the tree is built. |
 | Design system | [design-systems.md](design-systems.md) | |
 | Display tree | Not stored; built per request, cached per decision 12 | The wire format. |
@@ -1060,8 +1063,7 @@ removed per page as its Blazor replacement exists, not all at once.
    route's dynamic routes are gone (their address schemes still generate URLs), and
    `Contents/ContentItems/{id}` only generates (`GenerationOnlyRouteConstraint`). The site shell
    middleware resolves site paths through the route table and forwards a path a non-Blazor
-   endpoint owns to it (`ILegacyRouteOwnership`). BagPart stays in Flows (with the content card views and the
-   shapes the BagPart editor uses).
+   endpoint owns to it (`ILegacyRouteOwnership`).
 4. ☑ **Templates module rework** (§ 5), with composites, the UI action contract (decision 5) and
    overrides (§ 5a).
 5. ☑ **Editors as trees** (§ 7).
@@ -1071,9 +1073,9 @@ removed per page as its Blazor replacement exists, not all at once.
 7. ◐ **Retire** the HTML path. ☑ `IHtmlDisplay`, the Razor and Liquid shape engines, the tag
    helpers, `BlazorComponentShapeBindingResolver` and the markup fallback leaf are deleted with
    MVC; the admin and site shells are the Blazor themes. Every shape on the content path binds a
-   registered component (`ContentPart` for a part with fields and no driver, `TermPart`,
-   `PublishLaterPart`, `ArchiveLaterPart`; `ListPartFeed` is `HeadLink`; `LiquidPart` is retired,
-   its bodies migrated to `DisplayTreePart`; [MVC/shape-engine.md](MVC/shape-engine.md) ›
+   registered component (`ContentFieldSet` for a part with fields and no driver, `TermFieldSet`,
+   `PublishLaterFieldSet`, `ArchiveLaterFieldSet`; `ChildContentItemsFieldSetFeed` is `HeadLink`; `LiquidPart` is retired,
+   its bodies migrated to `DisplayTreeFieldSet`; [MVC/shape-engine.md](MVC/shape-engine.md) ›
    Component coverage). What remains:
    - ☐ Browser checks for the native pages that replaced the MVC settings and definition screens.
    - ◐ **Razor → Blazor component parity audit.** Every Razor view and shape template and every

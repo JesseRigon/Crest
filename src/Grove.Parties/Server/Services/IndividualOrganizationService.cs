@@ -50,7 +50,7 @@ public sealed class IndividualOrganizationService(
 {
     public static bool IsIndividual(ContentItem? organization) =>
         organization is { ContentType: PartiesConstants.ContentTypes.Organization }
-        && organization.Get<ContentPart>(PartiesConstants.ContentTypes.Organization)?.Get<BooleanField>(PartiesConstants.OrganizationFields.Individual)?.Value == true;
+        && organization.Get<ContentFieldSet>(PartiesConstants.ContentTypes.Organization)?.Get<BooleanField>(PartiesConstants.OrganizationFields.Individual)?.Value == true;
 
     public async Task<ContentItem> EnsureForPersonAsync(ContentItem person, CancellationToken cancellationToken = default)
     {
@@ -66,8 +66,8 @@ public sealed class IndividualOrganizationService(
 
         var organization = await contentManager.NewAsync(PartiesConstants.ContentTypes.Organization);
         organization.DisplayText = string.IsNullOrWhiteSpace(person.DisplayText) ? "Individual" : person.DisplayText;
-        ((System.Text.Json.Nodes.JsonObject)organization.Content)["TitlePart"] = new System.Text.Json.Nodes.JsonObject { ["Title"] = organization.DisplayText };
-        organization.Alter<ContentPart>(PartiesConstants.ContentTypes.Organization, part =>
+        ((System.Text.Json.Nodes.JsonObject)organization.Content)["Title"] = new System.Text.Json.Nodes.JsonObject { ["Title"] = new System.Text.Json.Nodes.JsonObject { ["Text"] = organization.DisplayText } };
+        organization.Alter<ContentFieldSet>(PartiesConstants.ContentTypes.Organization, part =>
             part.Alter<BooleanField>(PartiesConstants.OrganizationFields.Individual, field => field.Value = true));
         await contentManager.CreateAsync(organization, VersionOptions.Published);
 
@@ -119,7 +119,7 @@ public sealed class IndividualOrganizationService(
             throw new InvalidOperationException("This tenant does not allow converting an Individual organization into an ordinary one.");
         }
 
-        organization.Alter<ContentPart>(PartiesConstants.ContentTypes.Organization, part =>
+        organization.Alter<ContentFieldSet>(PartiesConstants.ContentTypes.Organization, part =>
             part.Alter<BooleanField>(PartiesConstants.OrganizationFields.Individual, field => field.Value = false));
         await contentManager.UpdateAsync(organization);
         if (!organization.Published)

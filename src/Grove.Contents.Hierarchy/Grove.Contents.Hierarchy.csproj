@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <!-- NuGet properties-->
+    <Title>Grove Lists</Title>
+    <Description>$(OCCMSDescription)
+
+    Provides container enabled List content type. It allows to associate content items to a parent container. For example, A blog contains a list of blog posts.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Infrastructure.Server.Abstractions\Grove.Infrastructure.Server.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Shells.Admin.Abstractions\Grove.Infrastructure.Shells.Admin.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Contents.AdminMenu.Abstractions\Grove.Contents.AdminMenu.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Protocols.GraphQL.Abstractions\Grove.Data.Protocols.GraphQL.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Contents.Localization.Abstractions\Grove.Contents.Localization.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Contents.Abstractions\Grove.Contents.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Contents.Management\Grove.Contents.Management.csproj" />
+    <ProjectReference Include="..\Grove.Contents.Management.Display\Grove.Contents.Management.Display.csproj" />
+    <ProjectReference Include="..\Grove.Contents.Management.GraphQL\Grove.Contents.Management.GraphQL.csproj" />
+    <ProjectReference Include="..\Grove.Contents.Types.Abstractions\Grove.Contents.Types.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.YesSql.Abstractions\Grove.Data.YesSql.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Feeds.Abstractions\Grove.Data.Feeds.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Indexing.Abstractions\Grove.Data.Indexing.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Media.Abstractions\Grove.Media.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Media\Grove.Media.csproj" />
+    <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
+    <ProjectReference Include="..\Grove.Access.Users.Abstractions\Grove.Access.Users.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Display.Resources.Management\Grove.Display.Resources.Management.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The field set's behaviour is system flows: its activities on the engine. -->
+    <ProjectReference Include="..\Grove.Workflows\Abstractions\Grove.Workflows.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Workflows\engine\src\modules\Grove.Workflows.Core\Grove.Workflows.Core.csproj" />
+    <ProjectReference Include="..\Grove.Workflows\engine\src\modules\Grove.Workflows.Engine\Grove.Workflows.Engine.csproj" />
+    <ProjectReference Include="..\Grove.Contents.Fields.Abstractions\Grove.Contents.Fields.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

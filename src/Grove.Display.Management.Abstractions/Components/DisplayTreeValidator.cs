@@ -83,7 +83,7 @@ public static class DisplayTreeValidator
 
     /// <summary>
     /// The wiring check plus the schema check of every node's stored properties (a tree authored
-    /// as data, docs/widgets.md: an item's <c>DisplayTreePart</c>): each property is a value
+    /// as data, docs/widgets.md: an item's <c>DisplayTreeFieldSet</c>): each property is a value
     /// parameter of the component and converts to its type; a required parameter has a value, a
     /// binding or a slot. Nothing here can be code: the tree names registered components only.
     /// </summary>
@@ -203,6 +203,12 @@ public static class DisplayTreeValidator
         if (binding.Event && !inEvent)
         {
             errors.Add(new(path, "binding", "The event payload is only available to an event's actions."));
+            return;
+        }
+
+        if (binding.Field is not null)
+        {
+            errors.Add(new(path, "binding", "A content field is read by field conditions (visibility, field rules), not by a display tree."));
             return;
         }
 

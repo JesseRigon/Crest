@@ -38,16 +38,16 @@ public static class ValueTypes
 {
     public static IReadOnlyList<ValueTypeDescriptor> Base { get; } =
     [
-        new("Text", ValueTypeKinds.String, ValueTypeKinds.String, ["TextField", "TitlePart"], "TextFieldEditor", "Label", typeof(string), "Text"),
+        new("Text", ValueTypeKinds.String, ValueTypeKinds.String, ["TextField"], "TextFieldEditor", "Label", typeof(string), "Text"),
         new("Number", ValueTypeKinds.Number, ValueTypeKinds.Number, ["NumericField"], "NumericFieldEditor", "Label", typeof(decimal), "Number"),
         new("Boolean", ValueTypeKinds.Boolean, ValueTypeKinds.Boolean, ["BooleanField"], "BooleanFieldEditor", "Label", typeof(bool), "Yes/no"),
         new("Date", ValueTypeKinds.Date, ValueTypeKinds.String, ["DateField"], "DateFieldEditor", "Label", typeof(DateOnly), "Date"),
         new("DateTime", ValueTypeKinds.DateTime, ValueTypeKinds.String, ["DateTimeField"], "DateFieldEditor", "Label", typeof(System.DateTime), "Date and time"),
-        new("Html", ValueTypeKinds.String, ValueTypeKinds.String, ["HtmlField", "HtmlBodyPart"], "HtmlEditor", "RichText", typeof(string), "Rich text"),
-        new("Markdown", ValueTypeKinds.String, ValueTypeKinds.String, ["MarkdownField", "MarkdownBodyPart"], "MarkdownEditor", "MarkdownBodyPart", typeof(string), "Markdown"),
+        new("Html", ValueTypeKinds.String, ValueTypeKinds.String, ["HtmlField"], "HtmlEditor", "RichText", typeof(string), "Rich text"),
+        new("Markdown", ValueTypeKinds.String, ValueTypeKinds.String, ["MarkdownField"], "MarkdownEditor", "MarkdownBody", typeof(string), "Markdown"),
         new("Link", ValueTypeKinds.Object, ValueTypeKinds.Object, ["LinkField"], "LinkFieldEditor", "Link", null, "Link"),
-        new("Options", ValueTypeKinds.Array, ValueTypeKinds.Array, ["OptionPickerField"], "OptionPickerFieldEditor", null, typeof(string[]), "Options"),
-        new("Permalink", ValueTypeKinds.String, ValueTypeKinds.String, ["AutoroutePart"], "AutoroutePartEditor", "Link", typeof(string), "Permalink"),
+        new("Options", ValueTypeKinds.Array, ValueTypeKinds.Array, ["OptionListField"], "OptionListFieldEditor", null, typeof(string[]), "Options"),
+        new("Permalink", ValueTypeKinds.String, ValueTypeKinds.String, [], "TextFieldEditor", "Link", typeof(string), "Permalink"),
     ];
 }
 

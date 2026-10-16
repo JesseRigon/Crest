@@ -54,7 +54,7 @@ public class TimeFieldIndexProvider : ContentFieldIndexProvider
                 }
 
                 var fieldDefinitions = contentTypeDefinition
-                    .Parts.SelectMany(x => x.PartDefinition.Fields.Where(f => f.FieldDefinition.Name == nameof(TimeField)))
+                    .FieldSets.SelectMany(x => x.FieldSetDefinition.Fields.Where(f => f.FieldTypeDefinition.Name == nameof(TimeField)))
                     .ToArray();
 
                 // This type doesn't have any TimeField, ignore it
@@ -74,7 +74,7 @@ public class TimeFieldIndexProvider : ContentFieldIndexProvider
                             ContentItemId = contentItem.ContentItemId,
                             ContentItemVersionId = contentItem.ContentItemVersionId,
                             ContentType = contentItem.ContentType,
-                            ContentPart = pair.Definition.ContentTypePartDefinition.Name,
+                            ContentFieldSet = pair.Definition.ContentTypeFieldSetDefinition.Name,
                             ContentField = pair.Definition.Name,
                             Time = pair.Field.Value,
                         });

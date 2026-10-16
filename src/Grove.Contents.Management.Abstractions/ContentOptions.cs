@@ -3,48 +3,48 @@ using System.Collections.Frozen;
 namespace Grove.Contents.Management;
 
 /// <summary>
-/// Provides a way to register code based content parts and fields.
+/// Provides a way to register code based field sets and fields.
 /// </summary>
 public class ContentOptions
 {
-    private readonly List<ContentPartOption> _contentParts = [];
+    private readonly List<ContentFieldSetOption> _contentFieldSets = [];
     private readonly List<ContentFieldOption> _contentFields = [];
 
-    private IReadOnlyDictionary<string, ContentPartOption> _contentPartOptionsLookup;
-    public IReadOnlyDictionary<string, ContentPartOption> ContentPartOptionsLookup
-        => _contentPartOptionsLookup ??= ContentPartOptions.ToFrozenDictionary(k => k.Type.Name);
+    private IReadOnlyDictionary<string, ContentFieldSetOption> _contentFieldSetOptionsLookup;
+    public IReadOnlyDictionary<string, ContentFieldSetOption> ContentFieldSetOptionsLookup
+        => _contentFieldSetOptionsLookup ??= ContentFieldSetOptions.ToFrozenDictionary(k => ContentFieldSetName.Of(k.Type));
 
     private IReadOnlyDictionary<string, ContentFieldOption> _contentFieldOptionsLookup;
     public IReadOnlyDictionary<string, ContentFieldOption> ContentFieldOptionsLookup
         => _contentFieldOptionsLookup ??= ContentFieldOptions.ToFrozenDictionary(k => k.Type.Name);
 
-    public IReadOnlyList<ContentPartOption> ContentPartOptions => _contentParts;
+    public IReadOnlyList<ContentFieldSetOption> ContentFieldSetOptions => _contentFieldSets;
     public IReadOnlyList<ContentFieldOption> ContentFieldOptions => _contentFields;
 
-    internal void AddPartHandler(Type contentPartType, Type handlerType)
+    internal void AddFieldSetHandler(Type contentFieldSetType, Type handlerType)
     {
-        var option = GetOrAddContentPart(contentPartType);
+        var option = GetOrAddContentFieldSet(contentFieldSetType);
         option.AddHandler(handlerType);
     }
 
-    internal void RemovePartHandler(Type contentPartType, Type handlerType)
+    internal void RemoveFieldSetHandler(Type contentFieldSetType, Type handlerType)
     {
-        var option = GetOrAddContentPart(contentPartType);
+        var option = GetOrAddContentFieldSet(contentFieldSetType);
         option.RemoveHandler(handlerType);
     }
 
-    internal ContentPartOption GetOrAddContentPart(Type contentPartType)
+    internal ContentFieldSetOption GetOrAddContentFieldSet(Type contentFieldSetType)
     {
-        if (!contentPartType.IsSubclassOf(typeof(ContentPart)))
+        if (!contentFieldSetType.IsSubclassOf(typeof(ContentFieldSet)))
         {
-            throw new ArgumentException("The type must inherit from " + nameof(ContentPart));
+            throw new ArgumentException("The type must inherit from " + nameof(ContentFieldSet));
         }
 
-        var option = _contentParts.FirstOrDefault(x => x.Type == contentPartType);
+        var option = _contentFieldSets.FirstOrDefault(x => x.Type == contentFieldSetType);
         if (option == null)
         {
-            option = new ContentPartOption(contentPartType);
-            _contentParts.Add(option);
+            option = new ContentFieldSetOption(contentFieldSetType);
+            _contentFieldSets.Add(option);
         }
 
         return option;

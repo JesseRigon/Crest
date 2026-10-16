@@ -30,6 +30,10 @@ public sealed record OptionSourceResolveRequest(
     string? ContentType = null,
     string? FieldName = null);
 
+/// <summary>A record to add by name to an attachment's source (<c>AllowCreate</c>): the attachment
+/// names the source and its filters, the caller only the name.</summary>
+public sealed record OptionSourceCreateRequest(string? ContentType, string? FieldName, string? DisplayText);
+
 /// <summary>What a picker must watch, and what to do when it changes.</summary>
 public sealed record OptionDependencyModel(
     IReadOnlyList<string> DependsOn,

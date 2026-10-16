@@ -38,7 +38,7 @@ public sealed class EnabledModuleAssemblies(
     {
         // A library is owned by the longest module OR feature id its name starts with: a module's
         // own library follows the module ("Grove.Access.Members.Member.BlazorWasm"), a library named
-        // for one feature of a module follows that feature ("Grove.Contents.PartLists.BlazorWasm").
+        // for one feature of a module follows that feature ("Grove.Contents.OptionLists.BlazorWasm").
         var enabledFeatures = (await shellFeaturesManager.GetEnabledFeaturesAsync()).ToArray();
         var enabledModules = enabledFeatures
             .Select(feature => feature.Extension.Id)

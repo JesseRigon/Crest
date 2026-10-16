@@ -1,3 +1,4 @@
+using Grove.Workflows.Extensions;
 using Fluid;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -27,14 +28,14 @@ public sealed class Startup : StartupBase
         services.AddLiquidFilter<ContentLocalizationFilter>("localization_set");
         services.AddApiContributor<Api.ContentLocalizationApi>();
 
-        services.AddScoped<IContentPartIndexHandler, LocalizationPartIndexHandler>();
+        services.AddScoped<IContentFieldSetIndexHandler, LocalizationFieldSetIndexHandler>();
         services.AddSingleton<ILocalizationEntries, LocalizationEntries>();
         services.AddContentLocalization();
 
         services.AddPermissionProvider<Permissions>();
         services.AddScoped<Grove.Access.IResourcePermissionMapper, LocalizeContentPermissionMapper>();
 
-        services.AddScoped<IContentItemListFilter, LocalizationPartContentItemListFilter>();
+        services.AddScoped<IContentItemListFilter, LocalizationFieldSetContentItemListFilter>();
     }
 }
 
@@ -72,5 +73,18 @@ public sealed class SitemapsStartup : StartupBase
     {
         services.AddScoped<ISitemapContentItemExtendedMetadataProvider, SitemapUrlHrefLangExtendedMetadataProvider>();
         services.Replace(ServiceDescriptor.Scoped<IContentItemsQueryProvider, LocalizedContentItemsQueryProvider>());
+    }
+}
+
+/// <summary>The localization's system flows and their activities (docs/content-engine.md › Behaviour is workflows).</summary>
+[RequireFeatures(Grove.Workflows.WorkflowsConstants.ContentsFeatureId)]
+public sealed class WorkflowsStartup : StartupBase
+{
+    public override void ConfigureServices(IServiceCollection services)
+    {
+        services.AddScoped<Grove.Workflows.IWorkflowActivityProvider, Workflows.LocalizationWorkflowProvider>();
+        services.AddScoped<Grove.Workflows.IWorkflowFlowProvider, Workflows.LocalizationWorkflowProvider>();
+        services.AddScoped<Grove.Workflows.IWorkflowFieldSetHookAttachmentProvider, Workflows.LocalizationWorkflowProvider>();
+        services.ConfigureGroveWorkflows(workflows => workflows.AddActivitiesFrom<WorkflowsStartup>());
     }
 }

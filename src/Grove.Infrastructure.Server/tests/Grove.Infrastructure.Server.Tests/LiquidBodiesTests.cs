@@ -4,7 +4,7 @@ using Xunit;
 
 namespace Grove.Infrastructure.Server.Tests;
 
-/// <summary>The retired LiquidPart's bodies as DisplayTreePart trees (docs/MVC/shape-engine.md › Component coverage).</summary>
+/// <summary>The retired LiquidPart's bodies as DisplayTreeFieldSet trees (docs/MVC/shape-engine.md › Component coverage).</summary>
 public sealed class LiquidBodiesTests
 {
     [Fact]

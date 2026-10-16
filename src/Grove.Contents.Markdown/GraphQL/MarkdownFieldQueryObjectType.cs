@@ -53,12 +53,12 @@ public class MarkdownFieldQueryObjectType : ObjectGraphType<MarkdownField>
         var partName = paths[0];
         var fieldName = paths[1];
         var contentTypeDefinition = await contentDefinitionManager.GetTypeDefinitionAsync(ctx.Source.ContentItem.ContentType);
-        var contentPartDefinition = contentTypeDefinition.Parts
+        var contentFieldSetDefinition = contentTypeDefinition.FieldSets
             .FirstOrDefault(x => string.Equals(x.Name, partName, StringComparison.Ordinal));
-        var contentPartFieldDefinition = contentPartDefinition.PartDefinition.Fields
+        var contentFieldDefinition = contentFieldSetDefinition.FieldSetDefinition.Fields
             .FirstOrDefault(x => string.Equals(x.Name, fieldName, StringComparison.Ordinal));
 
-        var settings = contentPartFieldDefinition.GetSettings<MarkdownFieldSettings>();
+        var settings = contentFieldDefinition.GetSettings<MarkdownFieldSettings>();
 
         var markdown = ctx.Source.Markdown ?? string.Empty;
         if (settings.RenderLiquid)
@@ -70,8 +70,8 @@ public class MarkdownFieldQueryObjectType : ObjectGraphType<MarkdownField>
             {
                 Markdown = markdown,
                 Field = ctx.Source,
-                Part = ctx.Source.ContentItem.Get<ContentPart>(partName),
-                PartFieldDefinition = contentPartFieldDefinition,
+                FieldSet = ctx.Source.ContentItem.Get<ContentFieldSet>(partName),
+                FieldDefinition = contentFieldDefinition,
             };
 
             markdown = await liquidTemplateManager.RenderStringAsync(model.Markdown, htmlEncoder, model,
@@ -86,7 +86,7 @@ public class MarkdownFieldQueryObjectType : ObjectGraphType<MarkdownField>
             new Context
             {
                 ["ContentItem"] = ctx.Source.ContentItem,
-                ["PartFieldDefinition"] = contentPartFieldDefinition,
+                ["FieldDefinition"] = contentFieldDefinition,
             });
 
         if (settings.SanitizeHtml)

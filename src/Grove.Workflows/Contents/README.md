@@ -16,17 +16,20 @@ This module integrates Elsa Workflows with Grove's content management system, en
 - **UnpublishContent** - Unpublish published content items
 - **DeleteContent** - Delete content items
 
-### Content Event Triggers
+### Content lifecycle triggers
 
-These activities trigger workflows in response to content lifecycle events:
+One trigger per content lifecycle point, raised once the unit that made the change commits,
+filtered by content type; the result is the item's new state and `PreviousContentItem` its
+state before the change (docs/content-engine.md › Behaviour is workflows):
 
-- **ContentCreated** - Triggers when a content item is created
-- **ContentUpdated** - Triggers when a content item is updated
-- **ContentPublished** - Triggers when a content item is published
-- **ContentUnpublished** - Triggers when a content item is unpublished
-- **ContentDeleted** - Triggers when a content item is deleted
-- **ContentDraftSaved** - Triggers when a content draft is saved
-- **ContentVersioned** - Triggers when a content item is versioned
+- **ContentCreated**, **ContentUpdated**, **ContentValidated**, **ContentDraftSaved**
+- **ContentPublished**, **ContentUnpublished**, **ContentRemoved**
+- **ContentCloned**, **ContentImported**, **ContentLocalized**
+
+### Content lifecycle hooks
+
+Each content type has a hook slot per lifecycle point (`content:{Type}.{point}`), run inside the
+saving unit before the item is stored; see docs/workflows.md › Hook slots.
 
 ## Dependencies
 

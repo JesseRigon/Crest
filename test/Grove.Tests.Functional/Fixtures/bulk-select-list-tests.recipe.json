@@ -66,12 +66,12 @@
               "Listable": true
             }
           },
-          "ContentTypePartDefinitionRecords": [
+          "ContentTypeFieldSetDefinitionRecords": [
             {
-              "PartName": "TitlePart",
-              "Name": "TitlePart",
+              "FieldSetName": "Title",
+              "Name": "Title",
               "Settings": {
-                "ContentTypePartSettings": {
+                "ContentTypeFieldSetSettings": {
                   "Position": "0"
                 }
               }
@@ -89,8 +89,8 @@
           "DisplayText": "Bulk Select Test Page One",
           "Latest": true,
           "Published": true,
-          "TitlePart": {
-            "Title": "Bulk Select Test Page One"
+          "Title": {
+            "Title": { "Text": "Bulk Select Test Page One" }
           }
         },
         {
@@ -99,8 +99,8 @@
           "DisplayText": "Bulk Select Test Page Two",
           "Latest": true,
           "Published": true,
-          "TitlePart": {
-            "Title": "Bulk Select Test Page Two"
+          "Title": {
+            "Title": { "Text": "Bulk Select Test Page Two" }
           }
         }
       ]

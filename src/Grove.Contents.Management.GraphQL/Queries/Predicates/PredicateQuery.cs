@@ -62,7 +62,7 @@ public class PredicateQuery : IPredicateQuery
         ArgumentNullException.ThrowIfNull(propertyPath);
 
         // Check if there's an alias for the full path
-        // aliasPart.Alias -> AliasFieldIndex.Alias
+        // aliasFieldSet.Alias -> AliasFieldIndex.Alias
         if (_aliases.TryGetValue(propertyPath, out var alias))
         {
             _usedAliases.Add(alias.alias);
@@ -100,7 +100,7 @@ public class PredicateQuery : IPredicateQuery
         ArgumentNullException.ThrowIfNull(propertyPath);
 
         // Check if there's an alias for the full path
-        // aliasPart.Alias -> AliasFieldIndex.Alias
+        // aliasFieldSet.Alias -> AliasFieldIndex.Alias
         if (_aliases.TryGetValue(propertyPath, out var alias))
         {
             if (alias.isPartial)
@@ -145,7 +145,7 @@ public class PredicateQuery : IPredicateQuery
                 if (propertyProvider.TryGetValue(propertyPath[(index + 1)..], out var columnName))
                 {
                     // Switch the given alias in the path with the mapped alias.
-                    // aliasPart.alias -> AliasPartIndex.Alias
+                    // aliasFieldSet.alias -> AliasIndex.Alias
                     return EnsureQuotes(tableAlias, columnName);
                 }
             }
@@ -153,7 +153,7 @@ public class PredicateQuery : IPredicateQuery
             {
                 // no property provider exists; hope sql is case-insensitive (will break postgres; property providers must be supplied for postgres)
                 // Switch the given alias in the path with the mapped alias.
-                // aliasPart.Alias -> AliasPartIndex.alias
+                // aliasFieldSet.Alias -> AliasIndex.alias
                 return EnsureQuotes(tableAlias, propertyPath[(index + 1)..]);
             }
         }

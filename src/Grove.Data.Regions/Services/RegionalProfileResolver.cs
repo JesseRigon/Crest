@@ -9,7 +9,7 @@ public sealed class RegionalProfileResolver(ISession session, IContentManager co
 {
     public async Task<RegionalProfileModel?> ResolveAsync(ContentItem? carrier, CancellationToken cancellationToken = default)
     {
-        var id = carrier?.Get<GroveRegionalProfileReferencePart>(typeof(GroveRegionalProfileReferencePart).Name)?.RegionalProfileId;
+        var id = carrier?.Get<RegionalProfileReferenceFieldSet>(ContentFieldSetName.Of<RegionalProfileReferenceFieldSet>())?.RegionalProfileId;
         return string.IsNullOrWhiteSpace(id) ? null : await GetAsync(id, cancellationToken);
     }
 
@@ -38,7 +38,7 @@ public sealed class RegionalProfileResolver(ISession session, IContentManager co
 
     private static RegionalProfileModel ToModel(ContentItem item)
     {
-        var part = item.Get<GroveRegionalProfilePart>(typeof(GroveRegionalProfilePart).Name) ?? new GroveRegionalProfilePart();
+        var part = item.Get<RegionalProfileFieldSet>(ContentFieldSetName.Of<RegionalProfileFieldSet>()) ?? new RegionalProfileFieldSet();
         return new RegionalProfileModel(
             item.ContentItemId,
             part.Key,

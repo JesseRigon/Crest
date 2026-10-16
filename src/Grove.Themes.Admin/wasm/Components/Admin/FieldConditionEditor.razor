@@ -1,0 +1,168 @@
+@namespace Grove.Themes.Admin.Components.Admin
+@using System.Text.Json.Nodes
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
+
+@* A field condition (docs/content-engine.md › Validation and conditions run on the one expression
+   engine): comparisons of fields (FieldSet.Field) with values, all or any of them holding. Stored
+   as the predicate display bindings use; the editor and the save evaluate the same one. *@
+<GroveStack Gap="0.5rem" data-testid="field-condition-editor">
+    @if (Terms.Count > 1)
+    {
+        <GroveFormField Text="@T["Holds when"]">
+            <GroveDropDown TValue="string" Value="@Match" ValueChanged="@((string value) => SetMatch(value))" Data="@MatchChoices"
+                           TextProperty="Label" ValueProperty="Value" Disabled="@Disabled" Style="width: 12rem;" data-testid="condition-match" />
+        </GroveFormField>
+    }
+
+    @if (Unsupported)
+    {
+        <GroveText TextStyle="TextStyle.Caption" Text="@T["This condition nests combinations; editing it here replaces it with a flat list."]" />
+    }
+
+    @for (var index = 0; index < Terms.Count; index++)
+    {
+        var position = index;
+        var term = Terms[position];
+        <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap" data-testid="condition-term">
+            <GroveFormField Text="@T["Field"]">
+                <GroveDropDown TValue="string" Value="@term.Field" ValueChanged="@((string value) => Change(position, term with { Field = value }))" Data="@Fields"
+                               TextProperty="Label" ValueProperty="Value" Disabled="@Disabled" Style="width: 14rem;" data-testid="condition-field" />
+            </GroveFormField>
+            <GroveFormField Text="@T["Is"]">
+                <GroveDropDown TValue="string" Value="@term.Operator" ValueChanged="@((string value) => Change(position, term with { Operator = value }))" Data="@OperatorChoices"
+                               TextProperty="Label" ValueProperty="Value" Disabled="@Disabled" Style="width: 11rem;" data-testid="condition-operator" />
+            </GroveFormField>
+            @if (DisplayPredicates.TakesOperand(term.Operator))
+            {
+                <GroveFormField Text="@T["Value (an option's key, not its label)"]">
+                    <GroveTextBox Value="@term.Value" ValueChanged="@((string value) => Change(position, term with { Value = value }))" Placeholder="@T["e.g. Voided"]"
+                                  Disabled="@Disabled" Style="width: 10rem;" data-testid="condition-value" />
+                </GroveFormField>
+            }
+            <GroveButton Icon="close" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => RemoveAsync(position))" Disabled="@Disabled" data-testid="condition-remove" />
+        </GroveStack>
+    }
+
+    <div>
+        <GroveButton Text="@(Terms.Count == 0 ? T["Add a condition"] : T["And another"])" Icon="add" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                     Click="AddAsync" Disabled="@(Disabled || Fields.Length == 0)" data-testid="condition-add" />
+    </div>
+</GroveStack>
+
+@code {
+    /// <summary>The condition; null when there is none.</summary>
+    [Parameter] public DisplayBinding? Value { get; set; }
+
+    [Parameter] public EventCallback<DisplayBinding?> ValueChanged { get; set; }
+
+    /// <summary>The fields a comparison can read, as field paths (FieldSet.Field) with labels.</summary>
+    [Parameter] public FieldChoice[] Fields { get; set; } = [];
+
+    [Parameter] public bool Disabled { get; set; }
+
+    public sealed record FieldChoice(string Label, string Value);
+
+    private sealed record Choice(string Label, string Value);
+
+    private sealed record Term(string Field, string Operator, string Value);
+
+    private List<Term> Terms = [];
+    private string Match = DisplayPredicates.And;
+    private bool Unsupported;
+    private DisplayBinding? _read;
+
+    private Choice[] MatchChoices =>
+    [
+        new(T["All of these"], DisplayPredicates.And),
+        new(T["Any of these"], DisplayPredicates.Or),
+    ];
+
+    private Choice[] OperatorChoices =>
+    [
+        new(T["equal to"], DisplayPredicates.Equal),
+        new(T["not equal to"], DisplayPredicates.NotEqual),
+        new(T["filled in"], DisplayPredicates.NotEmpty),
+        new(T["empty"], DisplayPredicates.Empty),
+        new(T["containing"], DisplayPredicates.Contains),
+        new(T["starting with"], DisplayPredicates.StartsWith),
+        new(T["ending with"], DisplayPredicates.EndsWith),
+        new(T["greater than"], DisplayPredicates.Greater),
+        new(T["less than"], DisplayPredicates.Less),
+    ];
+
+    protected override void OnParametersSet()
+    {
+        if (ReferenceEquals(_read, Value))
+        {
+            return;
+        }
+
+        _read = Value;
+        Unsupported = false;
+        Match = Value?.Combinator == DisplayPredicates.Or ? DisplayPredicates.Or : DisplayPredicates.And;
+        IEnumerable<DisplayBinding> comparisons = Value switch
+        {
+            null => [],
+            { Combinator: DisplayPredicates.And or DisplayPredicates.Or } => Value.Terms ?? [],
+            _ => [Value],
+        };
+
+        Terms = [];
+        foreach (var comparison in comparisons)
+        {
+            if (comparison is { Field: { } field, Operator: { } @operator, Combinator: null } && comparison.Operand is null or { IsLiteral: true })
+            {
+                Terms.Add(new Term(field, @operator, comparison.Operand?.Value?.ToString() ?? string.Empty));
+            }
+            else
+            {
+                Unsupported = true;
+            }
+        }
+    }
+
+    private Task SetMatch(string value)
+    {
+        Match = value == DisplayPredicates.Or ? DisplayPredicates.Or : DisplayPredicates.And;
+        return PublishAsync();
+    }
+
+    private Task Change(int index, Term term)
+    {
+        Terms[index] = term;
+        return PublishAsync();
+    }
+
+    private Task AddAsync()
+    {
+        Terms.Add(new Term(Fields[0].Value, DisplayPredicates.Equal, string.Empty));
+        return PublishAsync();
+    }
+
+    private Task RemoveAsync(int index)
+    {
+        Terms.RemoveAt(index);
+        return PublishAsync();
+    }
+
+    private async Task PublishAsync()
+    {
+        Unsupported = false;
+        var comparisons = Terms
+            .Where(term => !string.IsNullOrWhiteSpace(term.Field))
+            .Select(term => DisplayBinding.Compare(
+                DisplayBinding.FromField(term.Field),
+                term.Operator,
+                DisplayPredicates.TakesOperand(term.Operator) ? DisplayBinding.Literal(JsonValue.Create(term.Value.Trim())) : null))
+            .ToList();
+
+        _read = comparisons.Count switch
+        {
+            0 => null,
+            1 => comparisons[0],
+            _ => DisplayBinding.Combine(Match, comparisons),
+        };
+
+        await ValueChanged.InvokeAsync(_read);
+    }
+}

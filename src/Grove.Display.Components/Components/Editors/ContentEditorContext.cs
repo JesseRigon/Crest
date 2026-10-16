@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Grove.Display.Components.Models;
+using Grove.Display.Management.Components;
 
 namespace Grove.Display.Components.Editors;
 
@@ -20,6 +21,11 @@ public sealed class ContentEditorContext(JsonNode? content, GroveContentItemMeta
     // request is in flight; the field stays hidden until it lands rather than flashing into
     // view with an unverified condition.
     private readonly Dictionary<string, IReadOnlyList<string>?> _parentKeys = new(StringComparer.Ordinal);
+
+    // Each field's parsed visibility condition, by the field's metadata.
+    private readonly Dictionary<GroveContentFieldMetadata, DisplayBinding?> _conditions = new(ReferenceEqualityComparer.Instance);
+
+    private static readonly JsonSerializerOptions ConditionJson = new(JsonSerializerDefaults.Web);
 
     public JsonObject Content { get; } = content as JsonObject ?? (content is null ? [] : content.AsObject());
 
@@ -41,24 +47,24 @@ public sealed class ContentEditorContext(JsonNode? content, GroveContentItemMeta
     /// <summary>Raised when a value changes or a resolve lands: editors re-render, the page sees the content.</summary>
     public event Action? Changed;
 
-    public static string Key(string partName, string? fieldName) => fieldName is null ? partName : $"{partName}.{fieldName}";
+    public static string Key(string fieldSetName, string? fieldName) => fieldName is null ? fieldSetName : $"{fieldSetName}.{fieldName}";
 
-    public GroveContentPartMetadata? Part(string partName) =>
-        Metadata?.Parts?.FirstOrDefault(part => string.Equals(part.Name, partName, StringComparison.OrdinalIgnoreCase));
+    public GroveContentFieldSetMetadata? FieldSet(string fieldSetName) =>
+        Metadata?.FieldSets?.FirstOrDefault(part => string.Equals(part.Name, fieldSetName, StringComparison.OrdinalIgnoreCase));
 
-    public GroveContentFieldMetadata? Field(string partName, string fieldName) =>
-        Part(partName)?.Fields.FirstOrDefault(field => string.Equals(field.Name, fieldName, StringComparison.OrdinalIgnoreCase));
+    public GroveContentFieldMetadata? Field(string fieldSetName, string fieldName) =>
+        FieldSet(fieldSetName)?.Fields.FirstOrDefault(field => string.Equals(field.Name, fieldName, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>The stored object of a field (<c>{ "Text": ... }</c>), or of a part when <paramref name="fieldName"/> is null.</summary>
-    public JsonObject? Get(string partName, string? fieldName) =>
-        (fieldName is null ? Content[partName] : Content[partName]?[fieldName]) as JsonObject;
+    public JsonObject? Get(string fieldSetName, string? fieldName) =>
+        (fieldName is null ? Content[fieldSetName] : Content[fieldSetName]?[fieldName]) as JsonObject;
 
     /// <summary>The stored object, created when missing, for an editor to write into.</summary>
-    public JsonObject GetOrCreate(string partName, string? fieldName)
+    public JsonObject GetOrCreate(string fieldSetName, string? fieldName)
     {
-        if (Content[partName] is not JsonObject part)
+        if (Content[fieldSetName] is not JsonObject part)
         {
-            Content[partName] = part = [];
+            Content[fieldSetName] = part = [];
         }
 
         if (fieldName is null)
@@ -75,10 +81,10 @@ public sealed class ContentEditorContext(JsonNode? content, GroveContentItemMeta
     }
 
     /// <summary>Sets one property of a field's (or part's) object and tells everyone.</summary>
-    public void Set(string partName, string? fieldName, string property, JsonNode? value)
+    public void Set(string fieldSetName, string? fieldName, string property, JsonNode? value)
     {
-        GetOrCreate(partName, fieldName)[property] = value?.DeepClone();
-        Errors.Remove(Key(partName, fieldName));
+        GetOrCreate(fieldSetName, fieldName)[property] = value?.DeepClone();
+        Errors.Remove(Key(fieldSetName, fieldName));
 
         // A parent's committed value feeds dependent pickers and visibility conditions: drop the
         // resolved keys so both re-evaluate.
@@ -87,9 +93,9 @@ public sealed class ContentEditorContext(JsonNode? content, GroveContentItemMeta
     }
 
     /// <summary>Tells everyone a field's (or part's) object was changed in place.</summary>
-    public void Touch(string partName, string? fieldName)
+    public void Touch(string fieldSetName, string? fieldName)
     {
-        Errors.Remove(Key(partName, fieldName));
+        Errors.Remove(Key(fieldSetName, fieldName));
         _parentKeys.Clear();
         Changed?.Invoke();
     }
@@ -97,14 +103,14 @@ public sealed class ContentEditorContext(JsonNode? content, GroveContentItemMeta
     /// <summary>Tells everyone the errors changed (the server's, after a save).</summary>
     public void Refresh() => Changed?.Invoke();
 
-    public void Set<T>(string partName, string? fieldName, string property, T value) =>
-        Set(partName, fieldName, property, value is null ? null : JsonSerializer.SerializeToNode(value));
+    public void Set<T>(string fieldSetName, string? fieldName, string property, T value) =>
+        Set(fieldSetName, fieldName, property, value is null ? null : JsonSerializer.SerializeToNode(value));
 
     /// <summary>Checks the required fields that are visible; the errors go to <see cref="Errors"/>.</summary>
     public bool Validate()
     {
         Errors.Clear();
-        foreach (var part in Metadata?.Parts ?? [])
+        foreach (var part in Metadata?.FieldSets ?? [])
         {
             foreach (var field in part.Fields)
             {
@@ -136,7 +142,7 @@ public sealed class ContentEditorContext(JsonNode? content, GroveContentItemMeta
     {
         var propertyName = field.FieldType switch
         {
-            "OptionPickerField" => "SelectedIds",
+            "OptionListField" => "SelectedIds",
             "TextField" => "Text",
             "HtmlField" => "Html",
             "MarkdownField" => "Markdown",
@@ -149,7 +155,7 @@ public sealed class ContentEditorContext(JsonNode? content, GroveContentItemMeta
 
     // --- Option pickers -------------------------------------------------------
 
-    public static JsonNode? PickerSettings(GroveContentFieldMetadata field) => field.Settings?["OptionPickerFieldSettings"];
+    public static JsonNode? PickerSettings(GroveContentFieldMetadata field) => field.Settings?["OptionListFieldSettings"];
 
     public static IReadOnlyList<OptionPickerColumn> PickerColumns(JsonNode? pickerSettings)
     {
@@ -195,7 +201,7 @@ public sealed class ContentEditorContext(JsonNode? content, GroveContentItemMeta
         return state.Count == 0 ? null : state;
     }
 
-    // Paths are "Field" (the type's implicit part) or "Part.Field", matching the server's
+    // Paths are "Field" (the type's implicit part) or "FieldSet.Field", matching the server's
     // convention. A picker contributes its selected ids, scalars their value.
     private string[] ReadPathValues(string path)
     {
@@ -205,57 +211,82 @@ public sealed class ContentEditorContext(JsonNode? content, GroveContentItemMeta
             return [];
         }
 
-        var partName = segments.Length == 2 ? segments[0] : Metadata?.ContentType ?? string.Empty;
-        var node = Content[partName]?[segments[^1]];
-        if (node is null)
-        {
-            return [];
-        }
-
-        if (node["SelectedIds"] is JsonArray ids)
-        {
-            return [.. ids.Select(id => id?.ToString()).Where(id => !string.IsNullOrWhiteSpace(id)).Select(id => id!)];
-        }
-
-        var scalar = (node["Text"] ?? node["Value"])?.ToString();
-        return string.IsNullOrWhiteSpace(scalar) ? [] : [scalar];
+        // A bare field name is a field of the type's own field set.
+        return [.. FieldConditions.StoredValues(Content, segments.Length == 2 ? path : $"{Metadata?.ContentType}.{path}")];
     }
 
     // --- Field visibility -----------------------------------------------------
 
     /// <summary>
-    /// Evaluates a field's GroveFieldVisibilitySettings against the live form. Scalar parents
-    /// compare their stored value; a picker parent's ids resolve to option KEYS through the server
-    /// (the identity rule: conditions name keys, never ids or labels).
+    /// Evaluates a field's visibility condition (<c>FieldVisibilitySettings.When</c>) against the
+    /// live form, with the evaluator the save uses (<see cref="FieldConditions"/>). A scalar field
+    /// compares its stored value; an option list field's ids resolve to option keys through the
+    /// server (conditions name keys, never ids or labels). While a resolve is in flight the field
+    /// stays hidden rather than flashing into view on an unverified condition.
     /// </summary>
-    public bool IsFieldVisible(string partName, GroveContentFieldMetadata field)
+    public bool IsFieldVisible(string fieldSetName, GroveContentFieldMetadata field)
     {
-        var settings = field.Settings?["GroveFieldVisibilitySettings"];
-        var path = settings?["Path"]?.GetValue<string>();
-        if (string.IsNullOrWhiteSpace(path))
+        if (VisibilityCondition(fieldSetName, field) is not { } when)
         {
             return true;
         }
 
-        var raw = ReadPathValues(path);
-        var @operator = settings?["Operator"]?.GetValue<string>() ?? "Any";
-        if (string.Equals(@operator, "Any", StringComparison.OrdinalIgnoreCase))
+        var values = new Dictionary<string, JsonNode?>(StringComparer.OrdinalIgnoreCase);
+        var ignoreCase = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var path in FieldConditions.Fields(when).Distinct(StringComparer.OrdinalIgnoreCase))
         {
-            return raw.Length > 0;
+            var raw = ReadPathValues(path);
+            var resolved = raw.Length == 0 ? raw : ParentComparisonValues(path, raw);
+            if (resolved is null)
+            {
+                return false;
+            }
+
+            // Option keys compare case-insensitively: lower-cased here and in the condition's literals.
+            if (IsOptionField(path))
+            {
+                ignoreCase.Add(path);
+                resolved = [.. resolved.Select(value => value.ToLowerInvariant())];
+            }
+
+            values[path] = FieldConditions.Value(resolved);
         }
 
-        if (raw.Length == 0)
+        if (ignoreCase.Count > 0)
         {
-            return false;
+            when = FieldConditions.IgnoreCase(when, ignoreCase.Contains);
         }
 
-        string[] keys = settings?["Keys"] is JsonArray keyArray
-            ? [.. keyArray.Select(key => key?.GetValue<string>()).Where(key => !string.IsNullOrWhiteSpace(key)).Select(key => key!)]
-            : [];
-        var parentValues = ParentComparisonValues(path, raw);
+        return FieldConditions.IsMet(when, path => values.GetValueOrDefault(path)?.DeepClone());
+    }
 
-        return parentValues is not null
-            && parentValues.Any(value => keys.Any(key => string.Equals(key, value, StringComparison.OrdinalIgnoreCase)));
+    private bool IsOptionField(string path)
+    {
+        var segments = path.Split('.', StringSplitOptions.RemoveEmptyEntries);
+        return segments.Length == 2 && string.Equals(Field(segments[0], segments[1])?.FieldType, "OptionListField", StringComparison.Ordinal);
+    }
+
+    // The field's condition, its sibling paths read from the attachment it is edited under.
+    private DisplayBinding? VisibilityCondition(string fieldSetName, GroveContentFieldMetadata field)
+    {
+        if (!_conditions.TryGetValue(field, out var when))
+        {
+            try
+            {
+                when = field.Settings?["FieldVisibilitySettings"]?["When"] is JsonObject condition
+                    && condition.Deserialize<DisplayBinding>(ConditionJson) is { } parsed
+                    ? FieldConditions.Qualify(parsed, fieldSetName)
+                    : null;
+            }
+            catch (JsonException)
+            {
+                when = null;
+            }
+
+            _conditions[field] = when;
+        }
+
+        return when;
     }
 
     private IReadOnlyList<string>? ParentComparisonValues(string path, string[] raw)
@@ -265,7 +296,7 @@ public sealed class ContentEditorContext(JsonNode? content, GroveContentItemMeta
             ? Field(segments.Length == 2 ? segments[0] : Metadata?.ContentType ?? string.Empty, segments[^1])
             : null;
 
-        if (parentField is null || !string.Equals(parentField.FieldType, "OptionPickerField", StringComparison.Ordinal))
+        if (parentField is null || !string.Equals(parentField.FieldType, "OptionListField", StringComparison.Ordinal))
         {
             // Scalar parents: the stored value IS the comparison value.
             return raw;

@@ -28,12 +28,12 @@
               "Securable": true
             }
           },
-          "ContentTypePartDefinitionRecords": [
+          "ContentTypeFieldSetDefinitionRecords": [
             {
-              "PartName": "Message",
+              "FieldSetName": "Message",
               "Name": "Message",
               "Settings": {
-                "ContentTypePartSettings": {
+                "ContentTypeFieldSetSettings": {
                   "Position": "5"
                 }
               }
@@ -57,8 +57,8 @@
           "Owner": "[js: parameters('AdminUserId')]",
           "Author": "[js: parameters('AdminUsername')]",
           "Message": {},
-          "TitlePart": {
-            "Title": "[locale en]This text contains a colon ':' symbol[/locale][locale fr]Ce texte contient un deux-points ':'[/locale]"
+          "Title": {
+            "Title": { "Text": "[locale en]This text contains a colon ':' symbol[/locale][locale fr]Ce texte contient un deux-points ':'[/locale]" }
           }
         }
       ]

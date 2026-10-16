@@ -23,9 +23,9 @@ public class ContentAuditTrailEventHandler(ContentHistory history) : AuditTrailE
             return Task.CompletedTask;
         }
 
-        if (contentItem.TryGet<AuditTrailPart>(out var auditTrailPart))
+        if (contentItem.TryGet<AuditTrailFieldSet>(out var auditTrailFieldSet))
         {
-            contentEvent.AuditTrailEventItem.Comment = auditTrailPart.Comment;
+            contentEvent.AuditTrailEventItem.Comment = auditTrailFieldSet.Comment;
         }
 
         context.Subject ??= new AuditTrailSubject();

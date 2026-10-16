@@ -14,54 +14,92 @@ public sealed record ContentType(
     string Name,
     string DisplayName,
     JsonObject Settings,
-    ContentTypePart[] Parts)
+    ContentTypeFieldSet[] FieldSets,
+    ContentTypeEmbedding[] Embeddings)
 {
     public static ContentType From(ContentTypeDefinition source) => new(
         source.Name,
         source.DisplayName,
         source.Settings,
-        source.Parts.Select(ContentTypePart.From).ToArray());
+        source.FieldSets.Select(ContentTypeFieldSet.From).ToArray(),
+        source.Embeddings.Select(ContentTypeEmbedding.From).ToArray());
+}
+
+/// <summary>An embedding on a type (docs/content-engine.md › Embedded content items); Lock is its own lock.</summary>
+public sealed record ContentTypeEmbedding(
+    string Name,
+    string? DisplayName,
+    string? Description,
+    string? Position,
+    string[] AllowedTypes,
+    int? MinCount,
+    int? MaxCount,
+    bool Ordered,
+    string? DisplayType,
+    bool Nested,
+    bool Collapsed,
+    bool Referenceable,
+    string Mode,
+    string[] CopiedValues,
+    string Lock)
+{
+    public static ContentTypeEmbedding From(EmbeddedContentDefinition source) => new(
+        source.Name,
+        source.DisplayName,
+        source.Description,
+        source.Position,
+        [.. source.AllowedTypes],
+        source.MinCount,
+        source.MaxCount,
+        source.Ordered,
+        source.DisplayType,
+        source.Nested,
+        source.Collapsed,
+        source.Referenceable,
+        source.Mode,
+        [.. source.CopiedValues],
+        source.GetLock());
 }
 
 /// <summary>Lock is the attachment's own lock (docs/content-engine.md › Definition locks): None, Tenant or Module.</summary>
-public sealed record ContentTypePart(
+public sealed record ContentTypeFieldSet(
     string Name,
     JsonObject Settings,
-    ContentPart Part,
+    ContentFieldSet FieldSet,
     string Lock)
 {
-    public static ContentTypePart From(ContentTypePartDefinition source) => new(
+    public static ContentTypeFieldSet From(ContentTypeFieldSetDefinition source) => new(
         source.Name,
         source.Settings,
-        ContentPart.From(source.PartDefinition),
+        ContentFieldSet.From(source.FieldSetDefinition),
         source.GetLock());
 }
 
 /// <summary>Lock is the part definition's own lock; every field reports its effective lock (its own or the part's).</summary>
-public sealed record ContentPart(
+public sealed record ContentFieldSet(
     string Name,
     JsonObject Settings,
-    ContentPartField[] Fields,
+    ContentField[] Fields,
     string Lock)
 {
-    public static ContentPart From(ContentPartDefinition source) => new(
+    public static ContentFieldSet From(ContentFieldSetDefinition source) => new(
         source.Name,
         source.Settings,
-        source.Fields.Select(field => ContentPartField.From(field, source)).ToArray(),
+        source.Fields.Select(field => ContentField.From(field, source)).ToArray(),
         source.GetLock());
 }
 
-public sealed record ContentPartField(
+public sealed record ContentField(
     string Name,
     JsonObject Settings,
-    ContentField Field,
+    ContentFieldType FieldType,
     string Lock)
 {
-    public static ContentPartField From(ContentPartFieldDefinition source, ContentPartDefinition part) => new(
+    public static ContentField From(ContentFieldDefinition source, ContentFieldSetDefinition part) => new(
         source.Name,
         source.Settings,
-        new ContentField(source.FieldDefinition.Name),
+        new ContentFieldType(source.FieldTypeDefinition.Name),
         source.GetEffectiveLock(part));
 }
 
-public sealed record ContentField(string Name);
+public sealed record ContentFieldType(string Name);

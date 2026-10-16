@@ -20,4 +20,9 @@
     <ProjectReference Include="..\Grove.Contents.Management.Abstractions\Grove.Contents.Management.Abstractions.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- The field set's values are fields. -->
+    <ProjectReference Include="..\Grove.Contents.Fields.Abstractions\Grove.Contents.Fields.Abstractions.csproj" />
+  </ItemGroup>
+
 </Project>

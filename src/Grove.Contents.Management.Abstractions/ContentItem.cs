@@ -1,3 +1,4 @@
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
 namespace Grove.Contents.Management;
@@ -72,6 +73,27 @@ public class ContentItem : ContentElement
     /// The text representing this content item.
     /// </summary>
     public string DisplayText { get; set; }
+
+    /// <summary>
+    /// A copy of this version as it is now: its properties and a deep copy of its content, not
+    /// attached to the session. The content lifecycle keeps one as an item's previous state.
+    /// </summary>
+    public ContentItem Snapshot() => new()
+    {
+        Id = Id,
+        ContentItemId = ContentItemId,
+        ContentItemVersionId = ContentItemVersionId,
+        ContentType = ContentType,
+        Published = Published,
+        Latest = Latest,
+        ModifiedUtc = ModifiedUtc,
+        PublishedUtc = PublishedUtc,
+        CreatedUtc = CreatedUtc,
+        Owner = Owner,
+        Author = Author,
+        DisplayText = DisplayText,
+        Data = Data.Clone(),
+    };
 
     public override string ToString()
     {

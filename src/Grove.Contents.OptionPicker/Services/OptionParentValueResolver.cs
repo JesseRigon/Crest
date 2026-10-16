@@ -9,7 +9,7 @@ namespace Grove.Services;
 /// <summary>
 /// Turns a parent field's RAW values into COMPARISON values. A scalar parent (text,
 /// numeric, boolean) already stores what logic compares, so its values pass through.
-/// An OptionPickerField parent stores ids - per the identity rule content stores ids
+/// An OptionListField parent stores ids - per the identity rule content stores ids
 /// while CODE COMPARES KEYS - so its selection is resolved through its own source's
 /// GetByIdsAsync and a column is read from the rows (Key by default). This is the
 /// seam both cascading filters and field-visibility conditions resolve through.
@@ -23,9 +23,9 @@ public sealed class OptionParentValueResolver(
 
     /// <summary>
     /// Resolves the comparison values <paramref name="rawValues"/> stand for. Paths
-    /// are "Field" (a field on the content type's implicit part) or "Part.Field".
-    /// An unknown parent field, or a picker parent whose provider is missing,
-    /// resolves to EMPTY - failing closed, so a dependent restriction never silently
+    /// are "Field" (a field of the content type's own field set) or "FieldSet.Field" (by the
+    /// type's attachment name). An unknown parent field, or a picker parent whose provider is
+    /// missing, resolves to EMPTY - failing closed, so a dependent restriction never silently
     /// widens into "matches everything".
     /// </summary>
     public async Task<IReadOnlyList<string>> ResolveAsync(
@@ -33,29 +33,38 @@ public sealed class OptionParentValueResolver(
         string path,
         string? column,
         IReadOnlyList<string> rawValues,
+        CancellationToken cancellationToken = default) =>
+        (await ResolveFieldAsync(contentType, path, column, rawValues, cancellationToken)).Values;
+
+    /// <summary>As <see cref="ResolveAsync"/>, also saying whether the parent is an option list field (whose values are option rows' columns).</summary>
+    public async Task<(IReadOnlyList<string> Values, bool IsOptionField)> ResolveFieldAsync(
+        string contentType,
+        string path,
+        string? column,
+        IReadOnlyList<string> rawValues,
         CancellationToken cancellationToken = default)
     {
-        if (rawValues.Count == 0)
-        {
-            return rawValues;
-        }
-
         var field = await FindFieldAsync(contentType, path);
         if (field is null)
         {
-            return [];
+            return ([], false);
         }
 
-        if (!string.Equals(field.FieldDefinition?.Name, nameof(OptionPickerField), StringComparison.Ordinal))
+        if (!string.Equals(field.FieldTypeDefinition?.Name, nameof(OptionListField), StringComparison.Ordinal))
         {
             // Scalar parents: the stored value IS the comparison value.
-            return rawValues;
+            return (rawValues, false);
         }
 
-        var sourceKey = field.GetSettings<OptionPickerFieldSettings>()?.SourceKey;
+        if (rawValues.Count == 0)
+        {
+            return (rawValues, true);
+        }
+
+        var sourceKey = field.GetSettings<OptionListFieldSettings>()?.SourceKey;
         if (string.IsNullOrWhiteSpace(sourceKey))
         {
-            return [];
+            return ([], true);
         }
 
         var (providerKey, qualifier) = OptionSourceKeys.Split(sourceKey);
@@ -63,12 +72,12 @@ public sealed class OptionParentValueResolver(
             string.Equals(candidate.Key, providerKey, StringComparison.OrdinalIgnoreCase));
         if (provider is null)
         {
-            return [];
+            return ([], true);
         }
 
         var wantsKey = IsKeyColumn(column);
         var rows = await provider.GetByIdsAsync(qualifier, rawValues, wantsKey ? [] : [column!], cancellationToken);
-        return Project(rows, column);
+        return (Project(rows, column), true);
     }
 
     /// <summary>
@@ -90,10 +99,10 @@ public sealed class OptionParentValueResolver(
             .Distinct(StringComparer.OrdinalIgnoreCase)];
     }
 
-    private static bool IsKeyColumn(string? column) =>
+    internal static bool IsKeyColumn(string? column) =>
         string.IsNullOrWhiteSpace(column) || string.Equals(column, KeyColumn, StringComparison.OrdinalIgnoreCase);
 
-    private async Task<ContentPartFieldDefinition?> FindFieldAsync(string contentType, string path)
+    private async Task<ContentFieldDefinition?> FindFieldAsync(string contentType, string path)
     {
         var segments = path.Split('.', StringSplitOptions.RemoveEmptyEntries);
         if (segments.Length is 0 or > 2)
@@ -101,12 +110,14 @@ public sealed class OptionParentValueResolver(
             return null;
         }
 
-        // "Field" addresses the content type's implicit part (named after the type),
-        // matching how attachments and editor state name their siblings.
-        var partName = segments.Length == 2 ? segments[0] : contentType;
-        var partDefinition = await contentDefinitionManager.GetPartDefinitionAsync(partName);
+        // "Field" addresses the content type's own field set (named after the type); a qualified
+        // path names one of the type's attachments, whose field set may be named otherwise.
+        var attachmentName = segments.Length == 2 ? segments[0] : contentType;
+        var type = await contentDefinitionManager.GetTypeDefinitionAsync(contentType);
+        var fieldSet = type?.FieldSets.FirstOrDefault(candidate => string.Equals(candidate.Name, attachmentName, StringComparison.OrdinalIgnoreCase))?.FieldSetDefinition
+            ?? await contentDefinitionManager.GetFieldSetDefinitionAsync(attachmentName);
 
-        return partDefinition?.Fields.FirstOrDefault(candidate =>
+        return fieldSet?.Fields.FirstOrDefault(candidate =>
             string.Equals(candidate.Name, segments[^1], StringComparison.OrdinalIgnoreCase));
     }
 }

@@ -404,7 +404,7 @@ msgid "Browse icons or enter a search term."
 msgstr "Examinar iconos o introduzca un término de búsqueda."
 
 msgctxt "Grove.Infrastructure.Shells.Admin.Client"
-msgid "Browse reusable content parts, their fields, and the content types that attach them."
+msgid "Browse reusable field groups, their fields, and the content types that attach them."
 msgstr "Explorar las partes de contenido reutilizables, sus campos y los tipos de contenido que las adjuntan."
 
 msgctxt "Grove.Infrastructure.Shells.Admin.Client"
@@ -1200,7 +1200,7 @@ msgid "No content items match the current filters."
 msgstr "Ningún elemento de contenido coincide con los filtros actuales."
 
 msgctxt "Grove.Infrastructure.Shells.Admin.Client"
-msgid "No content parts are attached to the available types."
+msgid "No field groups are attached to the available types."
 msgstr "Ninguna parte de contenido está asociada a los tipos disponibles."
 
 msgctxt "Grove.Infrastructure.Shells.Admin.Client"
@@ -1212,7 +1212,7 @@ msgid "No content types returned."
 msgstr "No se devolvieron tipos de contenido."
 
 msgctxt "Grove.Infrastructure.Shells.Admin.Client"
-msgid "No fields are defined on this part."
+msgid "No fields are defined in this field group."
 msgstr "Ningún campo está definido en esta parte."
 
 msgctxt "Grove.Infrastructure.Shells.Admin.Client"
@@ -1748,7 +1748,7 @@ msgid "Security headers saved"
 msgstr "Encabezados de seguridad guardados"
 
 msgctxt "Grove.Infrastructure.Shells.Admin.Client"
-msgid "Select a content part to inspect its field and type usage."
+msgid "Select a field group to inspect its field and type usage."
 msgstr "Seleccione una parte de contenido para inspeccionar su uso de campos y tipos."
 
 msgctxt "Grove.Infrastructure.Shells.Admin.Client"
@@ -2076,7 +2076,7 @@ msgid "This permanently removes {0}."
 msgstr "Esto elimina permanentemente {0}."
 
 msgctxt "Grove.Infrastructure.Shells.Admin.Client"
-msgid "This type has no attached parts."
+msgid "This type has no attached field groups."
 msgstr "Este tipo no tiene partes adjuntas."
 
 msgctxt "Grove.Infrastructure.Shells.Admin.Client"
@@ -2376,7 +2376,7 @@ msgid "{0} {1} tenant{2}?"
 msgstr "¿{0} {1} tenant{2}?"
 
 msgctxt "Grove.Infrastructure.Shells.Admin.Client"
-msgid "{0} · {1} parts"
+msgid "{0} · {1} field groups"
 msgstr "{0} · {1} partes"
 
 msgctxt "Grove.Parties.Navigation.AdminMenu"

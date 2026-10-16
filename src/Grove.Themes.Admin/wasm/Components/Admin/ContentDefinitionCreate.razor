@@ -3,9 +3,9 @@
 @inject HttpClient Http
 @inject Grove.Display.Components.Theme.GroveApiLocalizer T
 
-@* Creates a content type (with its own part, named alike) or a content part. *@
+@* Creates a content type (with its own part, named alike) or a field group. *@
 <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap" data-testid="@($"create-content-{Kind}")">
-    <GroveFormField Text="@(Kind == "type" ? T["New content type (technical name)"] : T["New content part (technical name)"])">
+    <GroveFormField Text="@(Kind == "type" ? T["New content type (technical name)"] : T["New field group (technical name)"])">
         <GroveTextBox @bind-Value="Name" Style="width: 12rem" />
     </GroveFormField>
     <GroveFormField Text="@T["Display name"]"><GroveTextBox @bind-Value="DisplayName" Style="width: 12rem" /></GroveFormField>
@@ -30,7 +30,7 @@
         Error = null;
         try
         {
-            var url = Kind == "type" ? "api/grove/content-types" : "api/grove/content-types/parts";
+            var url = Kind == "type" ? "api/grove/content-types" : "api/grove/content-types/field-sets";
             using var response = await Http.PostAsJsonAsync(url, new { Name = Name!.Trim(), DisplayName });
             if (!response.IsSuccessStatusCode) { Error = await response.Content.ReadAsStringAsync(); return; }
             var created = Name.Trim();

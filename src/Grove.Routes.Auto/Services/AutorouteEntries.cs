@@ -157,7 +157,7 @@ public class AutorouteEntries : IAutorouteEntries
             if (_stateIdentifier != state.Identifier)
             {
                 var indexes = await Session
-                    .QueryIndex<AutoroutePartIndex>(i => i.Id > _lastIndexId)
+                    .QueryIndex<AutorouteIndex>(i => i.Id > _lastIndexId)
                     .OrderBy(i => i.Id)
                     .ListAsync();
 
@@ -212,7 +212,7 @@ public class AutorouteEntries : IAutorouteEntries
                 var state = await _autorouteStateManager.GetOrCreateImmutableAsync();
 
                 var indexes = await Session
-                    .QueryIndex<AutoroutePartIndex>(i => i.Published && i.Path != null)
+                    .QueryIndex<AutorouteIndex>(i => i.Published && i.Path != null)
                     .OrderBy(i => i.Id)
                     .ListAsync();
 

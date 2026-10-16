@@ -6,6 +6,7 @@ using Grove.Workflows.Models;
 using Grove.Workflows.UIHints;
 using Microsoft.Extensions.DependencyInjection;
 using Grove.Contents.Management;
+using Grove.Workflows.Contents.Hooks;
 using Grove.Workflows.Contents.Stimuli;
 using Grove.Workflows.Contents.UIHints;
 using Grove.Workflows.Contexts;
@@ -13,7 +14,10 @@ using Grove.Workflows.Contexts;
 namespace Grove.Workflows.Contents.Activities;
 
 /// <summary>
-/// Base of the content triggers. Matches on content type (the stimulus), then, when
+/// Base of the content triggers, one per content lifecycle point (docs/content-engine.md ›
+/// Behaviour is workflows), raised once the unit that made the change commits. The result is
+/// the item's new state; <see cref="PreviousContentItem"/> is its state before the change (null
+/// when it was created). Matches on content type (the stimulus), then, when
 /// <see cref="RequiredPermission"/> is set, on the acting user: a user who lacks the
 /// permission ends the run on the "Denied" port without a result, so a flow can be
 /// restricted to the people whose actions may cause its effects. The check runs through
@@ -35,6 +39,9 @@ public abstract class ContentEventTriggerBase : Trigger<ContentItem>
         UIHint = InputUIHints.SingleLine
     )]
     public Input<string?> RequiredPermission { get; set; } = null!;
+
+    [Output(Description = "The item's state before the change; null when it was created.")]
+    public Output<ContentItem?> PreviousContentItem { get; set; } = null!;
 
     protected override async ValueTask ExecuteAsync(ActivityExecutionContext context)
     {
@@ -69,6 +76,7 @@ public abstract class ContentEventTriggerBase : Trigger<ContentItem>
         }
 
         var contentItem = context.GetWorkflowInput<ContentItem>();
+        PreviousContentItem.Set(context, context.FindWorkflowInput<ContentItem>(ContentLifecycleInputKeys.PreviousContentItem));
         context.SetResult(contentItem);
         await context.CompleteActivityAsync();
     }

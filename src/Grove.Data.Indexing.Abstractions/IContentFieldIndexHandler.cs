@@ -9,5 +9,5 @@ namespace Grove.Data.Indexing;
 /// </summary>
 public interface IContentFieldIndexHandler
 {
-    Task BuildIndexAsync(ContentPart contentPart, ContentTypePartDefinition typePartDefinition, ContentPartFieldDefinition partFieldDefinition, BuildDocumentIndexContext context, IContentIndexSettings settings);
+    Task BuildIndexAsync(ContentFieldSet contentFieldSet, ContentTypeFieldSetDefinition typeFieldSetDefinition, ContentFieldDefinition partFieldDefinition, BuildDocumentIndexContext context, IContentIndexSettings settings);
 }

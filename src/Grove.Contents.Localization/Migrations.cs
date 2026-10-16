@@ -7,6 +7,7 @@ using Grove.Data.Migration;
 using Grove.Environment.Shell.Scope;
 using YesSql;
 using YesSql.Sql;
+using Grove.Contents.Types;
 
 namespace Grove.Contents.Localization.Records;
 
@@ -21,7 +22,7 @@ public sealed class Migrations : DataMigration
 
     public async Task<int> CreateAsync()
     {
-        await _contentDefinitionManager.AlterPartDefinitionAsync(nameof(LocalizationPart), builder => builder
+        await _contentDefinitionManager.AlterFieldSetDefinitionAsync(ContentFieldSetName.Of<LocalizationFieldSet>(), builder => builder
             .Attachable()
             .WithDescription("Provides a way to create localized version of content."));
 
@@ -34,7 +35,7 @@ public sealed class Migrations : DataMigration
         );
 
         await SchemaBuilder.AlterIndexTableAsync<LocalizedContentItemIndex>(table => table
-            .CreateIndex("IDX_LocalizationPartIndex_DocumentId",
+            .CreateIndex("IDX_LocalizationIndex_DocumentId",
             "DocumentId",
             "LocalizationSet",
             "Culture",
@@ -43,8 +44,10 @@ public sealed class Migrations : DataMigration
             "Latest")
         );
 
+        await DefineLocalizationFieldsAsync();
+
         // Shortcut other migration steps on new content definition schemas.
-        return 4;
+        return 5;
     }
 
     // This code can be removed in a later version.
@@ -64,7 +67,7 @@ public sealed class Migrations : DataMigration
         );
 
         await SchemaBuilder.AlterIndexTableAsync<LocalizedContentItemIndex>(table => table
-            .CreateIndex("IDX_LocalizationPartIndex_DocumentId",
+            .CreateIndex("IDX_LocalizationIndex_DocumentId",
             "DocumentId",
             "LocalizationSet",
             "Culture",
@@ -94,4 +97,29 @@ public sealed class Migrations : DataMigration
 
         return 4;
     }
+
+    // The field set's values are fields (docs/content-engine.md › Behaviour is workflows); the ones its
+    // system flows require are locked by the module.
+    public async Task<int> UpdateFrom4Async()
+    {
+        await DefineLocalizationFieldsAsync();
+        return 5;
+    }
+
+    private Task DefineLocalizationFieldsAsync() =>
+        _contentDefinitionManager.AlterFieldSetDefinitionAsync(ContentFieldSetName.Of<LocalizationFieldSet>(), builder => builder
+            .WithField(LocalizationFieldSet.CultureField, field => field
+                .OfType("TextField")
+                .WithDisplayMode(ContentFieldDisplayModes.None)
+                .WithDisplayName("Culture")
+                .WithPosition("0")
+                .WithEditor(ContentFieldEditors.None)
+                .Locked())
+            .WithField(LocalizationFieldSet.LocalizationSetField, field => field
+                .OfType("TextField")
+                .WithDisplayMode(ContentFieldDisplayModes.None)
+                .WithDisplayName("Localization set")
+                .WithPosition("1")
+                .WithEditor(ContentFieldEditors.None)
+                .Locked()));
 }

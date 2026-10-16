@@ -29,7 +29,7 @@ public class ContentStepLuceneQueryTests
         secondContentItem[nameof(ContentItem.ContentItemId)] = "secondcontentitemid";
         secondContentItem[nameof(ContentItem.ContentItemVersionId)] = "secondcontentitemversionid";
         secondContentItem[nameof(ContentItem.DisplayText)] = "second content item display text";
-        secondContentItem[nameof(AutoroutePart)][nameof(AutoroutePart.Path)] = "new-path";
+        secondContentItem[ContentFieldSetName.Of<AutorouteFieldSet>()][nameof(AutorouteFieldSet.Path)] = "new-path";
         data.Add(secondContentItem);
 
         await context.PostRecipeAsync(recipe);

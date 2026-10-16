@@ -54,7 +54,7 @@ public class DateFieldIndexProvider : ContentFieldIndexProvider
                 }
 
                 var fieldDefinitions = contentTypeDefinition
-                    .Parts.SelectMany(x => x.PartDefinition.Fields.Where(f => f.FieldDefinition.Name == nameof(DateField)))
+                    .FieldSets.SelectMany(x => x.FieldSetDefinition.Fields.Where(f => f.FieldTypeDefinition.Name == nameof(DateField)))
                     .ToArray();
 
                 // This type doesn't have any DateField, ignore it
@@ -73,7 +73,7 @@ public class DateFieldIndexProvider : ContentFieldIndexProvider
                         ContentItemId = contentItem.ContentItemId,
                         ContentItemVersionId = contentItem.ContentItemVersionId,
                         ContentType = contentItem.ContentType,
-                        ContentPart = pair.Definition.ContentTypePartDefinition.Name,
+                        ContentFieldSet = pair.Definition.ContentTypeFieldSetDefinition.Name,
                         ContentField = pair.Definition.Name,
                         Date = pair.Field.Value,
                     });

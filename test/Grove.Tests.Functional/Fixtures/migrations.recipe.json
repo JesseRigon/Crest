@@ -41,7 +41,6 @@
         "Grove.Routes.Auto",
         "Grove.Contents.Fields",
         "Grove.Contents.Fields.Indexing.SQL",
-        "Grove.Contents.Fields.Indexing.SQL.UserPicker",
         "Grove.Contents.Localization",
         "Grove.Contents.Preview",
         "Grove.Contents",
@@ -50,11 +49,10 @@
         "Grove.Deployment",
         "Grove.Deployment.Remote",
         "Grove.Data.Feeds",
-        "Grove.Contents.BagParts",
         "Grove.Data.Protocols.Html",
         "Grove.Data.Indexing",
         "Grove.Display.Layers",
-        "Grove.Contents.Lists",
+        "Grove.Contents.Hierarchy",
         "Grove.Media",
         "Grove.Contents.SiteMenu",
         "Grove.Contents.Markdown",
@@ -104,45 +102,45 @@
               "Listable": true
             }
           },
-          "ContentTypePartDefinitionRecords": [
+          "ContentTypeFieldSetDefinitionRecords": [
             {
-              "PartName": "Article",
+              "FieldSetName": "Article",
               "Name": "Article",
               "Settings": {
-                "ContentTypePartSettings": {
+                "ContentTypeFieldSetSettings": {
                   "Position": "3"
                 }
               }
             },
             {
-              "PartName": "AutoroutePart",
-              "Name": "AutoroutePart",
+              "FieldSetName": "Autoroute",
+              "Name": "Autoroute",
               "Settings": {
-                "AutoroutePartSettings": {
+                "AutorouteFieldSetSettings": {
                   "AllowCustomPath": true,
                   "Pattern": "{{ Model.ContentItem | display_text | slugify }}",
                   "ShowHomepageOption": true
                 },
-                "ContentTypePartSettings": {
+                "ContentTypeFieldSetSettings": {
                   "Position": "1"
                 }
               }
             },
             {
-              "PartName": "HtmlBodyPart",
-              "Name": "HtmlBodyPart",
+              "FieldSetName": "HtmlBody",
+              "Name": "HtmlBody",
               "Settings": {
-                "ContentTypePartSettings": {
+                "ContentTypeFieldSetSettings": {
                   "Editor": "Wysiwyg",
                   "Position": "2"
                 }
               }
             },
             {
-              "PartName": "TitlePart",
-              "Name": "TitlePart",
+              "FieldSetName": "Title",
+              "Name": "Title",
               "Settings": {
-                "ContentTypePartSettings": {
+                "ContentTypeFieldSetSettings": {
                   "Position": "0"
                 }
               }
@@ -150,7 +148,7 @@
           ]
         }
       ],
-      "ContentParts": [
+      "ContentFieldSets": [
         {
           "Name": "Article",
           "Settings": {}
@@ -168,15 +166,15 @@
           "Published": true,
           "Owner": "[js: parameters('AdminUserId')]",
           "Author": "[js: parameters('AdminUsername')]",
-          "AutoroutePart": {
-            "Path": "about",
+          "Autoroute": {
+            "Path": { "Text": "about" },
             "SetHomepage": false
           },
-          "HtmlBodyPart": {
-            "Html": "<p>Testing features having database migrations.</p>"
+          "HtmlBody": {
+            "Html": { "Html": "<p>Testing features having database migrations.</p>" }
           },
-          "TitlePart": {
-            "Title": "Testing Migrations"
+          "Title": {
+            "Title": { "Text": "Testing Migrations" }
           }
         }
       ]

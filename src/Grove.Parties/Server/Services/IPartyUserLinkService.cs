@@ -1,6 +1,6 @@
 using Grove.Parties.Constants;
-using Grove.Contents.Fields.Fields;
-using Grove.Contents.Fields.Indexing.SQL;
+using Grove.Data.Indexing;
+using Grove.Fields;
 using Grove.Contents.Management;
 using YesSql;
 
@@ -11,7 +11,7 @@ namespace Grove.Parties.Services;
 /// Grove user that IS that person (a member's portal account, an employee's staff
 /// account) in its PortalUser picker. The user side of the same link is owned by
 /// whichever module creates the account (Grove.Access.Members stamps the person id on
-/// the member).
+/// the member). PortalUser is an option list field on the users source.
 /// </summary>
 public interface IPartyUserLinkService
 {
@@ -23,7 +23,7 @@ public interface IPartyUserLinkService
     Task<string?> GetPortalUserIdAsync(string personId, CancellationToken cancellationToken = default);
 
     /// <summary>The Person whose PortalUser is <paramref name="userId"/>, via the
-    /// user-picker index; null when no person claims that account.</summary>
+    /// option list field index; null when no person claims that account.</summary>
     Task<string?> FindPersonIdForUserAsync(string userId, CancellationToken cancellationToken = default);
 }
 
@@ -43,7 +43,7 @@ public sealed class PartyUserLinkService(IContentManager contentManager, ISessio
     public async Task<string?> GetPortalUserIdAsync(string personId, CancellationToken cancellationToken = default)
     {
         var person = await LoadPersonAsync(personId);
-        return person?.Get<ContentPart>(PartiesConstants.ContentTypes.Person)?.Get<UserPickerField>(PortalUserField)?.UserIds.FirstOrDefault();
+        return person?.Get<ContentFieldSet>(PartiesConstants.ContentTypes.Person)?.Get<OptionListField>(PortalUserField)?.SelectedIds?.FirstOrDefault();
     }
 
     public async Task<string?> FindPersonIdForUserAsync(string userId, CancellationToken cancellationToken = default)
@@ -53,10 +53,10 @@ public sealed class PartyUserLinkService(IContentManager contentManager, ISessio
             return null;
         }
 
-        var index = await session.QueryIndex<UserPickerFieldIndex>(index =>
+        var index = await session.QueryIndex<OptionListFieldIndex>(index =>
                 index.ContentType == PartiesConstants.ContentTypes.Person
                 && index.ContentField == PortalUserField
-                && index.SelectedUserId == userId
+                && index.SelectedId == userId
                 && index.Latest)
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -66,8 +66,12 @@ public sealed class PartyUserLinkService(IContentManager contentManager, ISessio
     /// <summary>Sets the picker on an already-loaded person without saving it - the
     /// migration's path, where the caller batches the save.</summary>
     internal static void SetPortalUser(ContentItem person, string? userId) =>
-        person.Alter<ContentPart>(PartiesConstants.ContentTypes.Person, part =>
-            part.Alter<UserPickerField>(PortalUserField, field => field.UserIds = userId is null ? [] : [userId]));
+        person.Alter<ContentFieldSet>(PartiesConstants.ContentTypes.Person, part =>
+            part.Alter<OptionListField>(PortalUserField, field =>
+            {
+                field.SourceKey = Grove.Models.OptionSourceKeys.UserProvider;
+                field.SelectedIds = userId is null ? [] : [userId];
+            }));
 
     private async Task<bool> SetAsync(string personId, string? userId)
     {

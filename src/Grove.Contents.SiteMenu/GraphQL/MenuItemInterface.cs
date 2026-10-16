@@ -8,6 +8,6 @@ public class MenuItemInterface : InterfaceGraphType<ContentItem>
     public MenuItemInterface()
     {
         Name = "MenuItem";
-        Field<MenuItemsListQueryObjectType>("menuItemsList");
+        Field<ListGraphType<MenuItemInterface>>("menuItems");
     }
 }

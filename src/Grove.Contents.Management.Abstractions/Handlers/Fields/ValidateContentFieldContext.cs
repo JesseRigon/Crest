@@ -29,7 +29,7 @@ public static class ValidateFieldContentContextExtensions
             return;
         }
 
-        var memberName = $"{context.PartName}.{context.ContentPartFieldDefinition.Name}.{propertyName}";
+        var memberName = $"{context.FieldSetName}.{context.ContentFieldDefinition.Name}.{propertyName}";
 
         context.ContentValidateResult.Fail(new ValidationResult(errorMessage, new[] { memberName }));
     }

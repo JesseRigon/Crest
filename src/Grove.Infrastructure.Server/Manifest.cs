@@ -30,9 +30,9 @@ using Grove.Modules.Manifest;
     //     layout but never promoted into the tenant's translation store, so the Razor admin
     //     and Grove would disagree about the caption.
     //   Grove.Routes.Auto  -> ISite.HomeRoute (SiteController's home-page-lookup
-    //     endpoint, consumed by Site's Home.razor) is only ever WRITTEN by
-    //     AutoroutePartHandler.PublishedAsync, which only runs while this feature is
-    //     enabled - AutorouteOptions itself is a ContentManagement.Abstractions type
+    //     endpoint, consumed by Site's Home.razor) is only ever WRITTEN by the
+    //     Autoroute field set's system flow (Register route entries, on publishing), which only
+    //     runs while this feature is enabled - AutorouteOptions itself is a ContentManagement.Abstractions type
     //     (already referenced), but without this feature enabled, HomeRoute would stay
     //     permanently null regardless. Also brings in Grove.HomeRoute (its own
     //     manifest dependency) for free.

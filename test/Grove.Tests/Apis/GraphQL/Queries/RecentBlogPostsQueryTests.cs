@@ -1,5 +1,5 @@
 using Grove.Contents.Management;
-using Grove.Contents.Lists.Models;
+using Grove.Contents.Hierarchy.Models;
 using Grove.Tests.Apis.Context;
 
 namespace Grove.Tests.Apis.GraphQL;
@@ -25,7 +25,7 @@ public class RecentBlogPostsQueryTests
                 builder.DisplayText = "Some sort of blogpost in a Query!";
 
                 builder
-                    .Weld(new ContainedPart
+                    .Weld(new ParentContentItemFieldSet
                     {
                         ListContentItemId = context.BlogContentItemId,
                     });

@@ -45,7 +45,7 @@ public class OptionFilter
 
     /// <summary>
     /// Which column of the PARENT's selected rows supplies the comparison value, when
-    /// <see cref="ValueFrom"/> names an OptionPickerField. A picker field stores ids,
+    /// <see cref="ValueFrom"/> names an OptionListField. A picker field stores ids,
     /// but logic compares machine data - so the parent's selection is resolved through
     /// its own source and this column is read from the rows. Null or "Key" means the
     /// option's technical Key (falling back to the row id for entity sources, whose id

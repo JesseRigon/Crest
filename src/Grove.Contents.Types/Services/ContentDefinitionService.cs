@@ -16,25 +16,28 @@ public class ContentDefinitionService : IContentDefinitionService
     private readonly IContentDefinitionManager _contentDefinitionManager;
     private readonly IEnumerable<IContentDefinitionEventHandler> _contentDefinitionEventHandlers;
     private readonly ContentTypesOptions _contentTypesOptions;
+    private readonly ContentOptions _contentOptions;
     private readonly ILogger _logger;
     protected readonly IStringLocalizer S;
 
     public ContentDefinitionService(
             IContentDefinitionManager contentDefinitionManager,
             IEnumerable<IContentDefinitionEventHandler> contentDefinitionEventHandlers,
-            IEnumerable<ContentPart> contentParts,
+            IEnumerable<ContentFieldSet> contentFieldSets,
             IEnumerable<ContentField> contentFields,
             IOptions<ContentTypesOptions> contentTypesOptions,
+            IOptions<ContentOptions> contentOptions,
             ILogger<ContentDefinitionService> logger,
             IStringLocalizer<ContentDefinitionService> stringLocalizer)
     {
         _contentDefinitionManager = contentDefinitionManager;
         _contentDefinitionEventHandlers = contentDefinitionEventHandlers;
         _contentTypesOptions = contentTypesOptions.Value;
+        _contentOptions = contentOptions.Value;
 
-        foreach (var element in contentParts.Select(x => x.GetType()))
+        foreach (var element in contentFieldSets.Select(x => x.GetType()))
         {
-            logger.LogError("The content part '{ContentPart}' should not be registered in DI. Use AddContentPart<T>() instead.", element);
+            logger.LogError("The field set '{ContentFieldSet}' should not be registered in DI. Use AddContentFieldSet<T>() instead.", element);
         }
 
         foreach (var element in contentFields.Select(x => x.GetType()))
@@ -79,7 +82,7 @@ public class ContentDefinitionService : IContentDefinitionService
         await _contentDefinitionManager.StoreTypeDefinitionAsync(contentTypeDefinition);
 
         // Ensure it has its own part.
-        await _contentDefinitionManager.AlterTypeDefinitionAsync(name, builder => builder.WithPart(name));
+        await _contentDefinitionManager.AlterTypeDefinitionAsync(name, builder => builder.WithFieldSet(name));
         await _contentDefinitionManager.AlterTypeDefinitionAsync(name, cfg =>
         {
             cfg.Creatable()
@@ -118,16 +121,17 @@ public class ContentDefinitionService : IContentDefinitionService
             throw new InvalidOperationException("Unable to remove system-defined type.");
         }
 
-        var partDefinitions = typeDefinition.Parts.ToList();
+        var partDefinitions = typeDefinition.FieldSets.ToList();
         foreach (var partDefinition in partDefinitions)
         {
-            await RemovePartFromTypeAsync(partDefinition.PartDefinition.Name, name);
+            await RemoveFieldSetFromTypeAsync(partDefinition.FieldSetDefinition.Name, name);
+        }
 
-            // Delete the part if it's its own part.
-            if (partDefinition.PartDefinition.Name == name)
-            {
-                await RemovePartAsync(name);
-            }
+        // The type's own field set goes with it unless code defines it or another type attaches it.
+        if (partDefinitions.Any(part => part.FieldSetDefinition.Name == name) &&
+            await TypeOwnFieldSet.CanDeleteAsync(_contentDefinitionManager, _contentOptions, name))
+        {
+            await RemoveFieldSetAsync(name);
         }
 
         await _contentDefinitionManager.DeleteTypeDefinitionAsync(name);
@@ -140,28 +144,28 @@ public class ContentDefinitionService : IContentDefinitionService
         _contentDefinitionEventHandlers.Invoke((handler, ctx) => handler.ContentTypeRemoved(ctx), context, _logger);
     }
 
-    public async Task AddPartToTypeAsync(string partName, string typeName)
+    public async Task AddFieldSetToTypeAsync(string fieldSetName, string typeName)
     {
         var typeDefinition = await _contentDefinitionManager.LoadTypeDefinitionAsync(typeName);
-        var position = GetPartPosition(typeDefinition, partName);
+        var position = GetFieldSetPosition(typeDefinition, fieldSetName);
 
-        await _contentDefinitionManager.AlterTypeDefinitionAsync(typeName, typeBuilder => typeBuilder.WithPart(partName, partBuilder => partBuilder.WithPosition(position)));
-        var context = new ContentPartAttachedContext
+        await _contentDefinitionManager.AlterTypeDefinitionAsync(typeName, typeBuilder => typeBuilder.WithFieldSet(fieldSetName, partBuilder => partBuilder.WithPosition(position)));
+        var context = new ContentFieldSetAttachedContext
         {
             ContentTypeName = typeName,
-            ContentPartName = partName,
+            ContentFieldSetName = fieldSetName,
         };
 
-        _contentDefinitionEventHandlers.Invoke((handler, ctx) => handler.ContentPartAttached(ctx), context, _logger);
+        _contentDefinitionEventHandlers.Invoke((handler, ctx) => handler.ContentFieldSetAttached(ctx), context, _logger);
     }
 
-    public async Task AddReusablePartToTypeAsync(string name, string displayName, string description, string partName, string typeName)
+    public async Task AddReusableFieldSetToTypeAsync(string name, string displayName, string description, string fieldSetName, string typeName)
     {
         var typeDefinition = await _contentDefinitionManager.LoadTypeDefinitionAsync(typeName);
-        var position = GetPartPosition(typeDefinition, name);
+        var position = GetFieldSetPosition(typeDefinition, name);
 
         await _contentDefinitionManager.AlterTypeDefinitionAsync(typeName, typeBuilder => typeBuilder
-            .WithPart(name, partName, partBuilder =>
+            .WithFieldSet(name, fieldSetName, partBuilder =>
             {
                 partBuilder.WithDisplayName(displayName);
                 partBuilder.WithDescription(description);
@@ -169,16 +173,16 @@ public class ContentDefinitionService : IContentDefinitionService
             })
         );
 
-        var context = new ContentPartAttachedContext
+        var context = new ContentFieldSetAttachedContext
         {
             ContentTypeName = typeName,
-            ContentPartName = partName,
+            ContentFieldSetName = fieldSetName,
         };
 
-        _contentDefinitionEventHandlers.Invoke((handler, ctx) => handler.ContentPartAttached(ctx), context, _logger);
+        _contentDefinitionEventHandlers.Invoke((handler, ctx) => handler.ContentFieldSetAttached(ctx), context, _logger);
     }
 
-    public async Task RemovePartFromTypeAsync(string partName, string typeName)
+    public async Task RemoveFieldSetFromTypeAsync(string fieldSetName, string typeName)
     {
         var typeDefinition = await _contentDefinitionManager.LoadTypeDefinitionAsync(typeName);
 
@@ -187,7 +191,7 @@ public class ContentDefinitionService : IContentDefinitionService
             return;
         }
 
-        var partDefinition = typeDefinition.Parts.FirstOrDefault(p => string.Equals(p.Name, partName, StringComparison.OrdinalIgnoreCase));
+        var partDefinition = typeDefinition.FieldSets.FirstOrDefault(p => string.Equals(p.Name, fieldSetName, StringComparison.OrdinalIgnoreCase));
 
         if (partDefinition == null)
         {
@@ -201,35 +205,35 @@ public class ContentDefinitionService : IContentDefinitionService
             throw new InvalidOperationException("Unable to remove system-defined part.");
         }
 
-        await _contentDefinitionManager.AlterTypeDefinitionAsync(typeName, typeBuilder => typeBuilder.RemovePart(partName));
+        await _contentDefinitionManager.AlterTypeDefinitionAsync(typeName, typeBuilder => typeBuilder.RemoveFieldSet(fieldSetName));
 
-        var context = new ContentPartDetachedContext
+        var context = new ContentFieldSetDetachedContext
         {
             ContentTypeName = typeName,
-            ContentPartName = partName,
+            ContentFieldSetName = fieldSetName,
         };
 
-        _contentDefinitionEventHandlers.Invoke((handler, ctx) => handler.ContentPartDetached(ctx), context, _logger);
+        _contentDefinitionEventHandlers.Invoke((handler, ctx) => handler.ContentFieldSetDetached(ctx), context, _logger);
     }
 
-    public async Task<ContentPartDefinition> AddPartAsync(string name)
+    public async Task<ContentFieldSetDefinition> AddFieldSetAsync(string name)
     {
-        if (await _contentDefinitionManager.LoadPartDefinitionAsync(name) is not null)
+        if (await _contentDefinitionManager.LoadFieldSetDefinitionAsync(name) is not null)
         {
             throw new Exception(S["Cannot add part named '{0}'. It already exists.", name]);
         }
 
         if (!string.IsNullOrEmpty(name))
         {
-            await _contentDefinitionManager.AlterPartDefinitionAsync(name, builder => builder.Attachable());
-            var partDefinition = await _contentDefinitionManager.LoadPartDefinitionAsync(name);
+            await _contentDefinitionManager.AlterFieldSetDefinitionAsync(name, builder => builder.Attachable());
+            var partDefinition = await _contentDefinitionManager.LoadFieldSetDefinitionAsync(name);
 
-            var context = new ContentPartCreatedContext
+            var context = new ContentFieldSetCreatedContext
             {
-                ContentPartDefinition = partDefinition,
+                ContentFieldSetDefinition = partDefinition,
             };
 
-            _contentDefinitionEventHandlers.Invoke((handler, ctx) => handler.ContentPartCreated(ctx), context, _logger);
+            _contentDefinitionEventHandlers.Invoke((handler, ctx) => handler.ContentFieldSetCreated(ctx), context, _logger);
 
             return partDefinition;
         }
@@ -237,9 +241,9 @@ public class ContentDefinitionService : IContentDefinitionService
         return null;
     }
 
-    public async Task RemovePartAsync(string name)
+    public async Task RemoveFieldSetAsync(string name)
     {
-        var partDefinition = await _contentDefinitionManager.LoadPartDefinitionAsync(name);
+        var partDefinition = await _contentDefinitionManager.LoadFieldSetDefinitionAsync(name);
 
         if (partDefinition == null)
         {
@@ -256,56 +260,56 @@ public class ContentDefinitionService : IContentDefinitionService
 
         foreach (var fieldDefinition in partDefinition.Fields)
         {
-            await RemoveFieldFromPartAsync(fieldDefinition.Name, name);
+            await RemoveFieldFromFieldSetAsync(fieldDefinition.Name, name);
         }
 
-        await _contentDefinitionManager.DeletePartDefinitionAsync(name);
+        await _contentDefinitionManager.DeleteFieldSetDefinitionAsync(name);
 
-        var context = new ContentPartRemovedContext
+        var context = new ContentFieldSetRemovedContext
         {
-            ContentPartDefinition = partDefinition,
+            ContentFieldSetDefinition = partDefinition,
         };
 
-        _contentDefinitionEventHandlers.Invoke((handler, ctx) => handler.ContentPartRemoved(ctx), context, _logger);
+        _contentDefinitionEventHandlers.Invoke((handler, ctx) => handler.ContentFieldSetRemoved(ctx), context, _logger);
     }
 
-    public Task AddFieldToPartAsync(string fieldName, string fieldTypeName, string partName)
-        => AddFieldToPartAsync(fieldName, fieldName, fieldTypeName, partName);
+    public Task AddFieldToFieldSetAsync(string fieldName, string fieldTypeName, string fieldSetName)
+        => AddFieldToFieldSetAsync(fieldName, fieldName, fieldTypeName, fieldSetName);
 
-    public async Task AddFieldToPartAsync(string fieldName, string displayName, string fieldTypeName, string partName)
+    public async Task AddFieldToFieldSetAsync(string fieldName, string displayName, string fieldTypeName, string fieldSetName)
     {
         if (string.IsNullOrEmpty(fieldName))
         {
             throw new ArgumentException($"The '{nameof(fieldName)}' can't be null or empty.", nameof(fieldName));
         }
 
-        var partDefinition = await _contentDefinitionManager.LoadPartDefinitionAsync(partName);
-        var typeDefinition = await _contentDefinitionManager.LoadTypeDefinitionAsync(partName);
+        var partDefinition = await _contentDefinitionManager.LoadFieldSetDefinitionAsync(fieldSetName);
+        var typeDefinition = await _contentDefinitionManager.LoadTypeDefinitionAsync(fieldSetName);
 
         // If the type exists ensure it has its own part.
         if (typeDefinition != null)
         {
-            await _contentDefinitionManager.AlterTypeDefinitionAsync(partName, builder => builder.WithPart(partName));
+            await _contentDefinitionManager.AlterTypeDefinitionAsync(fieldSetName, builder => builder.WithFieldSet(fieldSetName));
         }
 
         fieldName = fieldName.ToSafeName();
         var position = GetFieldPosition(partDefinition, fieldName);
 
-        await _contentDefinitionManager.AlterPartDefinitionAsync(partName,
-            partBuilder => partBuilder.WithField(fieldName, fieldBuilder => fieldBuilder.OfType(fieldTypeName).WithDisplayName(displayName).MergeSettings<ContentPartFieldSettings>(x => x.Position = position)));
+        await _contentDefinitionManager.AlterFieldSetDefinitionAsync(fieldSetName,
+            partBuilder => partBuilder.WithField(fieldName, fieldBuilder => fieldBuilder.OfType(fieldTypeName).WithDisplayName(displayName).MergeSettings<ContentFieldSettings>(x => x.Position = position)));
 
         _contentDefinitionEventHandlers.Invoke((handler, context) => handler.ContentFieldAttached(context), new ContentFieldAttachedContext
         {
-            ContentPartName = partName,
+            ContentFieldSetName = fieldSetName,
             ContentFieldTypeName = fieldTypeName,
             ContentFieldName = fieldName,
             ContentFieldDisplayName = displayName,
         }, _logger);
     }
 
-    public async Task RemoveFieldFromPartAsync(string fieldName, string partName)
+    public async Task RemoveFieldFromFieldSetAsync(string fieldName, string fieldSetName)
     {
-        var partDefinition = await _contentDefinitionManager.LoadPartDefinitionAsync(partName);
+        var partDefinition = await _contentDefinitionManager.LoadFieldSetDefinitionAsync(fieldSetName);
 
         if (partDefinition == null)
         {
@@ -319,11 +323,11 @@ public class ContentDefinitionService : IContentDefinitionService
             throw new InvalidOperationException("Unable to remove system-defined field.");
         }
 
-        await _contentDefinitionManager.AlterPartDefinitionAsync(partName, typeBuilder => typeBuilder.RemoveField(fieldName));
+        await _contentDefinitionManager.AlterFieldSetDefinitionAsync(fieldSetName, typeBuilder => typeBuilder.RemoveField(fieldName));
 
         var context = new ContentFieldDetachedContext
         {
-            ContentPartName = partName,
+            ContentFieldSetName = fieldSetName,
             ContentFieldName = fieldName,
         };
 
@@ -332,7 +336,7 @@ public class ContentDefinitionService : IContentDefinitionService
 
     public async Task AlterFieldAsync(AlterFieldContext context)
     {
-        await _contentDefinitionManager.AlterPartDefinitionAsync(context.PartName, partBuilder =>
+        await _contentDefinitionManager.AlterFieldSetDefinitionAsync(context.FieldSetName, partBuilder =>
         {
             partBuilder.WithField(context.FieldName, fieldBuilder =>
             {
@@ -342,20 +346,20 @@ public class ContentDefinitionService : IContentDefinitionService
             });
         });
 
-        var eventContext = new ContentPartFieldUpdatedContext
+        var eventContext = new ContentFieldUpdatedContext
         {
-            ContentPartName = context.PartName,
+            ContentFieldSetName = context.FieldSetName,
             ContentFieldName = context.FieldName,
         };
 
-        _contentDefinitionEventHandlers.Invoke((handler, ctx) => handler.ContentPartFieldUpdated(ctx), eventContext, _logger);
+        _contentDefinitionEventHandlers.Invoke((handler, ctx) => handler.ContentFieldUpdated(ctx), eventContext, _logger);
     }
 
-    public async Task AlterTypePartAsync(AlterTypePartContext context)
+    public async Task AlterTypeFieldSetAsync(AlterTypeFieldSetContext context)
     {
         await _contentDefinitionManager.AlterTypeDefinitionAsync(context.TypeName, type =>
         {
-            type.WithPart(context.PartName, context.PartDefinition, part =>
+            type.WithFieldSet(context.FieldSetName, context.FieldSetDefinition, part =>
             {
                 part.WithDisplayName(context.DisplayName);
                 part.WithDescription(context.Description);
@@ -364,36 +368,36 @@ public class ContentDefinitionService : IContentDefinitionService
             });
         });
 
-        var eventContext = new ContentTypePartUpdatedContext
+        var eventContext = new ContentTypeFieldSetUpdatedContext
         {
             ContentTypeName = context.TypeName,
-            ContentPartName = context.PartName,
+            ContentFieldSetName = context.FieldSetName,
         };
 
-        _contentDefinitionEventHandlers.Invoke((handler, ctx) => handler.ContentTypePartUpdated(ctx), eventContext, _logger);
+        _contentDefinitionEventHandlers.Invoke((handler, ctx) => handler.ContentTypeFieldSetUpdated(ctx), eventContext, _logger);
     }
 
-    public async Task AlterTypePartsOrderAsync(ContentTypeDefinition typeDefinition, string[] partNames)
+    public async Task AlterTypeFieldSetsOrderAsync(ContentTypeDefinition typeDefinition, string[] fieldSetNames)
     {
         await _contentDefinitionManager.AlterTypeDefinitionAsync(typeDefinition.Name, type =>
         {
-            if (partNames is null)
+            if (fieldSetNames is null)
             {
                 return;
             }
 
-            for (var i = 0; i < partNames.Length; i++)
+            for (var i = 0; i < fieldSetNames.Length; i++)
             {
-                var partDefinition = typeDefinition.Parts?.FirstOrDefault(x => x.Name == partNames[i]);
+                var partDefinition = typeDefinition.FieldSets?.FirstOrDefault(x => x.Name == fieldSetNames[i]);
 
                 if (partDefinition == null)
                 {
                     continue;
                 }
 
-                type.WithPart(partNames[i], partDefinition.PartDefinition, part =>
+                type.WithFieldSet(fieldSetNames[i], partDefinition.FieldSetDefinition, part =>
                 {
-                    part.MergeSettings<ContentTypePartSettings>(x => x.Position = i.ToString());
+                    part.MergeSettings<ContentTypeFieldSetSettings>(x => x.Position = i.ToString());
                 });
             }
         });
@@ -406,9 +410,9 @@ public class ContentDefinitionService : IContentDefinitionService
         _contentDefinitionEventHandlers.Invoke((handler, context) => handler.ContentTypeUpdated(context), context, _logger);
     }
 
-    public async Task AlterPartFieldsOrderAsync(ContentPartDefinition partDefinition, string[] fieldNames)
+    public async Task AlterFieldSetFieldsOrderAsync(ContentFieldSetDefinition fieldSetDefinition, string[] fieldNames)
     {
-        await _contentDefinitionManager.AlterPartDefinitionAsync(partDefinition.Name, type =>
+        await _contentDefinitionManager.AlterFieldSetDefinitionAsync(fieldSetDefinition.Name, type =>
         {
             if (fieldNames is null)
             {
@@ -417,17 +421,17 @@ public class ContentDefinitionService : IContentDefinitionService
 
             for (var i = 0; i < fieldNames.Length; i++)
             {
-                var fieldDefinition = partDefinition.Fields.FirstOrDefault(x => x.Name == fieldNames[i]);
+                var fieldDefinition = fieldSetDefinition.Fields.FirstOrDefault(x => x.Name == fieldNames[i]);
                 type.WithField(fieldNames[i], field =>
                 {
-                    field.MergeSettings<ContentPartFieldSettings>(x => x.Position = i.ToString());
+                    field.MergeSettings<ContentFieldSettings>(x => x.Position = i.ToString());
                 });
             }
         });
 
-        _contentDefinitionEventHandlers.Invoke((handler, context) => handler.ContentPartUpdated(context), new ContentPartUpdatedContext
+        _contentDefinitionEventHandlers.Invoke((handler, context) => handler.ContentFieldSetUpdated(context), new ContentFieldSetUpdatedContext
         {
-            ContentPartDefinition = partDefinition,
+            ContentFieldSetDefinition = fieldSetDefinition,
         }, _logger);
     }
 
@@ -443,27 +447,27 @@ public class ContentDefinitionService : IContentDefinitionService
         return displayName;
     }
 
-    public async Task<string> GenerateFieldNameFromDisplayNameAsync(string partName, string displayName)
+    public async Task<string> GenerateFieldNameFromDisplayNameAsync(string fieldSetName, string displayName)
     {
-        IEnumerable<ContentPartFieldDefinition> fieldDefinitions;
+        IEnumerable<ContentFieldDefinition> fieldDefinitions;
 
-        var part = await _contentDefinitionManager.LoadPartDefinitionAsync(partName);
+        var part = await _contentDefinitionManager.LoadFieldSetDefinitionAsync(fieldSetName);
         displayName = displayName.ToSafeName();
 
         if (part == null)
         {
-            var type = await _contentDefinitionManager.LoadTypeDefinitionAsync(partName)
-                ?? throw new ArgumentException("The part doesn't exist: " + partName);
+            var type = await _contentDefinitionManager.LoadTypeDefinitionAsync(fieldSetName)
+                ?? throw new ArgumentException("The part doesn't exist: " + fieldSetName);
 
-            var typePart = type.Parts?.FirstOrDefault(x => x.PartDefinition.Name == partName);
+            var typeFieldSet = type.FieldSets?.FirstOrDefault(x => x.FieldSetDefinition.Name == fieldSetName);
 
             // If passed in might be that of a type w/ no implicit field.
-            if (typePart == null)
+            if (typeFieldSet == null)
             {
                 return displayName;
             }
 
-            fieldDefinitions = typePart.PartDefinition.Fields.ToList();
+            fieldDefinitions = typeFieldSet.FieldSetDefinition.Fields.ToList();
         }
         else
         {
@@ -478,30 +482,30 @@ public class ContentDefinitionService : IContentDefinitionService
         return displayName;
     }
 
-    private static string GetPartPosition(ContentTypeDefinition typeDefinition, string partName)
+    private static string GetFieldSetPosition(ContentTypeDefinition typeDefinition, string partName)
     {
-        var existingPartDefinition = typeDefinition?.Parts.FirstOrDefault(part => string.Equals(part.Name, partName, StringComparison.OrdinalIgnoreCase));
-        var existingPosition = existingPartDefinition?.GetSettings<ContentTypePartSettings>().Position;
+        var existingFieldSetDefinition = typeDefinition?.FieldSets.FirstOrDefault(part => string.Equals(part.Name, partName, StringComparison.OrdinalIgnoreCase));
+        var existingPosition = existingFieldSetDefinition?.GetSettings<ContentTypeFieldSetSettings>().Position;
 
         if (!string.IsNullOrWhiteSpace(existingPosition))
         {
             return existingPosition;
         }
 
-        return GetNextPosition(typeDefinition?.Parts.Select(part => part.GetSettings<ContentTypePartSettings>().Position));
+        return GetNextPosition(typeDefinition?.FieldSets.Select(part => part.GetSettings<ContentTypeFieldSetSettings>().Position));
     }
 
-    private static string GetFieldPosition(ContentPartDefinition partDefinition, string fieldName)
+    private static string GetFieldPosition(ContentFieldSetDefinition partDefinition, string fieldName)
     {
         var existingFieldDefinition = partDefinition?.Fields.FirstOrDefault(field => string.Equals(field.Name, fieldName, StringComparison.OrdinalIgnoreCase));
-        var existingPosition = existingFieldDefinition?.GetSettings<ContentPartFieldSettings>().Position;
+        var existingPosition = existingFieldDefinition?.GetSettings<ContentFieldSettings>().Position;
 
         if (!string.IsNullOrWhiteSpace(existingPosition))
         {
             return existingPosition;
         }
 
-        return GetNextPosition(partDefinition?.Fields.Select(field => field.GetSettings<ContentPartFieldSettings>().Position));
+        return GetNextPosition(partDefinition?.Fields.Select(field => field.GetSettings<ContentFieldSettings>().Position));
     }
 
     private static string GetNextPosition(IEnumerable<string> positions)

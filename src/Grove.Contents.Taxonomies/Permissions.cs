@@ -4,7 +4,7 @@ namespace Grove.Contents.Taxonomies;
 
 public sealed class Permissions : IPermissionProvider
 {
-    public static readonly Permission ManageTaxonomies = new("ManageTaxonomy", "Manage taxonomies");
+    public static readonly Permission ManageTaxonomies = new("ManageTaxonomy", "Manage categories");
 
     private readonly IEnumerable<Permission> _allPermissions =
     [

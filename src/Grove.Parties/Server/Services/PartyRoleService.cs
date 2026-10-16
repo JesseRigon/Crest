@@ -68,7 +68,7 @@ public sealed class PartyRoleService(
                 ?? throw new InvalidOperationException("The Individual organization's person no longer exists.");
         }
 
-        var existing = await session.QueryIndex<OptionPickerFieldIndex>(index =>
+        var existing = await session.QueryIndex<OptionListFieldIndex>(index =>
                 index.ContentType == roleContentType &&
                 index.ContentField == PartyRoleDefinitions.PartyField &&
                 index.SelectedId == target.ContentItemId &&
@@ -82,8 +82,8 @@ public sealed class PartyRoleService(
         var role = await contentManager.NewAsync(roleContentType);
         await decision.RequireAsync(caller, CommonPermissionNames.PublishContent, role, cancellationToken);
         role.DisplayText = target.DisplayText;
-        ((System.Text.Json.Nodes.JsonObject)role.Content)["TitlePart"] = new System.Text.Json.Nodes.JsonObject { ["Title"] = target.DisplayText };
-        role.Alter<ContentPart>(roleContentType, part => part.Alter<OptionPickerField>(PartyRoleDefinitions.PartyField, field => field.SelectedIds = [target.ContentItemId]));
+        ((System.Text.Json.Nodes.JsonObject)role.Content)["Title"] = new System.Text.Json.Nodes.JsonObject { ["Title"] = new System.Text.Json.Nodes.JsonObject { ["Text"] = target.DisplayText } };
+        role.Alter<ContentFieldSet>(roleContentType, part => part.Alter<OptionListField>(PartyRoleDefinitions.PartyField, field => field.SelectedIds = [target.ContentItemId]));
         await contentManager.CreateAsync(role, VersionOptions.Published);
 
         return new PartyRoleResult(role.ContentItemId, roleContentType, target.ContentItemId, true, individual);

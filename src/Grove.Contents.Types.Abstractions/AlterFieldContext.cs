@@ -8,7 +8,7 @@ public class AlterFieldContext
     /// <summary>
     /// Gets or sets the name of the part containing the field.
     /// </summary>
-    public string PartName { get; set; }
+    public string FieldSetName { get; set; }
 
     /// <summary>
     /// Gets or sets the technical name of the field.

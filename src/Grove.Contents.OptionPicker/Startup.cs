@@ -1,3 +1,4 @@
+using Grove.Contents.Fields;
 using Grove.Apis;
 using Grove.Contents.Management;
 using Grove.Contents.Management.Display.ContentDisplay;
@@ -17,27 +18,30 @@ public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        // OptionPickerField: the reference mechanism for option sources. Providers keep the field
-        // ignorant of what it is picking (content part lists, users, content items, ...).
-        services.AddContentField<global::Grove.Fields.OptionPickerField>()
-            .UseDisplayDriver<Drivers.OptionPickerFieldDisplayDriver>()
-            .AddHandler<Handlers.OptionPickerFieldHandler>();
-        services.AddScoped<Grove.Data.Indexing.IContentFieldIndexHandler, global::Grove.Data.Indexing.OptionPickerFieldIndexHandler>();
+        // OptionListField: the reference mechanism for option sources. Providers keep the field
+        // ignorant of what it is picking (option lists, users, content items, ...).
+        services.AddFieldType<global::Grove.Fields.OptionListField, Grove.Infrastructure.Settings.OptionListFieldSettings>()
+            .UseDisplayDriver<Drivers.OptionListFieldDisplayDriver>()
+            .AddHandler<Handlers.OptionListFieldHandler>();
+        services.AddScoped<Grove.Data.Indexing.IContentFieldIndexHandler, global::Grove.Data.Indexing.OptionListFieldIndexHandler>();
         services.AddScoped<IOptionSourceProvider, UserOptionSourceProvider>();
         services.AddScoped<IOptionSourceProvider, ContentItemOptionSourceProvider>();
         services.AddScoped<IOptionSourceProvider, TimeZoneOptionSourceProvider>();
         services.AddScoped<IOptionSourceProvider, CultureOptionSourceProvider>();
-        services.AddScoped<OptionPickerFieldKeyResolver>();
+        services.AddScoped<OptionListFieldKeyResolver>();
 
         // Parent id -> key resolution behind cascading filters and field-visibility conditions.
         services.AddScoped<OptionParentValueResolver>();
-        services.AddScoped<IFieldComparisonValueResolver, OptionPickerComparisonValueResolver>();
+        services.AddScoped<IFieldComparisonValueResolver, OptionListFieldComparisonValueResolver>();
+
+        // A snapshot embedding's option references keep the values the embedding names.
+        services.AddScoped<Grove.Contents.Management.Handlers.IEmbeddedContentSnapshotHandler, OptionListFieldSnapshotHandler>();
 
         // Per-content-type index partitioning: modules register the high-volume types that get
         // their own table, and the catch-all partition skips them.
         services.AddSingleton<global::Grove.Data.Indexing.OptionIndexPartitions>();
-        services.AddDataMigration<global::Grove.Data.Indexing.OptionPickerFieldIndexMigrations>();
-        services.AddScopedIndexProvider<global::Grove.Data.Indexing.OptionPickerFieldIndexProvider>();
+        services.AddDataMigration<global::Grove.Data.Indexing.OptionListFieldIndexMigrations>();
+        services.AddScopedIndexProvider<global::Grove.Data.Indexing.OptionListFieldIndexProvider>();
 
         services.AddPermissionProvider<global::Grove.Permissions.OptionPickerPermissions>();
 
@@ -53,11 +57,19 @@ public sealed class Startup : StartupBase
     }
 }
 
+// Localization sets as a source: a field references a page in whatever culture is read.
+[RequireFeatures("Grove.Contents.Localization")]
+public sealed class LocalizationSetsStartup : StartupBase
+{
+    public override void ConfigureServices(IServiceCollection services) =>
+        services.AddScoped<IOptionSourceProvider, LocalizationSetOptionSourceProvider>();
+}
+
 [RequireFeatures("Grove.Data.Protocols.GraphQL")]
 public sealed class GraphQLStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services) =>
-        services.AddObjectGraphType<global::Grove.Fields.OptionPickerField, GraphQL.OptionPickerFieldQueryObjectType>();
+        services.AddObjectGraphType<global::Grove.Fields.OptionListField, GraphQL.OptionListFieldQueryObjectType>();
 }
 
 // Liquid reads an option picker field and its display model (Model.SelectedIds, Model.Items).
@@ -67,8 +79,8 @@ public sealed class LiquidStartup : StartupBase
     public override void ConfigureServices(IServiceCollection services) =>
         services.Configure<TemplateOptions>(options =>
         {
-            options.MemberAccessStrategy.Register<global::Grove.Fields.OptionPickerField>();
-            options.MemberAccessStrategy.Register<Drivers.OptionPickerFieldViewModel>();
+            options.MemberAccessStrategy.Register<global::Grove.Fields.OptionListField>();
+            options.MemberAccessStrategy.Register<Drivers.OptionListFieldViewModel>();
             options.MemberAccessStrategy.Register<Grove.Contents.Fields.ViewModels.DisplayLinkItem>();
         });
 }

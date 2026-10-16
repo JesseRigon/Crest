@@ -11,10 +11,10 @@ The platform's permission model is content-type and item level: `ContentTypePerm
 (`Grove.Contents/Security/ContentTypePermissions.cs`) generates per-type permissions
 (`Editable_<ContentType>`, `Viewable_<ContentType>`); a role can or cannot act on the whole item.
 
-Per-part access is a **scope provider** on content parts in `Grove.Access`, not a generated
-permission per (type, part). The seam is `Grove.Access.ContentPartScope`: a module registers an
-`IScopeProvider` with the target `ContentPartScope.Target(type, part)`
-(`ContentPart:{type}.{part}`); its rule, read against the item's content index row, shows the
+Per-field-set access is a **scope provider** on field sets in `Grove.Access`, not a generated
+permission per (type, field set). The seam is `Grove.Access.ContentFieldSetScope`: a module registers an
+`IScopeProvider` with the target `ContentFieldSetScope.Target(type, fieldSet)`
+(`ContentFieldSet:{type}.{fieldSet}`); its rule, read against the item's content index row, shows the
 part (`All`), hides it (`None`) or shows it on the rows a filter admits (a semi-join fails
 closed). `ContentItemsController.ViewAsync` (`?parts=`) decides `ViewContent` on the item once,
 then keeps each requested part its scope admits; a part with no provider follows the item. The

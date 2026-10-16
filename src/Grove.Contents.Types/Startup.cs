@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Grove.Contents.Management;
+using Grove.Contents.Management.Handlers;
 using Grove.Contents.Types.Deployment;
 using Grove.Contents.Types.RecipeSteps;
 using Grove.Contents.Types.Services;
@@ -54,14 +55,14 @@ public sealed class Startup : StartupBase
         services.AddTransient<IRecipeEventHandler, LuceneRecipeEventHandler>();
 
         // The definitions APIs (docs/MVC/api.md § Placement): types, parts, content groups, field
-        // visibility and definition locks.
+        // conditions (visibility, field rules) and definition locks.
         services.AddApiContributor<Api.ContentDefinitionsApi>();
         services.AddApiContributor<Api.ContentTypesEditorApi>();
         services.AddApiContributor<Api.ContentGroupsApi>();
-        services.AddApiContributor<Api.FieldVisibilityApi>();
-        // Visibility conditions are enforced on save; the option picker resolves its fields'
-        // ids to keys through IFieldComparisonValueResolver.
-        services.AddScoped<IFieldVisibilityEnforcer, FieldVisibilityEnforcer>();
+        services.AddApiContributor<Api.FieldConditionsApi>();
+        // Field conditions apply in the content manager's validation; the option picker resolves
+        // its fields' ids to keys through IFieldComparisonValueResolver.
+        services.AddScoped<IContentFieldConditions, FieldConditionEnforcer>();
     }
 }
 

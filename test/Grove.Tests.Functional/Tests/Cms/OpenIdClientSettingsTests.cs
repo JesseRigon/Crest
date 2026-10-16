@@ -18,7 +18,7 @@ namespace Grove.Tests.Functional.Tests.Cms;
 // ResourceManager.ExpandDependenciesImplementation's FindResource() silently no-ops on an
 // unresolved dependency name (see ResourceManager.cs), the real "vuejs"/"vue-draggable"
 // script dependencies this component actually needs (the same ones every other
-// options-table-editor.ts consumer, e.g. SeoMetaPart.Edit.cshtml, correctly declares) were
+// options-table-editor.ts consumer, e.g. SeoMetaFieldSet.Edit.cshtml, correctly declares) were
 // simply never loaded. The module's own script then threw `ReferenceError: vuedraggable is
 // not defined` on the very first statement inside initOptionsTableEditor() - before the
 // change-event listeners that drive the whole flow-selection state machine were ever

@@ -6,8 +6,12 @@
   "website": "https://orchardcore.net",
   "version": "1.0.0",
   "issetuprecipe": false,
-  "categories": [ "default" ],
-  "tags": [ "menu" ],
+  "categories": [
+    "default"
+  ],
+  "tags": [
+    "menu"
+  ],
   "steps": [
     {
       "name": "ContentDefinition",
@@ -20,30 +24,21 @@
               "Stereotype": "MenuItem"
             }
           },
-          "ContentTypePartDefinitionRecords": [
+          "ContentTypeFieldSetDefinitionRecords": [
             {
-              "PartName": "LinkMenuItemPart",
-              "Name": "LinkMenuItemPart",
+              "FieldSetName": "LinkMenuItem",
+              "Name": "LinkMenuItem",
               "Settings": {
-                "ContentTypePartSettings": {
+                "ContentTypeFieldSetSettings": {
                   "Position": "0"
                 }
               }
             },
             {
-              "PartName": "LinkMenuItem",
-              "Name": "LinkMenuItem",
+              "FieldSetName": "MenuItemPermission",
+              "Name": "MenuItemPermission",
               "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "1"
-                }
-              }
-            },
-            {
-              "PartName": "MenuItemPermissionPart",
-              "Name": "MenuItemPermissionPart",
-              "Settings": {
-                "ContentTypePartSettings": {
+                "ContentTypeFieldSetSettings": {
                   "Position": "2"
                 }
               }
@@ -59,30 +54,21 @@
             },
             "FullTextAspectSettings": {}
           },
-          "ContentTypePartDefinitionRecords": [
+          "ContentTypeFieldSetDefinitionRecords": [
             {
-              "PartName": "HtmlMenuItemPart",
-              "Name": "HtmlMenuItemPart",
+              "FieldSetName": "HtmlMenuItem",
+              "Name": "HtmlMenuItem",
               "Settings": {
-                "ContentTypePartSettings": {
+                "ContentTypeFieldSetSettings": {
                   "Position": "0"
                 }
               }
             },
             {
-              "PartName": "HtmlMenuItem",
-              "Name": "HtmlMenuItem",
+              "FieldSetName": "MenuItemPermission",
+              "Name": "MenuItemPermission",
               "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "1"
-                }
-              }
-            },
-            {
-              "PartName": "MenuItemPermissionPart",
-              "Name": "MenuItemPermissionPart",
-              "Settings": {
-                "ContentTypePartSettings": {
+                "ContentTypeFieldSetSettings": {
                   "Position": "2"
                 }
               }
@@ -90,11 +76,11 @@
           ]
         }
       ],
-      "ContentParts": [
+      "ContentFieldSets": [
         {
-          "Name": "MenuItemPermissionPart",
+          "Name": "MenuItemPermission",
           "Settings": {
-            "ContentPartSettings": {
+            "ContentFieldSetSettings": {
               "Attachable": true,
               "Description": "Provides a permission for the menu item."
             }

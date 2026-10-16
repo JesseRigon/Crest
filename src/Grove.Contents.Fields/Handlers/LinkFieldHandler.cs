@@ -35,7 +35,7 @@ public class LinkFieldHandler : ContentFieldHandler<LinkField>
 
     public override Task ValidatingAsync(ValidateContentFieldContext context, LinkField field)
     {
-        var settings = context.ContentPartFieldDefinition.GetSettings<LinkFieldSettings>();
+        var settings = context.ContentFieldDefinition.GetSettings<LinkFieldSettings>();
 
         var urlToValidate = field.Url;
         if (!string.IsNullOrEmpty(urlToValidate))
@@ -57,7 +57,7 @@ public class LinkFieldHandler : ContentFieldHandler<LinkField>
         // Validate Url
         if (settings.Required && string.IsNullOrWhiteSpace(field.Url))
         {
-            context.Fail(S["The url is required for {0}.", context.ContentPartFieldDefinition.DisplayName()], nameof(field.Url));
+            context.Fail(S["The url is required for {0}.", context.ContentFieldDefinition.DisplayName()], nameof(field.Url));
         }
         else if (!string.IsNullOrWhiteSpace(field.Url))
         {
@@ -78,11 +78,11 @@ public class LinkFieldHandler : ContentFieldHandler<LinkField>
 
         if (settings.LinkTextMode == LinkTextMode.Required && string.IsNullOrWhiteSpace(field.Text))
         {
-            context.Fail(S["The link text is required for {0}.", context.ContentPartFieldDefinition.DisplayName()], nameof(field.Text));
+            context.Fail(S["The link text is required for {0}.", context.ContentFieldDefinition.DisplayName()], nameof(field.Text));
         }
         else if (settings.LinkTextMode == LinkTextMode.Static && string.IsNullOrWhiteSpace(settings.DefaultText))
         {
-            context.Fail(S["The text default value is required for {0}.", context.ContentPartFieldDefinition.DisplayName()], nameof(field.Text));
+            context.Fail(S["The text default value is required for {0}.", context.ContentFieldDefinition.DisplayName()], nameof(field.Text));
         }
 
         return Task.CompletedTask;

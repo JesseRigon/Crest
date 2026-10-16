@@ -50,6 +50,6 @@ public class HeadLink : ComponentBase
     }
 }
 
-/// <summary>A list's RSS link (the <c>ListPartFeed</c> shape: its <c>Rel</c>, <c>Type</c>, <c>Href</c> and <c>Title</c>).</summary>
-[BlazorComponent("ListPartFeed", DisplayName = "List feed link", Category = "Document", Icon = "rss_feed")]
-public sealed class ListPartFeedLink : HeadLink;
+/// <summary>A list's RSS link (the <c>ChildContentItemsFieldSetFeed</c> shape: its <c>Rel</c>, <c>Type</c>, <c>Href</c> and <c>Title</c>).</summary>
+[BlazorComponent("ChildContentItemsFieldSetFeed", DisplayName = "List feed link", Category = "Document", Icon = "rss_feed")]
+public sealed class ChildContentItemsFieldSetFeedLink : HeadLink;

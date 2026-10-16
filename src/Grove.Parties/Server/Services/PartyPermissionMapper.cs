@@ -1,3 +1,4 @@
+using Grove.Fields;
 using Grove.Access;
 using Grove.Contents.Fields.Fields;
 using Grove.Contents.Management;
@@ -39,7 +40,7 @@ public sealed class PartyPermissionMapper(ISession session) : IResourcePermissio
 
         if (party.ContentType == PartiesConstants.ContentTypes.Person)
         {
-            var portalUsers = party.Get<ContentPart>(PartiesConstants.ContentTypes.Person)?.Get<UserPickerField>(PartyUserLinkService.PortalUserField)?.UserIds ?? [];
+            var portalUsers = party.Get<ContentFieldSet>(PartiesConstants.ContentTypes.Person)?.Get<OptionListField>(PartyUserLinkService.PortalUserField)?.SelectedIds ?? [];
             if (caller.UserId is not null && portalUsers.Contains(caller.UserId, StringComparer.Ordinal))
             {
                 candidates.Add(OrganizationPermissionNames.ManageOwnOrgMember);

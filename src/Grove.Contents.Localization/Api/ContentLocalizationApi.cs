@@ -17,7 +17,7 @@ namespace Grove.Contents.Localization.Api;
 /// <summary>
 /// An item's translations (<c>api/grove/content-localization</c>): its culture and its
 /// localization set's other cultures, each with the item that holds it, and the localize action
-/// that creates a translation. The native editor's <c>LocalizationPartEditor</c> reads and calls it.
+/// that creates a translation. The native editor's <c>LocalizationFieldSetEditor</c> reads and calls it.
 /// </summary>
 public sealed class ContentLocalizationApi : ApiContributor
 {
@@ -54,7 +54,7 @@ public sealed class ContentLocalizationHandlers(
     public async Task<IResult> GetAsync(string contentItemId)
     {
         var item = await contentManager.GetAsync(contentItemId, VersionOptions.Latest);
-        if (item is null || !item.TryGet<LocalizationPart>(out var part))
+        if (item is null || !item.TryGet<LocalizationFieldSet>(out var part))
         {
             return NotFound();
         }
@@ -91,7 +91,7 @@ public sealed class ContentLocalizationHandlers(
         // The invariant culture's name is empty.
         var targetCulture = request.Culture ?? string.Empty;
         var item = await contentManager.GetAsync(contentItemId, VersionOptions.Latest);
-        if (item is null || !item.TryGet<LocalizationPart>(out var part))
+        if (item is null || !item.TryGet<LocalizationFieldSet>(out var part))
         {
             return NotFound();
         }
@@ -123,7 +123,7 @@ public sealed class ContentLocalizationHandlers(
         }
     }
 
-    private static string? CultureOf(ContentItem item) => item.TryGet<LocalizationPart>(out var part) ? part.Culture : null;
+    private static string? CultureOf(ContentItem item) => item.TryGet<LocalizationFieldSet>(out var part) ? part.Culture : null;
 
     private static string DisplayName(string culture)
     {

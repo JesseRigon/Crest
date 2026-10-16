@@ -22,10 +22,10 @@ public class MarkdownFieldHandler : ContentFieldHandler<MarkdownField>
 
     public override Task ValidatingAsync(ValidateContentFieldContext context, MarkdownField field)
     {
-        var settings = context.ContentPartFieldDefinition.GetSettings<MarkdownFieldSettings>();
+        var settings = context.ContentFieldDefinition.GetSettings<MarkdownFieldSettings>();
         if (settings.RenderLiquid && !string.IsNullOrEmpty(field.Markdown) && !_liquidTemplateManager.Validate(field.Markdown, out var errors))
         {
-            context.Fail(S["{0} doesn't contain a valid Liquid expression. Details: {1}", context.ContentPartFieldDefinition.DisplayName(), string.Join(" ", errors)], nameof(field.Markdown));
+            context.Fail(S["{0} doesn't contain a valid Liquid expression. Details: {1}", context.ContentFieldDefinition.DisplayName(), string.Join(" ", errors)], nameof(field.Markdown));
         }
 
         return Task.CompletedTask;

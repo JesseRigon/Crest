@@ -70,7 +70,7 @@ public sealed class WorkflowFieldDependencyAnalyzer(IWorkflowDefinitionService d
         var bindings = new List<WorkflowFieldDependencyBinding>();
         await WalkAsync(graph, null, types, bindings, new HashSet<string>(StringComparer.Ordinal) { definitionId }, cancellationToken);
 
-        var warnings = bindings.Where(b => b.Status != WorkflowFieldDependencyStatuses.Ok && (b.Required || b.Status is WorkflowFieldDependencyStatuses.MissingPart or WorkflowFieldDependencyStatuses.MissingField))
+        var warnings = bindings.Where(b => b.Status != WorkflowFieldDependencyStatuses.Ok && (b.Required || b.Status is WorkflowFieldDependencyStatuses.MissingFieldSet or WorkflowFieldDependencyStatuses.MissingField))
             .Select(b => new WorkflowFieldDependencyWarning(b.ActivityId, b.ActivityType, b.Path, b.Status, Describe(b), b.InDefinition))
             .ToList();
         return new(bindings, warnings);
@@ -108,20 +108,20 @@ public sealed class WorkflowFieldDependencyAnalyzer(IWorkflowDefinitionService d
 
         if (!FieldPath.TryParse(dependency.Path, out var path))
         {
-            return Binding(WorkflowFieldDependencyStatuses.MissingPart);
+            return Binding(WorkflowFieldDependencyStatuses.MissingFieldSet);
         }
 
         var candidates = (dependency.ContentType is null ? types : types.Where(t => string.Equals(t.Name, dependency.ContentType, StringComparison.Ordinal)))
-            .Select(t => t.Parts.FirstOrDefault(p => string.Equals(p.Name, path.Part, StringComparison.OrdinalIgnoreCase)))
+            .Select(t => t.FieldSets.FirstOrDefault(p => string.Equals(p.Name, path.FieldSet, StringComparison.OrdinalIgnoreCase)))
             .Where(p => p is not null)
             .Select(p => p!)
             .ToList();
         if (candidates.Count == 0)
         {
-            return Binding(WorkflowFieldDependencyStatuses.MissingPart);
+            return Binding(WorkflowFieldDependencyStatuses.MissingFieldSet);
         }
 
-        var fields = candidates.Select(p => p.PartDefinition.Fields.FirstOrDefault(f => string.Equals(f.Name, path.Field, StringComparison.OrdinalIgnoreCase))).Where(f => f is not null).Select(f => f!).ToList();
+        var fields = candidates.Select(p => p.FieldSetDefinition.Fields.FirstOrDefault(f => string.Equals(f.Name, path.Field, StringComparison.OrdinalIgnoreCase))).Where(f => f is not null).Select(f => f!).ToList();
         if (fields.Count == 0)
         {
             return Binding(WorkflowFieldDependencyStatuses.MissingField);
@@ -129,7 +129,7 @@ public sealed class WorkflowFieldDependencyAnalyzer(IWorkflowDefinitionService d
 
         // A written field only has to exist. For a read one, several types may carry the
         // part: the field counts as required only when every one requires it.
-        var fieldType = fields[0].FieldDefinition.Name;
+        var fieldType = fields[0].FieldTypeDefinition.Name;
         if (dependency.Writes)
         {
             return Binding(WorkflowFieldDependencyStatuses.Ok, fieldType);
@@ -149,16 +149,16 @@ public sealed class WorkflowFieldDependencyAnalyzer(IWorkflowDefinitionService d
     }
 
     /// <summary>Grove keeps Required on the field's typed settings (<c>TextFieldSettings.Required</c>, ...).</summary>
-    private static bool IsRequired(ContentPartFieldDefinition field) =>
-        field.Settings[$"{field.FieldDefinition.Name}Settings"] is JsonObject settings && settings["Required"]?.GetValue<bool>() == true;
+    private static bool IsRequired(ContentFieldDefinition field) =>
+        field.Settings[$"{field.FieldTypeDefinition.Name}Settings"] is JsonObject settings && settings["Required"]?.GetValue<bool>() == true;
 
-    /// <summary>Grove's conditional visibility (<c>GroveFieldVisibilitySettings.Path</c> set) means the field may be hidden for some items.</summary>
-    private static bool HasVisibilityCondition(ContentPartFieldDefinition field) =>
-        field.Settings["GroveFieldVisibilitySettings"] is JsonObject settings && !string.IsNullOrWhiteSpace(settings["Path"]?.GetValue<string>());
+    /// <summary>A visibility condition (<c>FieldVisibilitySettings.When</c>) means the field may be hidden for some items.</summary>
+    private static bool HasVisibilityCondition(ContentFieldDefinition field) =>
+        field.Settings["FieldVisibilitySettings"] is JsonObject settings && settings["When"] is JsonObject;
 
     private static string Describe(WorkflowFieldDependencyBinding b) => b.Status switch
     {
-        WorkflowFieldDependencyStatuses.MissingPart => $"{b.Path}: no content type{(b.ContentType is null ? string.Empty : $" '{b.ContentType}'")} carries a part named '{b.Path.Split('.')[0]}'.",
+        WorkflowFieldDependencyStatuses.MissingFieldSet => $"{b.Path}: no content type{(b.ContentType is null ? string.Empty : $" '{b.ContentType}'")} carries a field set named '{b.Path.Split('.')[0]}'.",
         WorkflowFieldDependencyStatuses.MissingField => $"{b.Path}: the part has no field '{b.Path.Split('.').Last()}'.",
         WorkflowFieldDependencyStatuses.Optional => $"{b.Path}: the activity requires it but the field is optional in the tenant's definition; a run with it empty ends on Failed.",
         WorkflowFieldDependencyStatuses.Conditional => $"{b.Path}: the activity requires it but the field is shown only under a condition; a run with it empty ends on Failed.",
@@ -224,7 +224,7 @@ public sealed class FieldDependencyChecker(IContentDefinitionManager definitions
                 return $"Required field {path} does not exist on {item.ContentType}.";
             }
 
-            if (ContentFieldValueCopier.IsEmpty(field.FieldDefinition.Name, ContentFieldValueCopier.Read(item, path)))
+            if (ContentFieldValueCopier.IsEmpty(field.FieldTypeDefinition.Name, ContentFieldValueCopier.Read(item, path)))
             {
                 return $"Required field {path} is empty on {item.ContentType} '{item.ContentItemId}'.";
             }

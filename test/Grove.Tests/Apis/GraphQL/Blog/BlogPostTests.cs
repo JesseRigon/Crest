@@ -3,7 +3,7 @@ using Grove.Data.Protocols.GraphQL;
 using Grove.Routes.Auto.Models;
 using Grove.Contents.Fields.Fields;
 using Grove.Contents.Management;
-using Grove.Contents.Lists.Models;
+using Grove.Contents.Hierarchy.Models;
 using Grove.Tests.Apis.Context;
 using GraphQLApi = Grove.Data.Protocols.GraphQL;
 
@@ -32,7 +32,7 @@ public class BlogPostTests
     }
 
     [Fact]
-    public async Task Query_ByBlogPostAutoroutePart_Succeeds()
+    public async Task Query_ByBlogPostAutorouteFieldSet_Succeeds()
     {
         using var context = new BlogContext();
         await context.InitializeAsync();
@@ -44,13 +44,13 @@ public class BlogPostTests
                     .DisplayText = "Some sorta blogpost!";
 
                 builder
-                    .Weld(new AutoroutePart
+                    .Weld(new AutorouteFieldSet
                     {
                         Path = "Path1",
                     });
 
                 builder
-                    .Weld(new ContainedPart
+                    .Weld(new ParentContentItemFieldSet
                     {
                         ListContentItemId = context.BlogContentItemId,
                     });
@@ -63,13 +63,13 @@ public class BlogPostTests
                     .DisplayText = "Some sorta other blogpost!";
 
                 builder
-                    .Weld(new AutoroutePart
+                    .Weld(new AutorouteFieldSet
                     {
                         Path = "Path2",
                     });
 
                 builder
-                    .Weld(new ContainedPart
+                    .Weld(new ParentContentItemFieldSet
                     {
                         ListContentItemId = context.BlogContentItemId,
                     });
@@ -93,7 +93,7 @@ public class BlogPostTests
     }
 
     [Fact]
-    public async Task Default_ThePartHasTheSameNameAsTheContentTypeDefaultCollapseFieldsToContentType_Succeeds()
+    public async Task Default_TheFieldSetHasTheSameNameAsTheContentTypeDefaultCollapseFieldsToContentType_Succeeds()
     {
         using var context = new BlogContext();
         await context.InitializeAsync();
@@ -124,10 +124,10 @@ public class BlogPostTests
                     .DisplayText = "Some sorta blogpost!";
 
                 builder
-                    .Weld("BlogPost", new ContentPart());
+                    .Weld("BlogPost", new ContentFieldSet());
 
                 builder
-                    .Alter<ContentPart>("BlogPost", (cp) =>
+                    .Alter<ContentFieldSet>("BlogPost", (cp) =>
                     {
                         cp.Weld("Subtitle", new TextField());
 
@@ -138,7 +138,7 @@ public class BlogPostTests
                     });
 
                 builder
-                    .Weld(new ContainedPart
+                    .Weld(new ParentContentItemFieldSet
                     {
                         ListContentItemId = context.BlogContentItemId,
                     });
@@ -175,7 +175,7 @@ public class BlogPostTests
                 builder.Latest = true;
 
                 builder
-                    .Weld(new ContainedPart
+                    .Weld(new ParentContentItemFieldSet
                     {
                         ListContentItemId = context.BlogContentItemId,
                     });
@@ -286,7 +286,7 @@ public class BlogPostTests
     }
 
     [Fact]
-    public async Task Query_ContainedPart_Succeeds()
+    public async Task Query_ParentContentItemFieldSet_Succeeds()
     {
         using var context = new BlogContext();
         await context.InitializeAsync();

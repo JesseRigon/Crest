@@ -1,7 +1,7 @@
 using Grove.Modules.Manifest;
 
 [assembly: Module(
-    Name = "Taxonomies",
+    Name = "Categories",
     Author = ManifestConstants.PlatformTeam,
     Website = ManifestConstants.PlatformWebsite,
     Version = ManifestConstants.PlatformVersion
@@ -9,16 +9,16 @@ using Grove.Modules.Manifest;
 
 [assembly: Feature(
     Id = "Grove.Contents.Taxonomies",
-    Name = "Taxonomies",
-    Description = "The taxonomies module provides a way to categorize content items.",
-    Dependencies = ["Grove.Contents.Types"],
+    Name = "Categories",
+    Description = "Categories (taxonomies) to file content items under: tag lists and category trees.",
+    Dependencies = ["Grove.Contents.Types", "Grove.Contents.OptionPicker"],
     Category = "Content Management"
 )]
 
 [assembly: Feature(
     Id = "Grove.Contents.Taxonomies.ContentsAdminList",
-    Name = "Taxonomies Contents List Filters",
-    Description = "Provides taxonomy filters in the contents list.",
+    Name = "Category Filters",
+    Description = "Provides category filters in the contents list.",
     Dependencies = ["Grove.Contents.Taxonomies"],
     Category = "Content Management"
 )]

@@ -14,10 +14,10 @@
         {
           "Name": "Message",
           "DisplayName": "Message",
-          "ContentTypePartDefinitionRecords": [ 
+          "ContentTypeFieldSetDefinitionRecords": [ 
             {
-              // "PartName": "TitlePart", // Test PartName validation.
-              "Name": "TitlePart"
+              // "FieldSetName": "Title", // Test FieldSetName validation.
+              "Name": "Title"
             }
           ]
         }

@@ -5,16 +5,22 @@ namespace Grove.Contents.Management.Metadata.Models;
 
 public class ContentTypeDefinition : ContentDefinition
 {
-    public ContentTypeDefinition(string name, string displayName, IEnumerable<ContentTypePartDefinition> parts, JsonObject settings)
+    public ContentTypeDefinition(string name, string displayName, IEnumerable<ContentTypeFieldSetDefinition> parts, JsonObject settings, IEnumerable<EmbeddedContentDefinition> embeddings = null)
     {
         Name = name;
         DisplayName = displayName;
-        Parts = parts.ToList();
+        FieldSets = parts.ToList();
+        Embeddings = embeddings?.ToList() ?? [];
         Settings = settings.Clone();
 
-        foreach (var part in Parts)
+        foreach (var part in FieldSets)
         {
             part.ContentTypeDefinition = this;
+        }
+
+        foreach (var embedding in Embeddings)
+        {
+            embedding.ContentTypeDefinition = this;
         }
     }
 
@@ -22,14 +28,18 @@ public class ContentTypeDefinition : ContentDefinition
     {
         Name = name;
         DisplayName = displayName;
-        Parts = [];
+        FieldSets = [];
+        Embeddings = [];
         Settings = [];
     }
 
     [Required, StringLength(1024)]
     public string DisplayName { get; private set; }
 
-    public IEnumerable<ContentTypePartDefinition> Parts { get; private set; }
+    public IEnumerable<ContentTypeFieldSetDefinition> FieldSets { get; private set; }
+
+    /// <summary>The embeddings the type declares (docs/content-engine.md › Embedded content items).</summary>
+    public IEnumerable<EmbeddedContentDefinition> Embeddings { get; private set; }
 
     /// <summary>
     /// Returns the <see cref="DisplayName"/> value of the type if defined,

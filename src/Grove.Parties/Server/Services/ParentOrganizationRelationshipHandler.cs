@@ -50,8 +50,8 @@ public sealed class ParentOrganizationRelationshipHandler(IContentManager conten
                     break;
                 }
 
-                var next = organization.Get<ContentPart>(PartiesConstants.ContentTypes.Organization)
-                    ?.Get<OptionPickerField>(PartiesConstants.OrganizationFields.ParentOrganization)
+                var next = organization.Get<ContentFieldSet>(PartiesConstants.ContentTypes.Organization)
+                    ?.Get<OptionListField>(PartiesConstants.OrganizationFields.ParentOrganization)
                     ?.SelectedIds.FirstOrDefault();
                 if (string.Equals(next, self, StringComparison.Ordinal))
                 {

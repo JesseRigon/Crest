@@ -277,7 +277,7 @@ public class ContentItemsFieldType : FieldType
 
             IPredicate expression = null;
 
-            // Gets the full path name without the comparison e.g. aliasPart.alias, not aliasPart.alias_contains.
+            // Gets the full path name without the comparison e.g. aliasFieldSet.alias, not aliasFieldSet.alias_contains.
             var values = entry.Key.Split('_', 2);
             var fieldName = values[0];
 
@@ -291,15 +291,15 @@ public class ContentItemsFieldType : FieldType
             {
                 property = fieldName;
 
-                // Figure out table aliases for collapsed parts and ones with the part suffix removed by the dsl.
-                if (tableAlias == null || !tableAlias.EndsWith("Part", StringComparison.OrdinalIgnoreCase))
+                // Figure out table aliases for collapsed field sets and ones that are not an index alias.
+                if (tableAlias == null || !indexAliases.Contains(tableAlias))
                 {
                     if (filterInputGraphType != null)
                     {
-                        foreach (var field in filterInputGraphType.Fields.Where(x => x.GetMetadata<string>("PartName") != null))
+                        foreach (var field in filterInputGraphType.Fields.Where(x => x.GetMetadata<string>("FieldSetName") != null))
                         {
-                            var partName = field.GetMetadata<string>("PartName");
-                            if ((tableAlias == null && field.GetMetadata<bool>("PartCollapsed") && field.Name.Equals(property, StringComparison.OrdinalIgnoreCase)) ||
+                            var partName = field.GetMetadata<string>("FieldSetName");
+                            if ((tableAlias == null && field.GetMetadata<bool>("FieldSetCollapsed") && field.Name.Equals(property, StringComparison.OrdinalIgnoreCase)) ||
                                 (tableAlias != null && partName.ToFieldName().Equals(tableAlias, StringComparison.OrdinalIgnoreCase)))
                             {
                                 tableAlias = ResolveIndexAlias(partName, tableAlias, indexAliases);
@@ -336,11 +336,11 @@ public class ContentItemsFieldType : FieldType
                 else if (entry.Value.HasValues() && entry.Value.GetValueKind() == JsonValueKind.Object)
                 {
                     tableAlias = values[0];
-                    var currentPartName = currentField?.GetMetadata<string>("PartName");
+                    var currentFieldSetName = currentField?.GetMetadata<string>("FieldSetName");
 
-                    if (currentPartName != null && tableAlias.Equals(currentPartName.ToFieldName(), StringComparison.OrdinalIgnoreCase))
+                    if (currentFieldSetName != null && tableAlias.Equals(currentFieldSetName.ToFieldName(), StringComparison.OrdinalIgnoreCase))
                     {
-                        tableAlias = ResolveIndexAlias(currentPartName, tableAlias, indexAliases);
+                        tableAlias = ResolveIndexAlias(currentFieldSetName, tableAlias, indexAliases);
                     }
 
                     // Loop through the part's properties, passing the name of the part as the table alias.
@@ -381,16 +381,16 @@ public class ContentItemsFieldType : FieldType
                 // For indexed content fields, add the additionally required columns.
                 if (!string.IsNullOrEmpty(aliasName))
                 {
-                    var contentPart = currentField.GetMetadata<string>("ContentPart");
+                    var contentFieldSet = currentField.GetMetadata<string>("ContentFieldSet");
                     var contentField = currentField.GetMetadata<string>("ContentField");
 
-                    if (!string.IsNullOrEmpty(contentPart) || !string.IsNullOrEmpty(contentField))
+                    if (!string.IsNullOrEmpty(contentFieldSet) || !string.IsNullOrEmpty(contentField))
                     {
                         var andExpression = Expression.Conjunction();
 
-                        if (!string.IsNullOrEmpty(contentPart))
+                        if (!string.IsNullOrEmpty(contentFieldSet))
                         {
-                            andExpression.Add(Expression.Equal($"{aliasName}:ContentPart", contentPart));
+                            andExpression.Add(Expression.Equal($"{aliasName}:ContentFieldSet", contentFieldSet));
                         }
 
                         if (!string.IsNullOrEmpty(contentField))

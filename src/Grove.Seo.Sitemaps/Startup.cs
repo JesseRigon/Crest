@@ -1,3 +1,4 @@
+using Grove.Contents.Management.Handlers;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
@@ -72,9 +73,10 @@ public sealed class Startup : StartupBase
         services.AddScoped<IRouteableContentTypeCoordinator, DefaultRouteableContentTypeCoordinator>();
 
         // Sitemap Part.
-        // Edited by SitemapPartEditor (Grove.Display.Components) on the editor tree.
-        services.AddContentPart<SitemapPart>()
-            .AddHandler<SitemapPartHandler>();
+        // Edited by SitemapFieldSetEditor (Grove.Display.Components) on the editor tree.
+        // Its data is its fields; its entry, a read projection.
+        services.AddContentFieldSet<SitemapFieldSet>();
+        services.AddContentFieldSetProjection<Projections.SitemapProjection>();
 
         // Custom sitemap path.
         services.AddScoped<ISitemapSourceBuilder, CustomPathSitemapSourceBuilder>();

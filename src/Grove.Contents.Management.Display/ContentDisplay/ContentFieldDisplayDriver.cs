@@ -10,22 +10,22 @@ public abstract class ContentFieldDisplayDriver<TField> : DisplayDriverBase, ICo
 {
     private const string DisplaySeparator = "_Display__";
 
-    private ContentTypePartDefinition _typePartDefinition;
-    private ContentPartFieldDefinition _partFieldDefinition;
+    private ContentTypeFieldSetDefinition _typeFieldSetDefinition;
+    private ContentFieldDefinition _fieldDefinition;
 
     public override ShapeResult Factory<TBuilderState, TInitState>(string shapeType, Func<IBuildShapeContext, TBuilderState, ValueTask<IShape>> shapeBuilder, TBuilderState shapeBuilderState, Func<IShape, TInitState, ValueTask> initializingAsync, TInitState initializingState)
     {
-        // e.g., HtmlBodyPart.Summary, HtmlBodyPart-BlogPost, BagPart-LandingPage-Services
+        // e.g., HtmlBodyFieldSet.Summary, HtmlBodyFieldSet-BlogPost, Taxonomy-LandingPage-Categories
         // context.Shape is the ContentItem shape, we need to alter the part shape
 
         var result = base.Factory(shapeType, shapeBuilder, shapeBuilderState, initializingAsync, initializingState);
 
-        if (_typePartDefinition != null && _partFieldDefinition != null)
+        if (_typeFieldSetDefinition != null && _fieldDefinition != null)
         {
-            var partName = _typePartDefinition.Name;
-            var fieldType = _partFieldDefinition.FieldDefinition.Name;
-            var fieldName = _partFieldDefinition.Name;
-            var displayMode = _partFieldDefinition.DisplayMode();
+            var partName = _typeFieldSetDefinition.Name;
+            var fieldType = _fieldDefinition.FieldTypeDefinition.Name;
+            var fieldName = _fieldDefinition.Name;
+            var displayMode = _fieldDefinition.DisplayMode();
             // If the shape type and the field type only differ by the display mode
             if (!string.IsNullOrEmpty(displayMode) && shapeType == fieldType + DisplaySeparator + displayMode)
             {
@@ -35,25 +35,25 @@ public abstract class ContentFieldDisplayDriver<TField> : DisplayDriverBase, ICo
 
             if (fieldType == shapeType)
             {
-                // HtmlBodyPart-Description, Services-Description
+                // HtmlBodyFieldSet-Description, Services-Description
                 result.Differentiator($"{partName}-{fieldName}");
             }
             else
             {
-                // HtmlBodyPart-Description-TextField, Services-Description-TextField
+                // HtmlBodyFieldSet-Description-TextField, Services-Description-TextField
                 result.Differentiator($"{partName}-{fieldName}-{shapeType}");
             }
 
             // The definitions will be cleared before the displaying event is raised, so
             // we need to cache it here for use in the displaying event to add alternates.
-            var typePartDefinition = _typePartDefinition;
-            var partFieldDefinition = _partFieldDefinition;
+            var typeFieldSetDefinition = _typeFieldSetDefinition;
+            var partFieldDefinition = _fieldDefinition;
             result.Displaying(ctx =>
             {
                 var displayType = ctx.Shape.Metadata.DisplayType;
 
                 // Get cached alternates for this display type and add them efficiently
-                var cachedAlternates = ContentFieldAlternatesFactory.GetAlternates(typePartDefinition, partFieldDefinition, shapeType, displayType);
+                var cachedAlternates = ContentFieldAlternatesFactory.GetAlternates(typeFieldSetDefinition, partFieldDefinition, shapeType, displayType);
                 ctx.Shape.Metadata.Alternates.AddRange(cachedAlternates);
             });
         }
@@ -61,28 +61,28 @@ public abstract class ContentFieldDisplayDriver<TField> : DisplayDriverBase, ICo
         return result;
     }
 
-    Task<IDisplayResult> IContentFieldDisplayDriver.BuildDisplayAsync(ContentPart contentPart, ContentPartFieldDefinition partFieldDefinition, ContentTypePartDefinition typePartDefinition, BuildDisplayContext context)
+    Task<IDisplayResult> IContentFieldDisplayDriver.BuildDisplayAsync(ContentFieldSet contentFieldSet, ContentFieldDefinition partFieldDefinition, ContentTypeFieldSetDefinition typeFieldSetDefinition, BuildDisplayContext context)
     {
-        if (!string.Equals(typeof(TField).Name, partFieldDefinition.FieldDefinition.Name, StringComparison.Ordinal) &&
-           !string.Equals(nameof(ContentField), partFieldDefinition.FieldDefinition.Name, StringComparison.Ordinal))
+        if (!string.Equals(typeof(TField).Name, partFieldDefinition.FieldTypeDefinition.Name, StringComparison.Ordinal) &&
+           !string.Equals(nameof(ContentField), partFieldDefinition.FieldTypeDefinition.Name, StringComparison.Ordinal))
         {
             return Task.FromResult(default(IDisplayResult));
         }
 
-        var field = contentPart.Get<TField>(partFieldDefinition.Name);
+        var field = contentFieldSet.Get<TField>(partFieldDefinition.Name);
         if (field != null)
         {
-            BuildPrefix(typePartDefinition, partFieldDefinition, context.HtmlFieldPrefix);
+            BuildPrefix(typeFieldSetDefinition, partFieldDefinition, context.HtmlFieldPrefix);
 
-            var fieldDisplayContext = new BuildFieldDisplayContext(contentPart, typePartDefinition, partFieldDefinition, context);
+            var fieldDisplayContext = new BuildFieldDisplayContext(contentFieldSet, typeFieldSetDefinition, partFieldDefinition, context);
 
-            _typePartDefinition = typePartDefinition;
-            _partFieldDefinition = partFieldDefinition;
+            _typeFieldSetDefinition = typeFieldSetDefinition;
+            _fieldDefinition = partFieldDefinition;
 
             var result = DisplayAsync(field, fieldDisplayContext);
 
-            _typePartDefinition = null;
-            _partFieldDefinition = null;
+            _typeFieldSetDefinition = null;
+            _fieldDefinition = null;
 
             return result;
         }
@@ -102,7 +102,7 @@ public abstract class ContentFieldDisplayDriver<TField> : DisplayDriverBase, ICo
 
     protected string GetDisplayShapeType(string shapeType, BuildFieldDisplayContext context)
     {
-        var displayMode = context.PartFieldDefinition.DisplayMode();
+        var displayMode = context.FieldDefinition.DisplayMode();
         return !string.IsNullOrEmpty(displayMode)
             ? shapeType + DisplaySeparator + displayMode
             : shapeType;
@@ -113,9 +113,9 @@ public abstract class ContentFieldDisplayDriver<TField> : DisplayDriverBase, ICo
         return GetDisplayShapeType(typeof(TField).Name, context);
     }
 
-    private void BuildPrefix(ContentTypePartDefinition typePartDefinition, ContentPartFieldDefinition partFieldDefinition, string htmlFieldPrefix)
+    private void BuildPrefix(ContentTypeFieldSetDefinition typeFieldSetDefinition, ContentFieldDefinition partFieldDefinition, string htmlFieldPrefix)
     {
-        Prefix = typePartDefinition.Name + "." + partFieldDefinition.Name;
+        Prefix = typeFieldSetDefinition.Name + "." + partFieldDefinition.Name;
 
         if (!string.IsNullOrEmpty(htmlFieldPrefix))
         {

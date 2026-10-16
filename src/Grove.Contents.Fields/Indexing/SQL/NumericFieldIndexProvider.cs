@@ -54,7 +54,7 @@ public class NumericFieldIndexProvider : ContentFieldIndexProvider
                 }
 
                 var fieldDefinitions = contentTypeDefinition
-                    .Parts.SelectMany(x => x.PartDefinition.Fields.Where(f => f.FieldDefinition.Name == nameof(NumericField)))
+                    .FieldSets.SelectMany(x => x.FieldSetDefinition.Fields.Where(f => f.FieldTypeDefinition.Name == nameof(NumericField)))
                     .ToArray();
 
                 // This type doesn't have any NumericField, ignore it
@@ -74,7 +74,7 @@ public class NumericFieldIndexProvider : ContentFieldIndexProvider
                             ContentItemId = contentItem.ContentItemId,
                             ContentItemVersionId = contentItem.ContentItemVersionId,
                             ContentType = contentItem.ContentType,
-                            ContentPart = pair.Definition.ContentTypePartDefinition.Name,
+                            ContentFieldSet = pair.Definition.ContentTypeFieldSetDefinition.Name,
                             ContentField = pair.Definition.Name,
                             Numeric = pair.Field.Value,
                         });

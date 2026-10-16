@@ -39,24 +39,24 @@
               "Listable": true
             }
           },
-          "ContentTypePartDefinitionRecords": [
+          "ContentTypeFieldSetDefinitionRecords": [
             {
-              "PartName": "PricePart",
+              "FieldSetName": "PricePart",
               "Name": "PricePart",
               "Settings": {
-                "ContentTypePartSettings": {
+                "ContentTypeFieldSetSettings": {
                   "Position": "1"
                 }
               }
             },
             {
-              "PartName": "SkuPart",
+              "FieldSetName": "SkuPart",
               "Name": "SkuPart",
               "Settings": {
-                "ContentTypePartSettings": {
+                "ContentTypeFieldSetSettings": {
                   "Position": "2"
                 },
-                "GraphQLContentTypePartSettings": {
+                "GraphQLContentTypeFieldSetSettings": {
                   "Collapse": true,
                   "Hidden": false,
                   "PreventFieldNameCollision": false
@@ -64,13 +64,13 @@
               }
             },
             {
-              "PartName": "MetadataPart",
+              "FieldSetName": "MetadataPart",
               "Name": "MetadataPart",
               "Settings": {
-                "ContentTypePartSettings": {
+                "ContentTypeFieldSetSettings": {
                   "Position": "2"
                 },
-                "GraphQLContentTypePartSettings": {
+                "GraphQLContentTypeFieldSetSettings": {
                   "Collapse": true,
                   "Hidden": false,
                   "PreventFieldNameCollision": true
@@ -88,12 +88,12 @@
               "Listable": true
             }
           },
-          "ContentTypePartDefinitionRecords": [
+          "ContentTypeFieldSetDefinitionRecords": [
             {
-              "PartName": "NumberType",
+              "FieldSetName": "NumberType",
               "Name": "NumberType",
               "Settings": {
-                "ContentTypePartSettings": {
+                "ContentTypeFieldSetSettings": {
                   "Position": "0"
                 }
               }
@@ -109,12 +109,12 @@
               "Listable": true
             }
           },
-          "ContentTypePartDefinitionRecords": [
+          "ContentTypeFieldSetDefinitionRecords": [
             {
-              "PartName": "StringType",
+              "FieldSetName": "StringType",
               "Name": "StringType",
               "Settings": {
-                "ContentTypePartSettings": {
+                "ContentTypeFieldSetSettings": {
                   "Position": "0"
                 }
               }
@@ -130,12 +130,12 @@
               "Listable": true
             }
           },
-          "ContentTypePartDefinitionRecords": [
+          "ContentTypeFieldSetDefinitionRecords": [
             {
-              "PartName": "TwoNumbersType",
+              "FieldSetName": "TwoNumbersType",
               "Name": "TwoNumbersType",
               "Settings": {
-                "ContentTypePartSettings": {
+                "ContentTypeFieldSetSettings": {
                   "Position": "0"
                 }
               }
@@ -143,16 +143,16 @@
           ]
         }
       ],
-      "ContentParts": [
+      "ContentFieldSets": [
         {
           "Name": "PricePart",
           "Settings": {},
-          "ContentPartFieldDefinitionRecords": [
+          "ContentFieldDefinitionRecords": [
             {
               "FieldName": "NumericField",
               "Name": "Amount",
               "Settings": {
-                "ContentPartFieldSettings": {
+                "ContentFieldSettings": {
                   "DisplayName": "Amount",
                   "Position": "0"
                 }
@@ -163,12 +163,12 @@
         {
           "Name": "SkuPart",
           "Settings": {},
-          "ContentPartFieldDefinitionRecords": [
+          "ContentFieldDefinitionRecords": [
             {
               "FieldName": "TextField",
               "Name": "Sku",
               "Settings": {
-                "ContentPartFieldSettings": {
+                "ContentFieldSettings": {
                   "DisplayName": "Sku",
                   "Position": "0"
                 }
@@ -179,12 +179,12 @@
         {
           "Name": "MetadataPart",
           "Settings": {},
-          "ContentPartFieldDefinitionRecords": [
+          "ContentFieldDefinitionRecords": [
             {
               "FieldName": "TextField",
               "Name": "Code",
               "Settings": {
-                "ContentPartFieldSettings": {
+                "ContentFieldSettings": {
                   "DisplayName": "Code",
                   "Position": "0"
                 }
@@ -194,7 +194,7 @@
               "FieldName": "DateField",
               "Name": "AvailabilityDate",
               "Settings": {
-                "ContentPartFieldSettings": {
+                "ContentFieldSettings": {
                   "DisplayName": "Availability Date",
                   "Position": "0"
                 }
@@ -205,12 +205,12 @@
         {
           "Name": "NumberType",
           "Settings": {},
-          "ContentPartFieldDefinitionRecords": [
+          "ContentFieldDefinitionRecords": [
             {
               "FieldName": "NumericField",
               "Name": "Value",
               "Settings": {
-                "ContentPartFieldSettings": {
+                "ContentFieldSettings": {
                   "DisplayName": "Value",
                   "Position": "0"
                 }
@@ -221,12 +221,12 @@
         {
           "Name": "StringType",
           "Settings": {},
-          "ContentPartFieldDefinitionRecords": [
+          "ContentFieldDefinitionRecords": [
             {
               "FieldName": "TextField",
               "Name": "Value",
               "Settings": {
-                "ContentPartFieldSettings": {
+                "ContentFieldSettings": {
                   "DisplayName": "Value",
                   "Position": "0"
                 }
@@ -237,12 +237,12 @@
         {
           "Name": "TwoNumbersType",
           "Settings": {},
-          "ContentPartFieldDefinitionRecords": [
+          "ContentFieldDefinitionRecords": [
             {
               "FieldName": "NumericField",
               "Name": "Field1",
               "Settings": {
-                "ContentPartFieldSettings": {
+                "ContentFieldSettings": {
                   "DisplayName": "Field1",
                   "Position": "0"
                 }
@@ -252,7 +252,7 @@
               "FieldName": "NumericField",
               "Name": "Field2",
               "Settings": {
-                "ContentPartFieldSettings": {
+                "ContentFieldSettings": {
                   "DisplayName": "Field2",
                   "Position": "0"
                 }

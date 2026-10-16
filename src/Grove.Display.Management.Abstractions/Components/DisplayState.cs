@@ -160,26 +160,7 @@ public sealed class DisplayState
     {
         // A predicate (docs/widgets.md, comparisons in bindings) reads its sources and answers a
         // boolean; it is re-read with every change, like any binding.
-        if (binding.Combinator is { } combinator)
-        {
-            var terms = binding.Terms ?? [];
-            return JsonValue.Create(combinator switch
-            {
-                DisplayPredicates.And => terms.All(term => DisplayPredicates.IsTrue(Read(term, eventPayload))),
-                DisplayPredicates.Or => terms.Any(term => DisplayPredicates.IsTrue(Read(term, eventPayload))),
-                DisplayPredicates.Not => terms.Count > 0 && !DisplayPredicates.IsTrue(Read(terms[0], eventPayload)),
-                _ => false,
-            });
-        }
-
-        if (binding.Operator is { } @operator)
-        {
-            var left = ReadSource(binding, eventPayload);
-            var right = binding.Operand is { } operand ? Read(operand, eventPayload) : null;
-            return JsonValue.Create(DisplayPredicates.Evaluate(@operator, left, right));
-        }
-
-        return ReadSource(binding, eventPayload);
+        return DisplayPredicates.Read(binding, source => ReadSource(source, eventPayload));
     }
 
     private JsonNode? ReadSource(DisplayBinding binding, JsonNode? eventPayload)

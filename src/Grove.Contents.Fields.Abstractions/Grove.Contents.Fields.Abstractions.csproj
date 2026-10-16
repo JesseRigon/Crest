@@ -17,7 +17,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Grove.Contents.Management.Abstractions\Grove.Contents.Management.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
-    <!-- OptionPickerFieldSettings names the picker's columns and filters. -->
+    <!-- OptionListFieldSettings names the picker's columns and filters. -->
     <ProjectReference Include="..\Grove.Contents.OptionPicker.Abstractions\Grove.Contents.OptionPicker.Abstractions.csproj" />
   </ItemGroup>
 

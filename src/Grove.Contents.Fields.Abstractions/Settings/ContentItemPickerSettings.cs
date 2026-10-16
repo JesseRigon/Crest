@@ -9,18 +9,18 @@ namespace Grove.Infrastructure.Settings;
 /// </summary>
 public static class ContentItemPickerSettings
 {
-    public const string FieldType = "OptionPickerField";
+    public const string FieldType = "OptionListField";
 
     /// <summary>Makes the field an option picker over content items of <paramref name="types"/>.</summary>
-    public static ContentPartFieldDefinitionBuilder AsContentItemPicker(
-        this ContentPartFieldDefinitionBuilder field,
+    public static ContentFieldDefinitionBuilder AsContentItemPicker(
+        this ContentFieldDefinitionBuilder field,
         IEnumerable<string> types,
         bool multiple = false,
         bool required = false,
-        Action<OptionPickerFieldSettings>? configure = null) =>
+        Action<OptionListFieldSettings>? configure = null) =>
         field
             .OfType(FieldType)
-            .MergeSettings<OptionPickerFieldSettings>(settings =>
+            .MergeSettings<OptionListFieldSettings>(settings =>
             {
                 settings.SourceKey = OptionSourceKeys.ForContentItems(types);
                 settings.Multiple = multiple;
@@ -30,7 +30,7 @@ public static class ContentItemPickerSettings
 
     /// <summary>The content types an option picker over content items names (empty for another
     /// source, or for one over stereotypes or all types).</summary>
-    public static IReadOnlyList<string> ContentTypes(this OptionPickerFieldSettings settings)
+    public static IReadOnlyList<string> ContentTypes(this OptionListFieldSettings settings)
     {
         var (provider, qualifier) = OptionSourceKeys.Split(settings.SourceKey);
         return provider == OptionSourceKeys.ContentItemProvider ? ContentItemSourceScope.Parse(qualifier).Types : [];

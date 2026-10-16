@@ -13,10 +13,10 @@ namespace Grove.Display.Templates.Services;
 public sealed class TemplateValidator(TemplateTreeEvaluator evaluator, IComponentRegistry registry, IEnumerable<IDisplayActionValidator> actionValidators)
 {
     public async Task<IReadOnlyList<DisplayDiagnostic>> ValidateAsync(string name, string source, CancellationToken cancellationToken = default) =>
-        await ValidateAsync(new Models.TemplatePart { Name = name, Source = source }, cancellationToken);
+        await ValidateAsync(new Models.TemplateFieldSet { Name = name, Source = source }, cancellationToken);
 
     /// <summary>A template with its composite declaration: inputs are sampled into the model, outputs must name inner outputs.</summary>
-    public async Task<IReadOnlyList<DisplayDiagnostic>> ValidateAsync(Models.TemplatePart template, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<DisplayDiagnostic>> ValidateAsync(Models.TemplateFieldSet template, CancellationToken cancellationToken = default)
     {
         var name = template.Name;
         var source = template.Source;

@@ -15,9 +15,9 @@ namespace Grove.Contents.OptionPicker.Api;
 
 /// <summary>
 /// The provider-generic half of the picker API (<c>api/grove/option-sources</c>): rows, columns,
-/// dependencies and selection validation for whatever source a field is bound to (content part
-/// lists, users, content items, ...). The content part list management is the
-/// Grove.Contents.PartLists feature.
+/// dependencies and selection validation for whatever source a field is bound to (field set
+/// lists, users, content items, ...). The option list management is the
+/// Grove.Contents.OptionLists feature.
 /// </summary>
 public sealed class OptionSourcesApi : ApiContributor
 {
@@ -33,6 +33,7 @@ public sealed class OptionSourcesApi : ApiContributor
         routes.MapGet("dependencies", (HttpContext http, [FromQuery] string contentType, [FromQuery] string fieldName) => ApiHandlers.For<OptionSourcesHandlers>(http).GetDependenciesAsync(contentType, fieldName));
         routes.MapPost("validate-selection", (HttpContext http, [FromBody] OptionSelectionValidationRequest request) => ApiHandlers.For<OptionSourcesHandlers>(http).ValidateSelectionAsync(request));
         routes.MapPost("resolve", (HttpContext http, [FromBody] OptionSourceResolveRequest request) => ApiHandlers.For<OptionSourcesHandlers>(http).ResolveSourceAsync(request));
+        routes.MapPost("create", (HttpContext http, [FromBody] OptionSourceCreateRequest request) => ApiHandlers.For<OptionSourcesHandlers>(http).CreateAsync(request));
         routes.MapGet("create-links", (HttpContext http, [FromQuery] string contentType, [FromQuery] string fieldName) => ApiHandlers.For<OptionSourcesHandlers>(http).GetCreateLinksAsync(contentType, fieldName));
         routes.MapGet("{sourceKey}/columns", (HttpContext http, [FromRoute] string sourceKey) => ApiHandlers.For<OptionSourcesHandlers>(http).DescribeColumnsAsync(sourceKey));
     }
@@ -118,7 +119,7 @@ public sealed class OptionSourcesHandlers(
             return NotFound();
         }
 
-        var partDefinition = await contentDefinitionManager.GetPartDefinitionAsync(contentType);
+        var partDefinition = await contentDefinitionManager.GetFieldSetDefinitionAsync(contentType);
 
         return Ok(new OptionDependencyModel(
             OptionFilterResolver.DependencyPaths(settings.Filters),
@@ -210,6 +211,50 @@ public sealed class OptionSourcesHandlers(
             : Ok(Array.Empty<OptionCreateLink>());
     }
 
+    /// <summary>
+    /// Adds a record by name to the attachment's source (a tag to a taxonomy), when the attachment
+    /// allows it and the source supports it. The attachment's static filters say where the record
+    /// goes; the source authorizes the caller.
+    /// </summary>
+    public async Task<IResult> CreateAsync(OptionSourceCreateRequest request)
+    {
+        if (!await CanViewAsync())
+        {
+            return Forbid();
+        }
+
+        if (string.IsNullOrWhiteSpace(request.DisplayText))
+        {
+            return ApiProblems.Validation(nameof(OptionSourceCreateRequest.DisplayText), "A name is required.");
+        }
+
+        var settings = await GetFieldSettingsAsync(request.ContentType, request.FieldName);
+        if (settings is null)
+        {
+            return NotFound();
+        }
+
+        var (providerKey, qualifier) = OptionSourceKeys.Split(settings.SourceKey);
+        if (!settings.AllowCreate || FindProvider(providerKey) is not IOptionSourceInlineCreate creator)
+        {
+            return Problem("This field does not add records to its source.", statusCode: StatusCodes.Status400BadRequest);
+        }
+
+        // Only the static filters: they are what places the new record (the taxonomy).
+        var filters = settings.Filters.Where(filter => !filter.IsDependent && filter.Value is not null)
+            .Select(filter => ResolvedOptionFilter.From(filter, [filter.Value!]))
+            .ToArray();
+        var result = await creator.CreateAsync(qualifier, filters, request.DisplayText.Trim(), HttpContext.RequestAborted);
+        if (result.Forbidden)
+        {
+            return Forbid();
+        }
+
+        return result.Row is { } row
+            ? Ok(row)
+            : ApiProblems.Validation(new Dictionary<string, string[]> { [nameof(OptionSourceCreateRequest.DisplayText)] = [.. result.Errors] });
+    }
+
     /// <summary>The columns a source can offer - drives the column picker in the field's
     /// settings editor, so paths are never typed blind.</summary>
     public async Task<IResult> DescribeColumnsAsync(string sourceKey)
@@ -259,7 +304,7 @@ public sealed class OptionSourcesHandlers(
     // parent's own source before resolving.
     private async Task<OptionFilterResolution> ResolveTranslatedAsync(
         string contentType,
-        OptionPickerFieldSettings settings,
+        OptionListFieldSettings settings,
         IReadOnlyDictionary<string, string[]>? editorState)
     {
         var (filters, state) = await OptionDependentFilterTranslator.TranslateAsync(
@@ -270,33 +315,33 @@ public sealed class OptionSourcesHandlers(
         return OptionFilterResolver.Resolve(filters, state);
     }
 
-    private async Task<OptionPickerFieldSettings?> GetFieldSettingsAsync(string? contentType, string? fieldName)
+    private async Task<OptionListFieldSettings?> GetFieldSettingsAsync(string? contentType, string? fieldName)
     {
         if (string.IsNullOrWhiteSpace(contentType) || string.IsNullOrWhiteSpace(fieldName))
         {
             return null;
         }
 
-        var partDefinition = await contentDefinitionManager.GetPartDefinitionAsync(contentType);
+        var partDefinition = await contentDefinitionManager.GetFieldSetDefinitionAsync(contentType);
         var field = partDefinition?.Fields.FirstOrDefault(candidate =>
             string.Equals(candidate.Name, fieldName, StringComparison.OrdinalIgnoreCase));
 
-        return field?.GetSettings<OptionPickerFieldSettings>();
+        return field?.GetSettings<OptionListFieldSettings>();
     }
 
-    private static bool IsFieldRequired(ContentPartDefinition? partDefinition, string path)
+    private static bool IsFieldRequired(ContentFieldSetDefinition? partDefinition, string path)
     {
-        // Dependency paths are "FieldName" within the same part, or "Part.Field".
+        // Dependency paths are "FieldName" within the same part, or "FieldSet.Field".
         var fieldName = path.Contains('.') ? path[(path.LastIndexOf('.') + 1)..] : path;
         var field = partDefinition?.Fields.FirstOrDefault(candidate =>
             string.Equals(candidate.Name, fieldName, StringComparison.OrdinalIgnoreCase));
 
         // Read through the typed accessor: a hand-written settings key that does not exist reads
         // as false forever, which would make the derived-required rule silently never fire.
-        return field?.GetSettings<OptionPickerFieldSettings>()?.Required ?? false;
+        return field?.GetSettings<OptionListFieldSettings>()?.Required ?? false;
     }
 
-    private static IReadOnlyList<string> FilterPaths(OptionPickerFieldSettings? settings) =>
+    private static IReadOnlyList<string> FilterPaths(OptionListFieldSettings? settings) =>
         settings is null ? [] : [.. settings.Filters.Select(filter => filter.Path).Distinct(StringComparer.OrdinalIgnoreCase)];
 
     private static IReadOnlyDictionary<string, IReadOnlyList<string>>? ToEditorState(IReadOnlyDictionary<string, string[]>? state) =>

@@ -60,7 +60,7 @@ public class MultiTextFieldIndexProvider : ContentFieldIndexProvider
                 }
 
                 var fieldDefinitions = contentTypeDefinition
-                    .Parts.SelectMany(x => x.PartDefinition.Fields.Where(f => f.FieldDefinition.Name == nameof(MultiTextField)))
+                    .FieldSets.SelectMany(x => x.FieldSetDefinition.Fields.Where(f => f.FieldTypeDefinition.Name == nameof(MultiTextField)))
                     .ToArray();
 
                 // This type doesn't have any MultiTextField, ignore it
@@ -82,7 +82,7 @@ public class MultiTextFieldIndexProvider : ContentFieldIndexProvider
                             ContentItemId = contentItem.ContentItemId,
                             ContentItemVersionId = contentItem.ContentItemVersionId,
                             ContentType = contentItem.ContentType,
-                            ContentPart = pair.Definition.ContentTypePartDefinition.Name,
+                            ContentFieldSet = pair.Definition.ContentTypeFieldSetDefinition.Name,
                             ContentField = pair.Definition.Name,
                             Value = pair.Value?[..Math.Min(pair.Value.Length, MultiTextFieldIndex.MaxValueSize)],
                             BigValue = pair.Value,

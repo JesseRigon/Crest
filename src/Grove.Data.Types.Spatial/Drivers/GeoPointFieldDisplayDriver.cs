@@ -18,8 +18,8 @@ public sealed class GeoPointFieldDisplayDriver : ContentFieldDisplayDriver<GeoPo
         return Initialize<DisplayGeoPointFieldViewModel>(GetDisplayShapeType(context), model =>
         {
             model.Field = field;
-            model.Part = context.ContentPart;
-            model.PartFieldDefinition = context.PartFieldDefinition;
+            model.FieldSet = context.ContentFieldSet;
+            model.FieldDefinition = context.FieldDefinition;
         }).Location(PlatformConstants.DisplayType.Detail, "Content")
         .Location(PlatformConstants.DisplayType.Summary, "Content");
     }

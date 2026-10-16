@@ -21,12 +21,12 @@
             },
             "FullTextAspectSettings": {}
           },
-          "ContentTypePartDefinitionRecords": [
+          "ContentTypeFieldSetDefinitionRecords": [
             {
-              "PartName": "SocialMetaSettings",
+              "FieldSetName": "SocialMetaSettings",
               "Name": "SocialMetaSettings",
               "Settings": {
-                "ContentTypePartSettings": {
+                "ContentTypeFieldSetSettings": {
                   "Position": "0"
                 }
               }
@@ -34,16 +34,16 @@
           ]
         }
       ],   
-      "ContentParts": [
+      "ContentFieldSets": [
         {
           "Name": "SocialMetaSettings",
           "Settings": {},
-          "ContentPartFieldDefinitionRecords": [
+          "ContentFieldDefinitionRecords": [
             {
               "FieldName": "MediaField",
               "Name": "DefaultSocialImage",
               "Settings": {
-                "ContentPartFieldSettings": {
+                "ContentFieldSettings": {
                   "DisplayName": "Default social image",
                   "Position": "1"
                 },
@@ -56,7 +56,7 @@
               "FieldName": "MediaField",
               "Name": "OpenGraphImage",
               "Settings": {
-                "ContentPartFieldSettings": {
+                "ContentFieldSettings": {
                   "DisplayName": "Open graph image",
                   "Position": "2"
                 },
@@ -69,7 +69,7 @@
               "FieldName": "MediaField",
               "Name": "TwitterImage",
               "Settings": {
-                "ContentPartFieldSettings": {
+                "ContentFieldSettings": {
                   "DisplayName": "Twitter Image",
                   "Position": "3"
                 },
@@ -82,7 +82,7 @@
               "FieldName": "TextField",
               "Name": "OpenGraphType",
               "Settings": {
-                "ContentPartFieldSettings": {
+                "ContentFieldSettings": {
                   "DisplayName": "Open Graph Type",
                   "Position": "4"
                 }
@@ -92,7 +92,7 @@
               "FieldName": "TextField",
               "Name": "TwitterCard",
               "Settings": {
-                "ContentPartFieldSettings": {
+                "ContentFieldSettings": {
                   "DisplayName": "Twitter Card",
                   "Position": "8"
                 }
@@ -102,7 +102,7 @@
               "FieldName": "TextField",
               "Name": "TwitterCreator",
               "Settings": {
-                "ContentPartFieldSettings": {
+                "ContentFieldSettings": {
                   "DisplayName": "Twitter Creator",
                   "Position": "10"
                 }
@@ -112,7 +112,7 @@
               "FieldName": "TextField",
               "Name": "TwitterSite",
               "Settings": {
-                "ContentPartFieldSettings": {
+                "ContentFieldSettings": {
                   "DisplayName": "Twitter Site",
                   "Position": "11"
                 }
@@ -122,7 +122,7 @@
               "FieldName": "TextField",
               "Name": "GoogleSchema",
               "Settings": {
-                "ContentPartFieldSettings": {
+                "ContentFieldSettings": {
                   "DisplayName": "Google Schema",
                   "Editor": "CodeMirror",
                   "Position": "12"
@@ -134,7 +134,7 @@
               "FieldName": "TextField",
               "Name": "OpenGraphSiteName",
               "Settings": {
-                "ContentPartFieldSettings": {
+                "ContentFieldSettings": {
                   "DisplayName": "Open Graph Site Name",
                   "Position": "6"
                 }
@@ -144,7 +144,7 @@
               "FieldName": "TextField",
               "Name": "OpenGraphAppId",
               "Settings": {
-                "ContentPartFieldSettings": {
+                "ContentFieldSettings": {
                   "DisplayName": "Open Graph App Id",
                   "Position": "7"
                 }
@@ -154,7 +154,7 @@
               "FieldName": "TextField",
               "Name": "DefaultMetaDescription",
               "Settings": {
-                "ContentPartFieldSettings": {
+                "ContentFieldSettings": {
                   "DisplayName": "Default Meta Description",
                   "Editor": "CodeMirror",
                   "Position": "0"
@@ -166,7 +166,7 @@
               "FieldName": "TextField",
               "Name": "DefaultTwitterDescription",
               "Settings": {
-                "ContentPartFieldSettings": {
+                "ContentFieldSettings": {
                   "DisplayName": "Default Twitter Description",
                   "Editor": "CodeMirror",
                   "Position": "9"
@@ -178,7 +178,7 @@
               "FieldName": "TextField",
               "Name": "DefaultOpenGraphDescription",
               "Settings": {
-                "ContentPartFieldSettings": {
+                "ContentFieldSettings": {
                   "DisplayName": "Default Open Graph Description",
                   "Editor": "CodeMirror",
                   "Position": "5"

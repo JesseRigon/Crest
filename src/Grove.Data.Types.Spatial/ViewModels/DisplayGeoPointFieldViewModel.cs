@@ -10,9 +10,9 @@ public class DisplayGeoPointFieldViewModel
 
     public decimal? Longitude => Field?.Longitude;
 
-    public string FieldClass => PartFieldDefinition is null ? null : Grove.Utilities.StringExtensions.HtmlClassify(PartFieldDefinition.PartDefinition.Name + "-" + PartFieldDefinition.Name);
+    public string FieldClass => FieldDefinition is null ? null : Grove.Utilities.StringExtensions.HtmlClassify(FieldDefinition.FieldSetDefinition.Name + "-" + FieldDefinition.Name);
 
     public GeoPointField Field { get; set; }
-    public ContentPart Part { get; set; }
-    public ContentPartFieldDefinition PartFieldDefinition { get; set; }
+    public ContentFieldSet FieldSet { get; set; }
+    public ContentFieldDefinition FieldDefinition { get; set; }
 }

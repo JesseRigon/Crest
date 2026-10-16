@@ -64,14 +64,14 @@ public class MoveAttachedMediaFieldsStepTests
         var contentManager = scope.ServiceProvider.GetRequiredService<IContentManager>();
         var mediaFileStore = scope.ServiceProvider.GetRequiredService<IMediaFileStore>();
 
-        await contentDefinitionManager.AlterPartDefinitionAsync($"{contentType}Part", part => part
+        await contentDefinitionManager.AlterFieldSetDefinitionAsync($"{contentType}Part", part => part
             .WithField<MediaField>("Document", field => field.WithEditor("Attached")));
 
         await contentDefinitionManager.AlterTypeDefinitionAsync(contentType, type => type
             .Creatable()
             .Draftable()
             .Versionable()
-            .WithPart($"{contentType}Part"));
+            .WithFieldSet($"{contentType}Part"));
 
         await using (var stream = new MemoryStream([1, 2, 3, 4]))
         {
@@ -92,7 +92,7 @@ public class MoveAttachedMediaFieldsStepTests
 
     private static void SetMediaFieldPath(ContentItem contentItem, string partName, string fieldName, string path)
     {
-        var part = contentItem.GetOrCreate<ContentPart>(partName);
+        var part = contentItem.GetOrCreate<ContentFieldSet>(partName);
         var field = part.GetOrCreate<MediaField>(fieldName);
 
         field.Paths = [path];
@@ -112,7 +112,7 @@ public class MoveAttachedMediaFieldsStepTests
 
         foreach (var version in versions)
         {
-            var field = version.Get<ContentPart>($"{contentType}Part").Get<MediaField>("Document");
+            var field = version.Get<ContentFieldSet>($"{contentType}Part").Get<MediaField>("Document");
             var path = Assert.Single(field.Paths);
 
             if (expectedToMove)

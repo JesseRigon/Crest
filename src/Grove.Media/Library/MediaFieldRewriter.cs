@@ -165,9 +165,9 @@ public sealed class MediaFieldRewriter(
     public static async Task<IReadOnlySet<string>> FieldNamesAsync(IContentDefinitionManager definitions)
     {
         var names = new HashSet<string>(KnownPropertyFields, StringComparer.Ordinal);
-        foreach (var part in await definitions.ListPartDefinitionsAsync())
+        foreach (var part in await definitions.ListFieldSetDefinitionsAsync())
         {
-            foreach (var field in part.Fields.Where(field => field.FieldDefinition?.Name == nameof(MediaField)))
+            foreach (var field in part.Fields.Where(field => field.FieldTypeDefinition?.Name == nameof(MediaField)))
             {
                 names.Add(field.Name);
             }

@@ -1,7 +1,6 @@
 using Grove.Contents.Fields.Fields;
 using Grove.Contents.Management;
 using Grove.Fields;
-using Grove.Contents.BagParts.Models;
 using Grove.Parties.Constants;
 using YesSql.Indexes;
 
@@ -51,7 +50,7 @@ public sealed class ContactPointIndexProvider : IndexProvider<ContentItem>
                     return [];
                 }
 
-                var bag = contentItem.Get<BagPart>(PartiesConstants.Bags.ContactPoints);
+                var bag = contentItem.Get<EmbeddedContentItems>(PartiesConstants.Bags.ContactPoints);
                 if (bag is null)
                 {
                     return [];
@@ -60,13 +59,13 @@ public sealed class ContactPointIndexProvider : IndexProvider<ContentItem>
                 const string Part = PartiesConstants.ContentTypes.ContactPoint;
                 return bag.ContentItems.Select(element =>
                 {
-                    var part = element.Get<ContentPart>(Part);
+                    var part = element.Get<ContentFieldSet>(Part);
                     return new ContactPointIndex
                     {
                         PartyId = contentItem.ContentItemId,
                         PartyContentType = contentItem.ContentType,
                         ContactPointId = element.ContentItemId,
-                        KindId = part?.Get<OptionPickerField>("Kind")?.SelectedIds.FirstOrDefault(),
+                        KindId = part?.Get<OptionListField>("Kind")?.SelectedIds.FirstOrDefault(),
                         Value = Truncate(part?.Get<TextField>("Value")?.Text, 255),
                         Preferred = part?.Get<BooleanField>("Preferred")?.Value ?? false,
                         Published = contentItem.Published,
@@ -92,7 +91,7 @@ public sealed class OrganizationNameIndexProvider : IndexProvider<ContentItem>
                     return [];
                 }
 
-                var bag = contentItem.Get<BagPart>(PartiesConstants.Bags.OrganizationNames);
+                var bag = contentItem.Get<EmbeddedContentItems>(PartiesConstants.Bags.OrganizationNames);
                 if (bag is null)
                 {
                     return [];
@@ -101,12 +100,12 @@ public sealed class OrganizationNameIndexProvider : IndexProvider<ContentItem>
                 const string Part = PartiesConstants.ContentTypes.OrganizationName;
                 return bag.ContentItems.Select(element =>
                 {
-                    var part = element.Get<ContentPart>(Part);
+                    var part = element.Get<ContentFieldSet>(Part);
                     return new OrganizationNameIndex
                     {
                         OrganizationId = contentItem.ContentItemId,
                         NameId = element.ContentItemId,
-                        KindId = part?.Get<OptionPickerField>("Kind")?.SelectedIds.FirstOrDefault(),
+                        KindId = part?.Get<OptionListField>("Kind")?.SelectedIds.FirstOrDefault(),
                         Name = ContactPointIndexProvider.Truncate(part?.Get<TextField>("Name")?.Text, 255),
                         Primary = part?.Get<BooleanField>("Primary")?.Value ?? false,
                         Published = contentItem.Published,

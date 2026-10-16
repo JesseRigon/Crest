@@ -33,7 +33,7 @@ function buildSharedAdminChecks() {
     { name: 'content-item-editor-page', fn: require('./checks/content-item-editor-page') },
     { name: 'content-items-page', fn: require('./checks/content-items-page') },
     { name: 'content-items-type-filter', fn: require('./checks/content-items-type-filter') },
-    { name: 'content-parts-page', fn: require('./checks/content-parts-page') },
+    { name: 'field-groups-page', fn: require('./checks/field-groups-page') },
     { name: 'definition-locks', fn: require('./checks/definition-locks') },
     { name: 'content-types-page', fn: require('./checks/content-types-page') },
     { name: 'content-type-menu-toggle', fn: require('./checks/content-type-menu-toggle') },
@@ -97,7 +97,7 @@ function buildSharedAdminChecks() {
     { name: 'localization-tab-scoping', fn: require('./checks/localization-tab-scoping') },
     { name: 'localization-new-tab-inheritance', fn: require('./checks/localization-new-tab-inheritance') },
     { name: 'localization-multi-user-switch', fn: require('./checks/localization-multi-user-switch') },
-    { name: 'content-part-lists-page', fn: require('./checks/content-part-lists-page') },
+    { name: 'option-lists-page', fn: require('./checks/option-lists-page') },
     { name: 'option-dependent-filtering', fn: require('./checks/option-dependent-filtering') },
     { name: 'option-source-scope', fn: require('./checks/option-source-scope') },
   ];

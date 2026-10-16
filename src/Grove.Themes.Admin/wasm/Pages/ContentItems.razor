@@ -319,7 +319,7 @@
 
     private ListFilter[] ListFilters { get; set; } = [];
     private Dictionary<string, string> FilterValues { get; } = new(StringComparer.OrdinalIgnoreCase);
-    private bool ShowsCulture => ListFilters.Any(filter => filter.Part == "LocalizationPart");
+    private bool ShowsCulture => ListFilters.Any(filter => filter.FieldSet == "Localization");
 
     private async Task LoadFiltersAsync()
     {
@@ -356,14 +356,16 @@
 
     private static string? Culture(ContentItem item) =>
         item.Content.ValueKind == System.Text.Json.JsonValueKind.Object
-        && item.Content.TryGetProperty("LocalizationPart", out var part)
+        && item.Content.TryGetProperty("Localization", out var part)
         && part.ValueKind == System.Text.Json.JsonValueKind.Object
-        && part.TryGetProperty("Culture", out var culture)
+        && part.TryGetProperty("Culture", out var field)
+        && field.ValueKind == System.Text.Json.JsonValueKind.Object
+        && field.TryGetProperty("Text", out var culture)
         && culture.ValueKind == System.Text.Json.JsonValueKind.String
             ? culture.GetString()
             : null;
 
-    private sealed record ListFilter(string Name, string Label, ListFilterOption[] Options, string? Part);
+    private sealed record ListFilter(string Name, string Label, ListFilterOption[] Options, string? FieldSet);
     private sealed record ListFilterOption(string Value, string Text, int Level);
 
     // Deployment actions (the Contents deployment features): add to a plan, export to a target,

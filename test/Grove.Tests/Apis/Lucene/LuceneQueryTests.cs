@@ -162,8 +162,8 @@ public class LuceneQueryTests
             Assert.NotEmpty(contentItems);
             Assert.True(contentItems.Count() >= 4);
 
-            Assert.Contains("Grove", contentItems.ElementAt(0).GetOrCreate<HtmlBodyPart>().Html, StringComparison.OrdinalIgnoreCase);
-            Assert.Contains("Grove", contentItems.ElementAt(1).GetOrCreate<HtmlBodyPart>().Html, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("Grove", contentItems.ElementAt(0).GetOrCreate<HtmlBodyFieldSet>().Html, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("Grove", contentItems.ElementAt(1).GetOrCreate<HtmlBodyFieldSet>().Html, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("Grove", contentItems.ElementAt(2).DisplayText, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("Grove", contentItems.ElementAt(3).DisplayText, StringComparison.OrdinalIgnoreCase);
         }

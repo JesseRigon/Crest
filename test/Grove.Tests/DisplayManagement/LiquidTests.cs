@@ -541,8 +541,8 @@ public class LiquidTests
     public static ContentItem CreateFakeContentItem(decimal order, bool addtoHotActionsMenu)
     {
         var contentItem = new ContentItem();
-        contentItem.GetOrCreate<ContentPart>("HotActionsPart");
-        contentItem.Alter<ContentPart>("HotActionsPart", x =>
+        contentItem.GetOrCreate<ContentFieldSet>("HotActionsPart");
+        contentItem.Alter<ContentFieldSet>("HotActionsPart", x =>
         {
             x.GetOrCreate<BooleanField>("AddtoHotActionsMenu");
             x.Alter<BooleanField>("AddtoHotActionsMenu", f => f.Value = addtoHotActionsMenu);
@@ -553,7 +553,7 @@ public class LiquidTests
         return contentItem;
     }
 
-    public class MyPart : ContentPart
+    public class MyPart : ContentFieldSet
     {
         public string Text { get; set; }
     }

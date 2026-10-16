@@ -97,7 +97,7 @@ Every list-plus-detail admin screen follows it: the page root fills the admin co
   component (GroveCard) never receives Blazor's CSS scope attribute, so styling the
   card directly is dead CSS.
 
-Used by the Content Part Lists, Content Parts and Content Types pages.
+Used by the Option lists, Content Parts and Content Types pages.
 
 ## Feature UI boundary
 

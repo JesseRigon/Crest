@@ -40,13 +40,13 @@ public class ShellCompatibilityTests
     // a library named for a feature belongs to that feature, not to its module).
     [Theory]
     [InlineData("Grove.Access.Members.Member.BlazorWasm", "Grove.Access.Members")]
-    [InlineData("Grove.Contents.PartLists.BlazorWasm", "Grove.Contents.PartLists")]
+    [InlineData("Grove.Contents.OptionLists.BlazorWasm", "Grove.Contents.OptionLists")]
     [InlineData("Grove.Contents.BlazorWasm", "Grove.Contents")]
     [InlineData("Grove.Other.BlazorWasm", "Grove")]
     [InlineData("Acme.Ledger.BlazorWasm", null)]
     public void ClientAssemblyBelongsToTheLongestMatchingModule(string assemblyName, string? expected)
     {
-        string[] modules = ["Grove", "Grove.Access.Members", "Grove.Contents", "Grove.Contents.PartLists", "Grove.Member"];
+        string[] modules = ["Grove", "Grove.Access.Members", "Grove.Contents", "Grove.Contents.OptionLists", "Grove.Member"];
 
         Assert.Equal(expected, Grove.Routing.ModuleClientAssemblies.OwningExtensionId(assemblyName, modules));
     }

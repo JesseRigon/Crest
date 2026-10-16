@@ -23,37 +23,37 @@ public static class ContentDefinitionManagerExtensions
         await manager.StoreTypeDefinitionAsync(builder.Build());
     }
 
-    public static async Task AlterPartDefinitionAsync(this IContentDefinitionManager manager, string name, Func<ContentPartDefinitionBuilder, Task> alterationAsync)
+    public static async Task AlterFieldSetDefinitionAsync(this IContentDefinitionManager manager, string name, Func<ContentFieldSetDefinitionBuilder, Task> alterationAsync)
     {
-        var partDefinition = (await manager.LoadPartDefinitionAsync(name)) ?? new ContentPartDefinition(name);
-        var builder = new ContentPartDefinitionBuilder(partDefinition);
+        var partDefinition = (await manager.LoadFieldSetDefinitionAsync(name)) ?? new ContentFieldSetDefinition(name);
+        var builder = new ContentFieldSetDefinitionBuilder(partDefinition);
         await alterationAsync(builder);
-        await manager.StorePartDefinitionAsync(builder.Build());
+        await manager.StoreFieldSetDefinitionAsync(builder.Build());
     }
 
-    public static async Task AlterPartDefinitionAsync(this IContentDefinitionManager manager, string name, Action<ContentPartDefinitionBuilder> alteration)
+    public static async Task AlterFieldSetDefinitionAsync(this IContentDefinitionManager manager, string name, Action<ContentFieldSetDefinitionBuilder> alteration)
     {
-        var partDefinition = (await manager.LoadPartDefinitionAsync(name)) ?? new ContentPartDefinition(name);
-        var builder = new ContentPartDefinitionBuilder(partDefinition);
+        var partDefinition = (await manager.LoadFieldSetDefinitionAsync(name)) ?? new ContentFieldSetDefinition(name);
+        var builder = new ContentFieldSetDefinitionBuilder(partDefinition);
         alteration(builder);
-        await manager.StorePartDefinitionAsync(builder.Build());
+        await manager.StoreFieldSetDefinitionAsync(builder.Build());
     }
 
     /// <summary>
-    /// Migrate existing ContentPart settings to WithSettings<typeparamref name="TSettings"/>
+    /// Migrate existing ContentFieldSet settings to WithSettings<typeparamref name="TSettings"/>
     /// This method will be removed in a future release.
     /// </summary>
-    /// <typeparam name="TPart"></typeparam>
+    /// <typeparam name="TFieldSet"></typeparam>
     /// <typeparam name="TSettings"></typeparam>
     /// <param name="manager"></param>
-    public static async Task MigratePartSettingsAsync<TPart, TSettings>(this IContentDefinitionManager manager)
-        where TPart : ContentPart where TSettings : class
+    public static async Task MigrateFieldSetSettingsAsync<TFieldSet, TSettings>(this IContentDefinitionManager manager)
+        where TFieldSet : ContentFieldSet where TSettings : class
     {
         var contentTypes = await manager.LoadTypeDefinitionsAsync();
 
         foreach (var contentType in contentTypes)
         {
-            var partDefinition = contentType.Parts.FirstOrDefault(x => x.PartDefinition.Name == typeof(TPart).Name);
+            var partDefinition = contentType.FieldSets.FirstOrDefault(x => x.FieldSetDefinition.Name == ContentFieldSetName.Of<TFieldSet>());
             if (partDefinition != null)
             {
                 var existingSettings = partDefinition.Settings.ToObject<TSettings>();
@@ -68,7 +68,7 @@ public static class ContentDefinitionManagerExtensions
                 // Apply existing settings to type definition WithSettings<T>
                 await manager.AlterTypeDefinitionAsync(contentType.Name, typeBuilder =>
                 {
-                    typeBuilder.WithPart(partDefinition.Name, partBuilder =>
+                    typeBuilder.WithFieldSet(partDefinition.Name, partBuilder =>
                     {
                         partBuilder.WithSettings(existingSettings);
                     });
@@ -89,13 +89,13 @@ public static class ContentDefinitionManagerExtensions
     public static async Task MigrateFieldSettingsAsync<TField, TSettings>(this IContentDefinitionManager manager)
         where TField : ContentField where TSettings : class
     {
-        var partDefinitions = await manager.LoadPartDefinitionsAsync();
+        var partDefinitions = await manager.LoadFieldSetDefinitionsAsync();
 
         foreach (var partDefinition in partDefinitions)
         {
-            await manager.AlterPartDefinitionAsync(partDefinition.Name, partBuilder =>
+            await manager.AlterFieldSetDefinitionAsync(partDefinition.Name, partBuilder =>
             {
-                foreach (var fieldDefinition in partDefinition.Fields.Where(x => x.FieldDefinition.Name == typeof(TField).Name))
+                foreach (var fieldDefinition in partDefinition.Fields.Where(x => x.FieldTypeDefinition.Name == typeof(TField).Name))
                 {
                     var existingFieldSettings = fieldDefinition.Settings.ToObject<TSettings>();
 

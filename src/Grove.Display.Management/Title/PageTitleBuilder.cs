@@ -21,22 +21,22 @@ public class PageTitleBuilder : IPageTitleBuilder
         _fixedTitle = title;
     }
 
-    public void AddSegment(IHtmlContent titlePart, string position)
+    public void AddSegment(IHtmlContent titleFieldSet, string position)
     {
         _title = null;
 
         _titleParts.Add(new PositionalTitlePart
         {
-            Value = titlePart,
+            Value = titleFieldSet,
             Position = position,
         });
     }
 
     public void AddSegments(IEnumerable<IHtmlContent> titleParts, string position)
     {
-        foreach (var titlePart in titleParts)
+        foreach (var titleFieldSet in titleParts)
         {
-            AddSegment(titlePart, position);
+            AddSegment(titleFieldSet, position);
         }
     }
 

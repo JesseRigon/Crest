@@ -19,20 +19,22 @@ public static class ServiceCollectionExtensions
         services.TryAddScoped<IContentDefinitionManager, ContentDefinitionManager>();
         services.TryAddScoped<IContentDefinitionStore, DatabaseContentDefinitionStore>();
         services.TryAddScoped<IContentManager, DefaultContentManager>();
+        services.TryAddScoped<IContentLifecycle, ContentLifecycle>();
+        services.TryAddScoped<IEmbeddedContentReader, EmbeddedContentReader>();
         services.TryAddScoped<IValidationSink, ValidationSink>();
         services.TryAddScoped<IContentManagerSession, DefaultContentManagerSession>();
         services.AddIndexProvider<ContentItemIndexProvider>();
         services.AddDataMigration<Migrations>();
         services.AddScoped<IContentHandler, UpdateContentsHandler>();
-        services.AddScoped<IContentHandler, ContentPartHandlerCoordinator>();
-        services.AddSingleton<ITypeActivatorFactory<ContentPart>, ContentPartFactory>();
+        services.AddScoped<IContentHandler, ContentFieldSetHandlerCoordinator>();
+        services.AddSingleton<ITypeActivatorFactory<ContentFieldSet>, ContentFieldSetFactory>();
         services.AddSingleton<ITypeActivatorFactory<ContentField>, ContentFieldFactory>();
 
         services.AddSingleton<IContentItemIdGenerator, DefaultContentItemIdGenerator>();
         services.AddScoped<IContentHandleManager, ContentHandleManager>();
 
         services.AddOptions<ContentOptions>();
-        services.AddScoped<IContentPartHandlerResolver, ContentPartHandlerResolver>();
+        services.AddScoped<IContentFieldSetHandlerResolver, ContentFieldSetHandlerResolver>();
         services.AddScoped<IContentFieldHandlerResolver, ContentFieldHandlerResolver>();
 
         return services;

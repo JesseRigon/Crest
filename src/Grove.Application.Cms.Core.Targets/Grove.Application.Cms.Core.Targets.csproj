@@ -54,7 +54,7 @@
     <ProjectReference Include="..\Grove.Contents.Types\Grove.Contents.Types.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Security.Cors\Grove.Security.Cors.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Infrastructure.CustomSettings\Grove.Infrastructure.CustomSettings.csproj" PrivateAssets="none" />
-    <!-- Content Part Lists (a Grove.Contents feature) ship their global sets through it. -->
+    <!-- Option lists (a Grove.Contents feature) ship their global sets through it. -->
     <ProjectReference Include="..\Grove.Data.Global\Grove.Data.Global.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Data.Protection.Azure\Grove.Data.Protection.Azure.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Deployment\Grove.Deployment.csproj" PrivateAssets="none" />
@@ -68,7 +68,6 @@
     <ProjectReference Include="..\Grove.Integrations.Facebook\Grove.Integrations.Facebook.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Infrastructure.Features\Grove.Infrastructure.Features.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Data.Feeds\Grove.Data.Feeds.csproj" PrivateAssets="none" />
-    <ProjectReference Include="..\Grove.Contents.BagParts\Grove.Contents.BagParts.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Integrations.GitHub\Grove.Integrations.GitHub.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Integrations.Google\Grove.Integrations.Google.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Infrastructure.HealthChecks\Grove.Infrastructure.HealthChecks.csproj" PrivateAssets="none" />
@@ -79,7 +78,7 @@
     <ProjectReference Include="..\Grove.Infrastructure\Grove.Infrastructure.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Display.Layers\Grove.Display.Layers.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Display.Liquid\Grove.Display.Liquid.csproj" PrivateAssets="none" />
-    <ProjectReference Include="..\Grove.Contents.Lists\Grove.Contents.Lists.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Contents.Hierarchy\Grove.Contents.Hierarchy.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Data.Localization\Grove.Data.Localization.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Contents.Markdown\Grove.Contents.Markdown.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Media\Grove.Media.csproj" PrivateAssets="none" />

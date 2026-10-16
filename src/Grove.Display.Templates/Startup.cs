@@ -1,3 +1,5 @@
+using Grove.Contents.Management.Handlers;
+using Grove.Workflows.Extensions;
 using Fluid;
 using Grove.Contents.Management.Display.ContentDisplay;
 using Grove.Contents.Management;
@@ -36,16 +38,17 @@ public sealed class Startup : StartupBase
             options.MemberAccessStrategy.Register<Grove.Display.Management.Shapes.ShapeMetadata>();
         });
 
-        services.AddContentPart<TemplatePart>();
-        services.AddContentPart<DesignedPagePart>();
+        services.AddContentFieldSet<TemplateFieldSet>();
+        services.AddContentFieldSet<DesignedPageFieldSet>();
 
         // The per-item page body (docs/widgets.md): its shape binds to its stored tree, validated on save.
-        services.AddContentPart<DisplayTreePart>()
-            .UseDisplayDriver<Drivers.DisplayTreePartDisplayDriver>()
-            .AddHandler<DisplayTreePartHandler>();
+        services.AddContentFieldSet<DisplayTreeFieldSet>()
+            .UseDisplayDriver<Drivers.DisplayTreeFieldSetDisplayDriver>();
+        services.AddScoped<DisplayTreeBehaviour>();
+        services.AddContentFieldSetProjection<Projections.DisplayTreeBodyProjection>();
         // The body's text is searchable (a migrated Liquid body's included).
-        services.AddScoped<Grove.Data.Indexing.IContentPartIndexHandler, Indexing.DisplayTreePartIndexHandler>();
-        services.AddScoped<IDisplayTemplateBinding, DisplayTreePartBinding>();
+        services.AddScoped<Grove.Data.Indexing.IContentFieldSetIndexHandler, Indexing.DisplayTreeFieldSetIndexHandler>();
+        services.AddScoped<IDisplayTemplateBinding, DisplayTreeFieldSetBinding>();
         services.AddDataMigration<Migrations>();
         services.AddScoped<Grove.Contents.Management.Handlers.IContentHandler, TemplatePublishHandler>();
 
@@ -77,5 +80,18 @@ public sealed class Startup : StartupBase
         services.AddRecipeExecutionStep<TemplateStep>();
         services.AddRecipeExecutionStep<DesignedPageStep>();
         services.AddDeployment<AllTemplatesDeploymentSource, AllTemplatesDeploymentStep>();
+    }
+}
+
+/// <summary>The field set's system flows and their activities (docs/content-engine.md › Behaviour is workflows).</summary>
+[RequireFeatures(Grove.Workflows.WorkflowsConstants.ContentsFeatureId)]
+public sealed class WorkflowsStartup : StartupBase
+{
+    public override void ConfigureServices(IServiceCollection services)
+    {
+        services.AddScoped<Grove.Workflows.IWorkflowActivityProvider, Workflows.DisplayTreeWorkflowProvider>();
+        services.AddScoped<Grove.Workflows.IWorkflowFlowProvider, Workflows.DisplayTreeWorkflowProvider>();
+        services.AddScoped<Grove.Workflows.IWorkflowFieldSetHookAttachmentProvider, Workflows.DisplayTreeWorkflowProvider>();
+        services.ConfigureGroveWorkflows(workflows => workflows.AddActivitiesFrom<WorkflowsStartup>());
     }
 }

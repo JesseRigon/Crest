@@ -3,7 +3,7 @@ using Grove.Data.Indexing;
 namespace Grove.Search.Elasticsearch.Models;
 
 /// <summary>
-/// Represents the indexing settings for a content part or a field.
+/// Represents the indexing settings for a field set or a field.
 /// </summary>
 public class ElasticContentIndexSettings : IContentIndexSettings
 {

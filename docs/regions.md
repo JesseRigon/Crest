@@ -31,7 +31,7 @@ Content type `GroveRegionalProfile`, following the same "Orchard content, not a 
 JSON store" decision as [design-systems.md](design-systems.md)'s `GroveDesignSystem`.
 A tenant publishes and can enable/disable each Regional Profile independently.
 
-Built as `GroveRegionalProfilePart`, `GroveRegionalProfileReferencePart` (the
+Built as `RegionalProfileFieldSet`, `RegionalProfileReferenceFieldSet` (the
 reference a party carries), `RegionalProfileIndex`, permissions and
 `IRegionalProfileResolver` (party → context). It declares no facets of its own.
 

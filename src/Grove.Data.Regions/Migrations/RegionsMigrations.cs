@@ -14,7 +14,7 @@ public sealed class RegionsMigrations(IContentDefinitionManager contentDefinitio
 {
     public async Task<int> CreateAsync()
     {
-        await contentDefinitionManager.AlterPartDefinitionAsync(RegionsConstants.Parts.RegionalProfile, part => part
+        await contentDefinitionManager.AlterFieldSetDefinitionAsync(RegionsConstants.FieldSets.RegionalProfile, part => part
             .Attachable(false)
             .WithDisplayName("Regional profile")
             .WithDescription("A party's regional profile: default country, measurement system, time zone, language. Downstream modules attach their own facets."));
@@ -25,12 +25,12 @@ public sealed class RegionsMigrations(IContentDefinitionManager contentDefinitio
             .Listable()
             .Securable()
             .Versionable()
-            .WithPart("TitlePart", part => part.WithPosition("0"))
-            .WithPart(RegionsConstants.Parts.RegionalProfile, part => part.WithPosition("1")));
+            .WithFieldSet("Title", part => part.WithPosition("0"))
+            .WithFieldSet(RegionsConstants.FieldSets.RegionalProfile, part => part.WithPosition("1")));
 
         // The reference a party carries. Attachable so Parties (and anything else) can
         // add it to its own types; Grove attaches it to nothing.
-        await contentDefinitionManager.AlterPartDefinitionAsync(RegionsConstants.Parts.RegionalProfileReference, part => part
+        await contentDefinitionManager.AlterFieldSetDefinitionAsync(RegionsConstants.FieldSets.RegionalProfileReference, part => part
             .Attachable()
             .Reusable(false)
             .WithDisplayName("Regional profile")

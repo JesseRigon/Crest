@@ -53,20 +53,20 @@ public class DataLocalizationProviderTests
 
     private static ContentTypeDefinition CreateContentTypeDefinition(string name, string displayName, string[] fields)
     {
-        var contentPartFieldDefinitions = new List<ContentPartFieldDefinition>();
+        var contentFieldDefinitions = new List<ContentFieldDefinition>();
         var settings = new JsonObject();
 
         foreach (var field in fields)
         {
-            contentPartFieldDefinitions.Add(new ContentPartFieldDefinition(new ContentFieldDefinition(field), field, settings));
+            contentFieldDefinitions.Add(new ContentFieldDefinition(new ContentFieldTypeDefinition(field), field, settings));
         }
 
         return new ContentTypeDefinition(
             name,
             displayName,
-            new List<ContentTypePartDefinition>
+            new List<ContentTypeFieldSetDefinition>
             {
-                new(name, new ContentPartDefinition(name, contentPartFieldDefinitions, settings), settings),
+                new(name, new ContentFieldSetDefinition(name, contentFieldDefinitions, settings), settings),
             },
             settings);
     }

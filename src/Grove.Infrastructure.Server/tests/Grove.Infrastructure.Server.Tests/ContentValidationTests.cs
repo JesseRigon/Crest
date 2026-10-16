@@ -9,8 +9,7 @@ using Grove.Contents.Management.Metadata.Models;
 using ContentValidationErrors = Grove.Contents.Api.ContentValidationErrors;
 using ContentItem = Grove.Contents.Management.ContentItem;
 using Grove.Infrastructure.Html;
-using Grove.Contents.SiteMenu.Handlers;
-using Grove.Contents.SiteMenu.Models;
+using Grove.Contents.SiteMenu.Services;
 using Microsoft.Extensions.Localization;
 using NSubstitute;
 using Xunit;
@@ -69,16 +68,9 @@ public sealed class ContentValidationTests
     {
         var sanitizer = Substitute.For<IHtmlSanitizerService>();
         sanitizer.Sanitize(Arg.Any<string>()).Returns(call => call.Arg<string>()!.Contains("javascript:", StringComparison.Ordinal) ? "<a></a>" : call.Arg<string>());
-        IContentPartHandler handler = new LinkMenuItemPartHandler(sanitizer, HtmlEncoder.Default, Localizer<LinkMenuItemPartHandler>());
-        var item = new ContentItem { ContentType = "LinkMenuItem" };
-        var context = new ValidateContentPartContext(item)
-        {
-            ContentTypePartDefinition = new ContentTypePartDefinition(nameof(LinkMenuItemPart), new ContentPartDefinition(nameof(LinkMenuItemPart)), []),
-        };
+        var behaviour = new MenuBehaviour(null!, sanitizer, HtmlEncoder.Default, Localizer<MenuBehaviour>());
 
-        await handler.ValidatingAsync(context, new LinkMenuItemPart { Url = url });
-
-        Assert.Equal(valid, context.ContentValidateResult.Succeeded);
+        Assert.Equal(valid, behaviour.IsValidUrl(url));
     }
 
     [Fact]
@@ -86,32 +78,32 @@ public sealed class ContentValidationTests
     {
         var (_, field) = Item("TextField", []);
         var type = new ContentTypeDefinition("Article", "Article",
-            [field.ContentTypePartDefinition, new ContentTypePartDefinition("TitlePart", new ContentPartDefinition("TitlePart"), [])], []);
+            [field.ContentTypeFieldSetDefinition, new ContentTypeFieldSetDefinition("Title", new ContentFieldSetDefinition("Title"), [])], []);
 
         var map = ContentValidationErrors.ToMap(
             [
                 new ValidationResult("Too short.", ["Article.Subtitle.Text"]),
-                new ValidationResult("Required.", ["TitlePart.Title"]),
+                new ValidationResult("Required.", ["Title.Title"]),
                 new ValidationResult("Broken."),
             ],
             type);
 
         Assert.Equal(["Too short."], map["Article.Subtitle"]);
-        Assert.Equal(["Required."], map["TitlePart"]);
+        Assert.Equal(["Required."], map["Title"]);
         Assert.Equal(["Broken."], map[string.Empty]);
     }
 
-    private static (ContentItem Item, ContentPartFieldDefinition Field) Item(string fieldType, JsonObject settings)
+    private static (ContentItem Item, ContentFieldDefinition Field) Item(string fieldType, JsonObject settings)
     {
-        var field = new ContentPartFieldDefinition(new ContentFieldDefinition(fieldType), "Subtitle", settings);
-        var part = new ContentPartDefinition("Article", [field], []);
-        var typePart = new ContentTypePartDefinition("Article", part, []);
-        field.ContentTypePartDefinition = typePart;
+        var field = new ContentFieldDefinition(new ContentFieldTypeDefinition(fieldType), "Subtitle", settings);
+        var part = new ContentFieldSetDefinition("Article", [field], []);
+        var typeFieldSet = new ContentTypeFieldSetDefinition("Article", part, []);
+        field.ContentTypeFieldSetDefinition = typeFieldSet;
         return (new ContentItem { ContentType = "Article" }, field);
     }
 
-    private static ValidateContentFieldContext FieldContext(ContentItem item, ContentPartFieldDefinition definition) =>
-        new(item) { ContentPartFieldDefinition = definition, PartName = "Article" };
+    private static ValidateContentFieldContext FieldContext(ContentItem item, ContentFieldDefinition definition) =>
+        new(item) { ContentFieldDefinition = definition, FieldSetName = "Article" };
 
     private static IStringLocalizer<T> Localizer<T>()
     {

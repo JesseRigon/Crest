@@ -93,7 +93,7 @@ public sealed class ContentEditor : ComponentBase, IDisposable
         }
     }
 
-    // The server's errors of the last save, keyed as the editors are (Part.Field, Part), shown
+    // The server's errors of the last save, keyed as the editors are (FieldSet.Field, Part), shown
     // under each editor.
     private void OnStateChanged()
     {

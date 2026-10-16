@@ -12,27 +12,25 @@ public interface IContentDefinitionEventHandler
 
     void ContentTypeImported(ContentTypeImportedContext context);
 
-    void ContentPartCreated(ContentPartCreatedContext context);
+    void ContentFieldSetCreated(ContentFieldSetCreatedContext context);
 
-    void ContentPartUpdated(ContentPartUpdatedContext context);
+    void ContentFieldSetUpdated(ContentFieldSetUpdatedContext context);
 
-    void ContentPartRemoved(ContentPartRemovedContext context);
+    void ContentFieldSetRemoved(ContentFieldSetRemovedContext context);
 
-    void ContentPartAttached(ContentPartAttachedContext context);
+    void ContentFieldSetAttached(ContentFieldSetAttachedContext context);
 
-    void ContentPartDetached(ContentPartDetachedContext context);
+    void ContentFieldSetDetached(ContentFieldSetDetachedContext context);
 
-    void ContentPartImporting(ContentPartImportingContext context);
+    void ContentFieldSetImporting(ContentFieldSetImportingContext context);
 
-    void ContentPartImported(ContentPartImportedContext context);
+    void ContentFieldSetImported(ContentFieldSetImportedContext context);
 
-    void ContentTypePartUpdated(ContentTypePartUpdatedContext context);
+    void ContentTypeFieldSetUpdated(ContentTypeFieldSetUpdatedContext context);
 
     void ContentFieldAttached(ContentFieldAttachedContext context);
 
-    void ContentFieldUpdated(ContentFieldUpdatedContext context);
-
     void ContentFieldDetached(ContentFieldDetachedContext context);
 
-    void ContentPartFieldUpdated(ContentPartFieldUpdatedContext context);
+    void ContentFieldUpdated(ContentFieldUpdatedContext context);
 }

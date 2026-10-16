@@ -12,6 +12,6 @@ public sealed class Startup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddObjectGraphType<MetaEntry, MetaEntryQueryObjectType>();
-        services.AddObjectGraphType<SeoMetaPart, SeoMetaQueryObjectType>();
+        services.AddObjectGraphType<SeoMetaFieldSet, SeoMetaQueryObjectType>();
     }
 }

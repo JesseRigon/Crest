@@ -55,7 +55,7 @@ public sealed record StandardMenuSummary(
 
     internal static IEnumerable<JsonObject> ReadChildren(JsonObject source)
     {
-        if (source["MenuItemsListPart"] is not JsonObject part || part["MenuItems"] is not JsonArray items)
+        if (MenuItemsEmbedding.ItemsArray(source) is not { } items)
         {
             yield break;
         }
@@ -91,31 +91,32 @@ public sealed record StandardMenuNodeSummary(
         var id = ReadString(item, "ContentItemId") ?? $"menu-node-{depth}-{order}";
         var type = ReadString(item, "ContentType") ?? "MenuItem";
         var text = ReadString(item, "DisplayText") ?? type;
-        var url = ReadString(item, "LinkMenuItemPart", "Url") ?? ReadString(item, "HtmlMenuItemPart", "Url");
-        var target = ReadString(item, "LinkMenuItemPart", "Target") ?? ReadString(item, "HtmlMenuItemPart", "Target");
-        var html = ReadString(item, "HtmlMenuItemPart", "Html");
-        var permissions = ReadStringArray(item, "MenuItemPermissionPart", "PermissionNames");
+        // A menu item's values are fields: a text field's text, an HTML field's markup, a multi-text field's values.
+        var url = ReadString(item, "LinkMenuItem", "Url", "Text") ?? ReadString(item, "HtmlMenuItem", "Url", "Text");
+        var target = ReadString(item, "LinkMenuItem", "Target", "Text") ?? ReadString(item, "HtmlMenuItem", "Target", "Text");
+        var html = ReadString(item, "HtmlMenuItem", "Html", "Html");
+        var permissions = ReadStringArray(item, "MenuItemPermission", "PermissionNames");
         var children = StandardMenuSummary.ReadChildren(item)
             .Select((child, index) => From(child, id, depth + 1, index))
             .ToArray();
 
-        var contentPart = item["ContentMenuItemPart"] as JsonObject;
+        var contentFieldSet = item["ContentMenuItem"] as JsonObject;
         return new(id, type, text, url, target, html, true, depth, order, parentId, permissions, children)
         {
-            ContentItemId = (contentPart?["SelectedContentItem"]?["SelectedIds"] as JsonArray)?.FirstOrDefault()?.GetValue<string>(),
-            CheckContentPermissions = contentPart?["CheckContentPermissions"] is JsonValue check && check.TryGetValue<bool>(out var value) && value,
+            ContentItemId = (contentFieldSet?["SelectedContentItem"]?["SelectedIds"] as JsonArray)?.FirstOrDefault()?.GetValue<string>(),
+            CheckContentPermissions = contentFieldSet?["CheckContentPermissions"]?["Value"] is JsonValue check && check.TryGetValue<bool>(out var value) && value,
         };
     }
 
     private static string? ReadString(JsonObject source, string propertyName) =>
         source[propertyName]?.GetValue<string>();
 
-    private static string? ReadString(JsonObject source, string partName, string propertyName) =>
-        source[partName] is JsonObject part ? part[propertyName]?.GetValue<string>() : null;
+    private static string? ReadString(JsonObject source, string partName, string fieldName, string valueName) =>
+        source[partName] is JsonObject part ? part[fieldName]?[valueName]?.GetValue<string>() : null;
 
     private static string[] ReadStringArray(JsonObject source, string partName, string propertyName)
     {
-        if (source[partName] is not JsonObject part || part[propertyName] is not JsonArray values)
+        if (source[partName] is not JsonObject part || part[propertyName]?["Values"] is not JsonArray values)
         {
             return [];
         }

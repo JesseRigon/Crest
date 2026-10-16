@@ -17,7 +17,7 @@ public static class ServiceCollectionExtensions
         services.Configure<TemplateOptions>(o =>
         {
             o.MemberAccessStrategy.Register<ContentItemViewModel>();
-            o.MemberAccessStrategy.Register<ContentPartViewModel>();
+            o.MemberAccessStrategy.Register<ContentFieldSetViewModel>();
         });
 
         services.TryAddTransient<IContentItemDisplayManager, ContentItemDisplayManager>();
@@ -25,9 +25,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IContentDisplayHandler, ContentItemDisplayCoordinator>();
 
         services.AddScoped<IPlacementNodeFilterProvider, ContentTypePlacementNodeFilterProvider>();
-        services.AddScoped<IPlacementNodeFilterProvider, ContentPartPlacementNodeFilterProvider>();
+        services.AddScoped<IPlacementNodeFilterProvider, ContentFieldSetPlacementNodeFilterProvider>();
 
-        services.AddScoped<IContentPartDisplayDriverResolver, ContentPartDisplayDriverResolver>();
+        services.AddScoped<IContentFieldSetDisplayDriverResolver, ContentFieldSetDisplayDriverResolver>();
         services.AddScoped<IContentFieldDisplayDriverResolver, ContentFieldDisplayDriverResolver>();
 
         services.AddOptions<ContentDisplayOptions>();

@@ -8,9 +8,9 @@ public class ContentDefinitionRecord : Document
     public ContentDefinitionRecord()
     {
         ContentTypeDefinitionRecords = [];
-        ContentPartDefinitionRecords = [];
+        ContentFieldSetDefinitionRecords = [];
     }
 
     public IList<ContentTypeDefinitionRecord> ContentTypeDefinitionRecords { get; set; }
-    public IList<ContentPartDefinitionRecord> ContentPartDefinitionRecords { get; set; }
+    public IList<ContentFieldSetDefinitionRecord> ContentFieldSetDefinitionRecords { get; set; }
 }

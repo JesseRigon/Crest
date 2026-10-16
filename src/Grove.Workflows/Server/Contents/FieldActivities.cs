@@ -13,7 +13,7 @@ namespace Grove.Workflows.Contents;
 
 /// <summary>
 /// Shared shape of the field activities: source and target items by id (the target defaults
-/// to the trigger payload's object), a mapping of rows <c>Part.Field → Part.Field</c> each
+/// to the trigger payload's object), a mapping of rows <c>FieldSet.Field → FieldSet.Field</c> each
 /// with its required marker, and the result on the outputs. Failures end on Failed with the
 /// row named, never as an exception. Writes happen in the flow's unit: inside a hook
 /// attachment to <c>order.created</c> the copied fields exist with the order or not
@@ -31,7 +31,7 @@ public abstract class FieldActivityBase : Activity, IFieldDependencySource
     [Input(DisplayName = "Target item id", Description = "The content item to write to. Empty = the trigger payload's ContentItemId.", UIHint = InputUIHints.SingleLine)]
     public Input<string?> TargetId { get; set; } = null!;
 
-    [Input(DisplayName = "Mappings (JSON)", Description = "Rows of {\"from\":\"Part.Field\",\"to\":\"Part.Field\",\"required\":true}. A required source that is empty fails the activity; an optional one is skipped.", UIHint = InputUIHints.MultiLine)]
+    [Input(DisplayName = "Mappings (JSON)", Description = "Rows of {\"from\":\"FieldSet.Field\",\"to\":\"FieldSet.Field\",\"required\":true}. A required source that is empty fails the activity; an optional one is skipped.", UIHint = InputUIHints.MultiLine)]
     public Input<string?> MappingsJson { get; set; } = null!;
 
     [Output(Description = "How many fields were written.")]
@@ -155,7 +155,7 @@ public abstract class FieldActivityBase : Activity, IFieldDependencySource
 }
 
 /// <summary>Copies field values from one content item to another by a mapping; the source keeps its values.</summary>
-[Activity("Grove.Workflows", "Content", "Copies field values from one content item into another by a mapping of Part.Field rows, each required or optional.", DisplayName = "Copy fields")]
+[Activity("Grove.Workflows", "Content", "Copies field values from one content item into another by a mapping of FieldSet.Field rows, each required or optional.", DisplayName = "Copy fields")]
 [FlowNode("Done", "Failed")]
 [UsedImplicitly]
 public class CopyFields : FieldActivityBase

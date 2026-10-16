@@ -17,11 +17,11 @@ public class MultiTextFieldHandler : ContentFieldHandler<MultiTextField>
 
     public override Task ValidatingAsync(ValidateContentFieldContext context, MultiTextField field)
     {
-        var settings = context.ContentPartFieldDefinition.GetSettings<MultiTextFieldSettings>();
+        var settings = context.ContentFieldDefinition.GetSettings<MultiTextFieldSettings>();
 
         if (settings.Required && field.Values.Length == 0)
         {
-            context.Fail(S["A value is required for {0}.", context.ContentPartFieldDefinition.DisplayName()], nameof(field.Values));
+            context.Fail(S["A value is required for {0}.", context.ContentFieldDefinition.DisplayName()], nameof(field.Values));
         }
 
         return Task.CompletedTask;

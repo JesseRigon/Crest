@@ -14,7 +14,7 @@ public sealed class ContentTypesEditorTests : CmsTestBase<ContentTypesEditorTest
     public ContentTypesEditorTests(ContentTypesEditorTestsFixture fixture) : base(fixture) { }
 
     [Fact]
-    public async Task DragReorderParts_PersistsNewOrderOnReload()
+    public async Task DragReorderFieldSets_PersistsNewOrderOnReload()
     {
         var page = await Fixture.CreatePageAsync();
         await page.LoginAsync();
@@ -24,21 +24,21 @@ public sealed class ContentTypesEditorTests : CmsTestBase<ContentTypesEditorTest
 
         var partsList = page.Locator("ul#parts.sortable");
         var partItems = partsList.Locator("li.list-group-item");
-        await Assertions.Expect(partItems).ToHaveCountAsync(3); // TitlePart + HtmlBodyPart + AutoroutePart
+        await Assertions.Expect(partItems).ToHaveCountAsync(3); // TitleFieldSet + HtmlBodyFieldSet + AutorouteFieldSet
 
-        // TitlePart was declared at Position 0, HtmlBodyPart at Position 1 - the real
-        // order under test is TitlePart before HtmlBodyPart.
+        // TitleFieldSet was declared at Position 0, HtmlBodyFieldSet at Position 1 - the real
+        // order under test is TitleFieldSet before HtmlBodyFieldSet.
         var initialTexts = (await partItems.AllTextContentsAsync()).ToArray();
         var titleIndex = Array.FindIndex(initialTexts, t => t.Contains("Title"));
         var htmlBodyIndex = Array.FindIndex(initialTexts, t => t.Contains("Html"));
         Assert.True(titleIndex >= 0 && htmlBodyIndex >= 0 && titleIndex < htmlBodyIndex,
-            $"Expected TitlePart before HtmlBodyPart initially. Texts: {string.Join(" | ", initialTexts)}");
+            $"Expected Title before HtmlBody initially. Texts: {string.Join(" | ", initialTexts)}");
 
         // Simulating a real SortableJS pointer drag via synthetic mouse events proved too
         // flaky in earlier tasks (see DeploymentPlanStepOrderTests) - instead, since
         // Sortable.create() attaches its own internal drag machinery (no simple exposed
         // global function here, unlike steporder.js), directly reorder the underlying
-        // hidden <input name="OrderedPartNames"> form inputs via DOM manipulation, which
+        // hidden <input name="OrderedFieldSetNames"> form inputs via DOM manipulation, which
         // is what SortableJS's own drag would ultimately produce - then submit the form.
         // This tests the real regression-relevant surface (server-side persistence of the
         // submitted order) without depending on the third-party drag library's own
@@ -68,7 +68,7 @@ public sealed class ContentTypesEditorTests : CmsTestBase<ContentTypesEditorTest
         var reloadedTitleIndex = Array.FindIndex(reloadedTexts, t => t.Contains("Title"));
         var reloadedHtmlBodyIndex = Array.FindIndex(reloadedTexts, t => t.Contains("Html"));
         Assert.True(reloadedHtmlBodyIndex < reloadedTitleIndex,
-            $"Expected HtmlBodyPart before TitlePart after reload. Texts: {string.Join(" | ", reloadedTexts)}");
+            $"Expected HtmlBody before Title after reload. Texts: {string.Join(" | ", reloadedTexts)}");
 
         Assert.Empty(consoleErrors);
         await page.CloseAsync();

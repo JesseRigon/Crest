@@ -1,22 +1,22 @@
-using Grove.Workflows.Runtime;
-using Microsoft.Extensions.DependencyInjection;
 using Grove.Environment.Shell.Scope;
 using Grove.Modules;
+using Grove.Workflows.Runtime;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Grove.Workflows.StartupTasks;
 
+/// <summary>
+/// Fills the workflow registries and brings the shipped flows in when the tenant activates
+/// (docs/workflows.md › Shipped flows), through <see cref="Registry.ShippedFlowsInstaller"/>: in a
+/// task deferred to the end of the activation scope, so after the migrations of that activation
+/// have committed and before the request or recipe step that activated the shell runs. A content
+/// hook that finds a system flow missing installs them on demand first.
+/// </summary>
 public class PopulateRegistriesTask : ModularTenantEvents
 {
     public override Task ActivatedAsync()
     {
-        ShellScope.AddDeferredTask(async scope =>
-        {
-            var registriesPopulator = scope.ServiceProvider.GetRequiredService<IRegistriesPopulator>();
-            await registriesPopulator.PopulateAsync();
-
-            // Shipped flows can only be read once the activity types they name are registered.
-            await scope.ServiceProvider.GetRequiredService<Grove.Workflows.Registry.WorkflowFlowImporter>().SyncAsync();
-        });
+        ShellScope.AddDeferredTask(scope => scope.ServiceProvider.GetRequiredService<Registry.ShippedFlowsInstaller>().EnsureAsync(scope.ServiceProvider));
 
         // Background jobs (external calls) a previous process scheduled but never finished.
         ShellScope.AddDeferredTask(scope => scope.ServiceProvider.GetRequiredService<IBackgroundActivityScheduler>() is Grove.Workflows.Units.DurableBackgroundActivityScheduler durable ? durable.RecoverAsync() : Task.CompletedTask);

@@ -138,7 +138,7 @@ public sealed class MemberPortalHandlers(
 
         var person = await contentManager.NewAsync(PartiesConstants.ContentTypes.Person);
         person.DisplayText = $"{request.FirstName} {request.LastName}".Trim();
-        person.Alter<ContentPart>(PartiesConstants.ContentTypes.Person, part =>
+        person.Alter<ContentFieldSet>(PartiesConstants.ContentTypes.Person, part =>
         {
             part.Alter<TextField>("FirstName", field => field.Text = request.FirstName?.Trim());
             part.Alter<TextField>("LastName", field => field.Text = request.LastName?.Trim());

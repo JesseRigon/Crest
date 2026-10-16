@@ -30,6 +30,14 @@ public abstract class FieldDisplayBase : ComponentBase
     [ComponentParameter(Hidden = true)]
     public string? FieldClass { get; set; }
 
+    /// <summary>Whether the field's attachment says culture does not affect it: amounts and dates format the same in every culture.</summary>
+    [Parameter]
+    [ComponentParameter(Hidden = true)]
+    public bool CultureInvariant { get; set; }
+
+    /// <summary>The culture the field's values are formatted in.</summary>
+    protected CultureInfo FormatCulture => CultureInvariant ? CultureInfo.InvariantCulture : CultureInfo.CurrentCulture;
+
     protected abstract string FieldType { get; }
 
     /// <summary>Whether the label is shown (the Razor views of the reference fields show it).</summary>
@@ -171,7 +179,7 @@ public sealed class NumericFieldDisplay : FieldDisplayBase
 
     protected override string FieldType => "numericfield";
 
-    protected override void RenderValue(RenderTreeBuilder builder) => builder.AddContent(0, Value?.ToString(CultureInfo.CurrentCulture));
+    protected override void RenderValue(RenderTreeBuilder builder) => builder.AddContent(0, Value?.ToString(FormatCulture));
 }
 
 [BlazorComponent("BooleanField", DisplayName = "Yes/no field", Category = "Fields", Icon = "check_box")]
@@ -203,7 +211,7 @@ public sealed class DateFieldDisplay : FieldDisplayBase
 
     protected override bool HasValue => Value.HasValue;
 
-    protected override void RenderValue(RenderTreeBuilder builder) => builder.AddContent(0, Value?.ToString("d", CultureInfo.CurrentCulture));
+    protected override void RenderValue(RenderTreeBuilder builder) => builder.AddContent(0, Value?.ToString("d", FormatCulture));
 }
 
 [BlazorComponent("DateTimeField", DisplayName = "Date and time field", Category = "Fields", Icon = "schedule")]
@@ -217,7 +225,7 @@ public sealed class DateTimeFieldDisplay : FieldDisplayBase
 
     protected override bool HasValue => LocalDateTime.HasValue;
 
-    protected override void RenderValue(RenderTreeBuilder builder) => builder.AddContent(0, LocalDateTime?.ToString("g", CultureInfo.CurrentCulture));
+    protected override void RenderValue(RenderTreeBuilder builder) => builder.AddContent(0, LocalDateTime?.ToString("g", FormatCulture));
 }
 
 [BlazorComponent("TimeField", DisplayName = "Time field", Category = "Fields", Icon = "schedule")]
@@ -268,59 +276,20 @@ public sealed class LinkFieldDisplay : FieldDisplayBase
 
 /// <summary>An option picker field (content items, list options, users, ...): its selection as the
 /// driver resolved it for the viewer, linked where the source has a page (content items).</summary>
-[BlazorComponent("OptionPickerField", DisplayName = "Options field", Category = "Fields", Icon = "checklist")]
-public sealed class OptionPickerFieldDisplay : FieldDisplayBase
+[BlazorComponent("OptionListField", DisplayName = "Options field", Category = "Fields", Icon = "checklist")]
+public sealed class OptionListFieldDisplay : FieldDisplayBase
 {
     /// <summary>The selection, resolved by the driver for the viewer.</summary>
     [Parameter]
     public IReadOnlyList<DisplayLinkItem>? Items { get; set; }
 
-    protected override string FieldType => "optionpickerfield";
+    protected override string FieldType => "optionlistfield";
 
     protected override bool ShowLabel => true;
 
     protected override bool HasValue => Items is { Count: > 0 };
 
     protected override void RenderValue(RenderTreeBuilder builder) => Links(builder, Items ?? [], string.Empty);
-}
-
-[BlazorComponent("LocalizationSetContentPickerField", DisplayName = "Localized content items field", Category = "Fields", Icon = "translate")]
-public sealed class LocalizationSetContentPickerFieldDisplay : FieldDisplayBase
-{
-    [Parameter]
-    public IReadOnlyList<DisplayLinkItem>? Items { get; set; }
-
-    protected override string FieldType => "localizationsetpickerfield";
-
-    protected override bool ShowLabel => true;
-
-    protected override void RenderValue(RenderTreeBuilder builder) => Links(builder, Items ?? [], "No content items.");
-}
-
-/// <summary>A user picker field, by the user names stored with it (both its display modes).</summary>
-[BlazorComponent("UserPickerField", DisplayName = "Users field", Category = "Fields", Icon = "group")]
-public sealed class UserPickerFieldDisplay : FieldDisplayBase
-{
-    [Parameter]
-    public string[]? UserNames { get; set; }
-
-    protected override string FieldType => "userpickerfield";
-
-    protected override bool ShowLabel => true;
-
-    protected override void RenderValue(RenderTreeBuilder builder)
-    {
-        if (UserNames is not { Length: > 0 } names)
-        {
-            builder.OpenElement(0, "span");
-            builder.AddAttribute(1, "class", "value");
-            builder.AddContent(2, "No users.");
-            builder.CloseElement();
-            return;
-        }
-
-        Values(builder, names);
-    }
 }
 
 [BlazorComponent("MultiTextField", DisplayName = "Multiple choice field", Category = "Fields", Icon = "checklist")]
@@ -411,9 +380,9 @@ public sealed class MediaFieldDisplay : FieldDisplayBase
     }
 }
 
-/// <summary>An item's title (the <c>TitlePart</c> shape): a heading, linked to the item in a summary.</summary>
-[BlazorComponent("TitlePart", DisplayName = "Title", Category = "Content", Icon = "title")]
-public sealed class TitlePartDisplay : ComponentBase
+/// <summary>An item's title (the <c>TitleFieldSet</c> shape): a heading, linked to the item in a summary.</summary>
+[BlazorComponent("Title", DisplayName = "Title", Category = "Content", Icon = "title")]
+public sealed class TitleFieldSetDisplay : ComponentBase
 {
     [Parameter]
     public string? Title { get; set; }
@@ -450,8 +419,8 @@ public sealed class TitlePartDisplay : ComponentBase
 }
 
 /// <summary>The summary display of a title: an <c>h2</c> linked to the item.</summary>
-[BlazorComponent("TitlePart_Summary", DisplayName = "Title (summary)", Category = "Content", Icon = "title")]
-public sealed class TitlePartSummaryDisplay : ComponentBase
+[BlazorComponent("Title_Summary", DisplayName = "Title (summary)", Category = "Content", Icon = "title")]
+public sealed class TitleFieldSetSummaryDisplay : ComponentBase
 {
     [Parameter]
     public string? Title { get; set; }
@@ -479,10 +448,17 @@ public sealed class TitlePartSummaryDisplay : ComponentBase
     }
 }
 
-/// <summary>A bag of contained items (the <c>BagPart</c> shape): each item's display, built by its drivers, in order.</summary>
-[BlazorComponent("BagPart", DisplayName = "Contained items", Category = "Content", Icon = "inventory_2")]
-public sealed class BagPartDisplay : ComponentBase
+/// <summary>
+/// An embedding's embedded content items (the <c>EmbeddedContentItems</c> shape, named after the
+/// embedding): each item's display, built by its drivers, in order.
+/// </summary>
+[BlazorComponent("EmbeddedContentItems", DisplayName = "Embedded content items", Category = "Content", Icon = "inventory_2")]
+public sealed class EmbeddedContentItemsDisplay : ComponentBase
 {
+    /// <summary>The embedding's name.</summary>
+    [Parameter]
+    public string? Embedding { get; set; }
+
     [Parameter]
     [ComponentZone]
     public RenderFragment? ChildContent { get; set; }
@@ -491,17 +467,9 @@ public sealed class BagPartDisplay : ComponentBase
     {
         builder.OpenElement(0, "section");
         builder.AddAttribute(1, "class", "flow");
-        builder.AddContent(2, ChildContent);
+        builder.AddAttribute(2, "data-embedding", Embedding);
+        builder.AddContent(3, ChildContent);
         builder.CloseElement();
-    }
-}
-
-/// <summary>An empty bag renders nothing.</summary>
-[BlazorComponent("BagPart_Empty", DisplayName = "No contained items", Category = "Content", Icon = "inventory_2")]
-public sealed class BagPartEmptyDisplay : ComponentBase
-{
-    protected override void BuildRenderTree(RenderTreeBuilder builder)
-    {
     }
 }
 
@@ -518,30 +486,14 @@ public sealed class MarkdownFieldDisplay : FieldDisplayBase
     protected override void RenderValue(RenderTreeBuilder builder) => builder.AddMarkupContent(0, Html ?? string.Empty);
 }
 
-/// <summary>A taxonomy field: its terms, linked (the blog's tags and categories).</summary>
-[BlazorComponent("TaxonomyField", DisplayName = "Taxonomy field", Category = "Fields", Icon = "sell")]
-public sealed class TaxonomyFieldDisplay : FieldDisplayBase
+/// <summary>The option list field's <c>Tags</c> display mode: its selection as badges, linked where the source gives a page (taxonomy terms).</summary>
+[BlazorComponent("OptionListField_Display__Tags", DisplayName = "Options field as tags", Category = "Fields", Icon = "sell")]
+public sealed class OptionListFieldTagsDisplay : FieldDisplayBase
 {
     [Parameter]
     public IReadOnlyList<DisplayLinkItem>? Items { get; set; }
 
-    protected override string FieldType => "taxonomyfield";
-
-    protected override bool ShowLabel => true;
-
-    protected override bool HasValue => Items is { Count: > 0 };
-
-    protected override void RenderValue(RenderTreeBuilder builder) => Links(builder, Items!, string.Empty);
-}
-
-/// <summary>The taxonomy field's <c>Tags</c> display mode: its terms as linked badges.</summary>
-[BlazorComponent("TaxonomyField_Display__Tags", DisplayName = "Taxonomy field as tags", Category = "Fields", Icon = "sell")]
-public sealed class TaxonomyFieldTagsDisplay : FieldDisplayBase
-{
-    [Parameter]
-    public IReadOnlyList<DisplayLinkItem>? Items { get; set; }
-
-    protected override string FieldType => "taxonomyfield";
+    protected override string FieldType => "optionlistfield";
 
     protected override bool HasValue => Items is { Count: > 0 };
 
@@ -549,9 +501,15 @@ public sealed class TaxonomyFieldTagsDisplay : FieldDisplayBase
     {
         foreach (var item in Items!)
         {
-            builder.OpenElement(0, "a");
+            // A record without a page (a user, an option) is a plain badge.
+            var linked = !string.IsNullOrEmpty(item.Url);
+            builder.OpenElement(0, linked ? "a" : "span");
             builder.AddAttribute(1, "class", "grove-tag");
-            builder.AddAttribute(2, "href", SafeUrl.IsSafe(item.Url) ? item.Url : "#");
+            if (linked)
+            {
+                builder.AddAttribute(2, "href", SafeUrl.IsSafe(item.Url) ? item.Url : "#");
+            }
+
             builder.OpenComponent<Primitives.GroveBadge>(3);
             builder.AddComponentParameter(4, nameof(Primitives.GroveBadge.Text), item.Text);
             builder.AddComponentParameter(5, nameof(Primitives.GroveBadge.BadgeStyle), Primitives.BadgeStyle.Light);
@@ -561,9 +519,9 @@ public sealed class TaxonomyFieldTagsDisplay : FieldDisplayBase
     }
 }
 
-/// <summary>A list's contained items (the <c>ListPart</c> shape): their summaries, as their drivers built them.</summary>
-[BlazorComponent("ListPart", DisplayName = "List items", Category = "Content", Icon = "list")]
-public class ListPartDisplay : ComponentBase
+/// <summary>A list's contained items (the <c>ChildContentItemsFieldSet</c> shape): their summaries, as their drivers built them.</summary>
+[BlazorComponent("ChildContentItems", DisplayName = "List items", Category = "Content", Icon = "list")]
+public class ChildContentItemsFieldSetDisplay : ComponentBase
 {
     [Parameter]
     [ComponentZone]
@@ -578,9 +536,9 @@ public class ListPartDisplay : ComponentBase
     }
 }
 
-/// <summary>A term's page (the <c>TermPart</c> shape): the items tagged with the term, as the list displays them.</summary>
-[BlazorComponent("TermPart", DisplayName = "Term items", Category = "Content", Icon = "sell")]
-public sealed class TermPartDisplay : ListPartDisplay;
+/// <summary>A term's page (the <c>TermFieldSet</c> shape): the items tagged with the term, as the list displays them.</summary>
+[BlazorComponent("Term", DisplayName = "Term items", Category = "Content", Icon = "sell")]
+public sealed class TermFieldSetDisplay : ChildContentItemsFieldSetDisplay;
 
 /// <summary>
 /// A scheduled date as a badge ("Scheduled to publish …"): the note the content list and the
@@ -607,8 +565,8 @@ public abstract class ScheduledDateBadge : ComponentBase
 }
 
 /// <summary>The publish-later part: when the item is scheduled to be published.</summary>
-[BlazorComponent("PublishLaterPart", DisplayName = "Scheduled publication", Category = "Content", Icon = "schedule_send")]
-public sealed class PublishLaterPartDisplay : ScheduledDateBadge
+[BlazorComponent("PublishLater", DisplayName = "Scheduled publication", Category = "Content", Icon = "schedule_send")]
+public sealed class PublishLaterFieldSetDisplay : ScheduledDateBadge
 {
     [Parameter]
     public DateTime? ScheduledPublishUtc { get; set; }
@@ -619,8 +577,8 @@ public sealed class PublishLaterPartDisplay : ScheduledDateBadge
 }
 
 /// <summary>The archive-later part: when the item is scheduled to be archived.</summary>
-[BlazorComponent("ArchiveLaterPart", DisplayName = "Scheduled archiving", Category = "Content", Icon = "auto_delete")]
-public sealed class ArchiveLaterPartDisplay : ScheduledDateBadge
+[BlazorComponent("ArchiveLater", DisplayName = "Scheduled archiving", Category = "Content", Icon = "auto_delete")]
+public sealed class ArchiveLaterFieldSetDisplay : ScheduledDateBadge
 {
     [Parameter]
     public DateTime? ScheduledArchiveUtc { get; set; }
@@ -652,7 +610,7 @@ public sealed class GeoPointFieldDisplay : FieldDisplayBase
         builder.AddAttribute(1, "href", $"https://www.openstreetmap.org/?mlat={latitude}&mlon={longitude}#map=15/{latitude}/{longitude}");
         builder.AddAttribute(2, "target", "_blank");
         builder.AddAttribute(3, "rel", "noopener noreferrer");
-        builder.AddContent(4, Latitude.Value.ToString("N6", CultureInfo.CurrentCulture) + ", " + Longitude.Value.ToString("N6", CultureInfo.CurrentCulture));
+        builder.AddContent(4, Latitude.Value.ToString("N6", FormatCulture) + ", " + Longitude.Value.ToString("N6", FormatCulture));
         builder.CloseElement();
     }
 }
@@ -660,9 +618,9 @@ public sealed class GeoPointFieldDisplay : FieldDisplayBase
 /// <summary>A term in a taxonomy's tree: text, link, child terms.</summary>
 public sealed record TaxonomyTermNode(string? Text, string? Url, IReadOnlyList<TaxonomyTermNode>? Children);
 
-/// <summary>A taxonomy's own page (the <c>TaxonomyPart</c> shape): its term tree, each term linked.</summary>
-[BlazorComponent("TaxonomyPart", DisplayName = "Taxonomy terms", Category = "Content", Icon = "account_tree")]
-public sealed class TaxonomyPartDisplay : ComponentBase
+/// <summary>A taxonomy's own page (the <c>TaxonomyFieldSet</c> shape): its term tree, each term linked.</summary>
+[BlazorComponent("Taxonomy", DisplayName = "Categories", Category = "Content", Icon = "account_tree")]
+public sealed class TaxonomyFieldSetDisplay : ComponentBase
 {
     [Parameter]
     public IReadOnlyList<TaxonomyTermNode>? Terms { get; set; }
@@ -701,8 +659,8 @@ public sealed class TaxonomyPartDisplay : ComponentBase
 }
 
 /// <summary>A taxonomy without terms renders nothing.</summary>
-[BlazorComponent("TaxonomyPart_Empty", DisplayName = "No terms", Category = "Content", Icon = "account_tree")]
-public sealed class TaxonomyPartEmptyDisplay : ComponentBase
+[BlazorComponent("Taxonomy_Empty", DisplayName = "No terms", Category = "Content", Icon = "account_tree")]
+public sealed class TaxonomyFieldSetEmptyDisplay : ComponentBase
 {
     protected override void BuildRenderTree(RenderTreeBuilder builder)
     {

@@ -146,7 +146,7 @@ public class BlogPostCreateDeploymentPlanTests
             jItem[nameof(ContentItem.ContentItemId)] = "newcontentitemid";
             jItem[nameof(ContentItem.ContentItemVersionId)] = "newversion";
             jItem[nameof(ContentItem.DisplayText)] = "new version";
-            jItem[nameof(AutoroutePart)][nameof(AutoroutePart.Path)] = "blog/another";
+            jItem[ContentFieldSetName.Of<AutorouteFieldSet>()][nameof(AutorouteFieldSet.Path)] = "blog/another";
         });
 
         await context.PostRecipeAsync(recipe);
@@ -176,7 +176,7 @@ public class BlogPostCreateDeploymentPlanTests
             jItem[nameof(ContentItem.ContentItemId)] = "newcontentitemid";
             jItem[nameof(ContentItem.ContentItemVersionId)] = "dupversion";
             jItem[nameof(ContentItem.DisplayText)] = "duplicate version";
-            jItem[nameof(AutoroutePart)][nameof(AutoroutePart.Path)] = "blog/another";
+            jItem[ContentFieldSetName.Of<AutorouteFieldSet>()][nameof(AutorouteFieldSet.Path)] = "blog/another";
         });
 
         var secondRecipe = BlogPostDeploymentContext.GetContentStepRecipe(context.OriginalBlogPost, jItem =>
@@ -184,7 +184,7 @@ public class BlogPostCreateDeploymentPlanTests
             jItem[nameof(ContentItem.ContentItemId)] = "newcontentitemid";
             jItem[nameof(ContentItem.ContentItemVersionId)] = "dupversion";
             jItem[nameof(ContentItem.DisplayText)] = "duplicate version";
-            jItem[nameof(AutoroutePart)][nameof(AutoroutePart.Path)] = "blog/another";
+            jItem[ContentFieldSetName.Of<AutorouteFieldSet>()][nameof(AutorouteFieldSet.Path)] = "blog/another";
         });
 
         var firstRecipeData = firstRecipe.SelectNode("steps[0].Data").AsArray();

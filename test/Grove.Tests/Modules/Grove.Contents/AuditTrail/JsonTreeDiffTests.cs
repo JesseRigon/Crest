@@ -11,8 +11,8 @@ public class JsonTreeDiffTests
     [Fact]
     public void ApplyingTheDiffGivesTheNewVersion()
     {
-        var before = Node("""{"ContentItemId":"a","DisplayText":"One","TitlePart":{"Title":"One"},"Tags":["x"],"Gone":1}""");
-        var after = Node("""{"ContentItemId":"a","DisplayText":"Two","TitlePart":{"Title":"Two","Extra":true},"Tags":["x","y"],"New":{"Deep":{"Value":3}}}""");
+        var before = Node("""{"ContentItemId":"a","DisplayText":"One","Title":{"Title":"One"},"Tags":["x"],"Gone":1}""");
+        var after = Node("""{"ContentItemId":"a","DisplayText":"Two","Title":{"Title":"Two","Extra":true},"Tags":["x","y"],"New":{"Deep":{"Value":3}}}""");
 
         var diff = JsonTreeDiff.Diff(before, after);
 

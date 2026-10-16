@@ -15,28 +15,28 @@ public class GraphQLContentTypeOption
 
     public bool Hidden { get; set; }
 
-    public IEnumerable<GraphQLContentPartOption> PartOptions { get; set; }
+    public IEnumerable<GraphQLContentFieldSetOption> FieldSetOptions { get; set; }
         = [];
 
-    public GraphQLContentTypeOption ConfigurePart<TContentPart>(Action<GraphQLContentPartOption> action)
-        where TContentPart : ContentPart
+    public GraphQLContentTypeOption ConfigureFieldSet<TContentFieldSet>(Action<GraphQLContentFieldSetOption> action)
+        where TContentFieldSet : ContentFieldSet
     {
-        var option = new GraphQLContentPartOption<TContentPart>();
+        var option = new GraphQLContentFieldSetOption<TContentFieldSet>();
 
         action(option);
 
-        PartOptions = PartOptions.Union(new[] { option });
+        FieldSetOptions = FieldSetOptions.Union(new[] { option });
 
         return this;
     }
 
-    public GraphQLContentTypeOption ConfigurePart(string partName, Action<GraphQLContentPartOption> action)
+    public GraphQLContentTypeOption ConfigureFieldSet(string fieldSetName, Action<GraphQLContentFieldSetOption> action)
     {
-        var option = new GraphQLContentPartOption(partName);
+        var option = new GraphQLContentFieldSetOption(fieldSetName);
 
         action(option);
 
-        PartOptions = PartOptions.Union(new[] { option });
+        FieldSetOptions = FieldSetOptions.Union(new[] { option });
 
         return this;
     }

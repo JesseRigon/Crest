@@ -3,6 +3,7 @@ using Grove.Contents.Management;
 using Grove.Access.Users;
 using Grove.Access.Users.Indexes;
 using Grove.Access.Users.Models;
+using Grove.Infrastructure.Settings;
 using YesSql;
 
 namespace Grove.Services;
@@ -11,10 +12,10 @@ namespace Grove.Services;
 /// Exposes users as a picker source, with as many columns as the dropdown asks for.
 /// </summary>
 /// <remarks>
-/// This is what stock <c>UserPickerField</c> cannot do: it renders the user name and
-/// nothing else, so "show the rep's name AND badge number" needs a source that can
-/// project several columns of the same record. UserPickerField keeps its place for
-/// plain user references - this covers the cases that need more.
+/// Every user reference is an option list field on this source (docs/content-engine.md ›
+/// Picking is one field type): the user name by default, more columns where a field asks for
+/// them ("show the rep's name AND badge number"), limited to some roles by a filter on
+/// <see cref="Columns.Roles"/>.
 ///
 /// Custom per-user values (a badge number, a department) live in the user's own
 /// content properties, which is why <see cref="Columns.PropertyPrefix"/> exists as a
@@ -30,7 +31,7 @@ namespace Grove.Services;
 public sealed class UserOptionSourceProvider(ISession session, ICallerContextAccessor callers, IAccessDecision decision) : IOptionSourceProvider
 {
     /// <summary>Source key for users; the qualifier is unused.</summary>
-    public const string ProviderKey = "users";
+    public const string ProviderKey = Grove.Models.OptionSourceKeys.UserProvider;
 
     public string Key => ProviderKey;
 
@@ -40,6 +41,10 @@ public sealed class UserOptionSourceProvider(ISession session, ICallerContextAcc
         public const string Email = "Email";
         public const string PhoneNumber = "PhoneNumber";
         public const string IsEnabled = "IsEnabled";
+
+        /// <summary>The user's roles, comma-separated. A filter on it (Equals or In) keeps the
+        /// users holding any of the named roles (a field limited to some roles).</summary>
+        public const string Roles = "Roles";
 
         /// <summary>Prefix for values read from the user's content properties, e.g.
         /// "Property:Badge" or "Property:UserProfile.Department".</summary>
@@ -53,6 +58,7 @@ public sealed class UserOptionSourceProvider(ISession session, ICallerContextAcc
             new(Columns.Email, "Email"),
             new(Columns.PhoneNumber, "Phone number"),
             new(Columns.IsEnabled, "Enabled"),
+            new(Columns.Roles, "Roles"),
         ]);
 
     public async Task<IReadOnlyList<OptionRow>> QueryAsync(OptionSourceQuery query, CancellationToken cancellationToken = default)
@@ -63,10 +69,12 @@ public sealed class UserOptionSourceProvider(ISession session, ICallerContextAcc
         }
 
         var columns = await VisibleColumnsAsync(query.Columns, cancellationToken);
-        var users = await session.Query<User, UserIndex>().ListAsync();
+        var (roles, filters) = SplitRoleFilters(query.Filters);
+        var users = (await session.Query<User, UserIndex>().ListAsync())
+            .Where(user => roles is null || user.RoleNames.Any(role => roles.Contains(role)));
         var rows = users.Select(user => ToRow(user, columns));
 
-        rows = OptionFilterMatcher.Apply(rows, query.Filters);
+        rows = OptionFilterMatcher.Apply(rows, filters);
         rows = OptionFilterMatcher.Search(rows, query.SearchText, query.SearchColumns is { Count: > 0 }
             ? query.SearchColumns
             : [Columns.UserName, Columns.Email]);
@@ -99,6 +107,25 @@ public sealed class UserOptionSourceProvider(ISession session, ICallerContextAcc
         return [.. users.Where(user => wanted.Contains(user.UserId)).Select(user => ToRow(user, visible))];
     }
 
+    // A role filter keeps the users holding any of its roles: the roles column is a list, which
+    // the generic matcher compares as one string.
+    private static (HashSet<string>? Roles, IReadOnlyList<ResolvedOptionFilter>? Others) SplitRoleFilters(IReadOnlyList<ResolvedOptionFilter>? filters)
+    {
+        if (filters is null || !filters.Any(IsRoleFilter))
+        {
+            return (null, filters);
+        }
+
+        var roles = filters.Where(IsRoleFilter).SelectMany(filter => filter.Values)
+            .SelectMany(value => (value ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return (roles, [.. filters.Where(filter => !IsRoleFilter(filter))]);
+    }
+
+    private static bool IsRoleFilter(ResolvedOptionFilter filter) =>
+        string.Equals(filter.Path, Columns.Roles, StringComparison.OrdinalIgnoreCase)
+        && filter.Operator is OptionFilterOperators.Equals or OptionFilterOperators.In or OptionFilterOperators.Contains;
+
     /// <summary>The requested columns the caller may read: the user name always, the rest with ViewUsers.</summary>
     private async Task<IReadOnlyList<string>> VisibleColumnsAsync(IReadOnlyList<string> requested, CancellationToken cancellationToken)
     {
@@ -126,6 +153,7 @@ public sealed class UserOptionSourceProvider(ISession session, ICallerContextAcc
                 Columns.Email => user.Email,
                 Columns.PhoneNumber => user.PhoneNumber,
                 Columns.IsEnabled => user.IsEnabled ? "true" : "false",
+                Columns.Roles => string.Join(", ", user.RoleNames),
                 _ when column.StartsWith(Columns.PropertyPrefix, StringComparison.OrdinalIgnoreCase) =>
                     ReadProperty(user, column[Columns.PropertyPrefix.Length..]),
                 _ => null,

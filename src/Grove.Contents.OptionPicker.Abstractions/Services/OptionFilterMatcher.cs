@@ -6,7 +6,7 @@ namespace Grove.Services;
 /// In-memory evaluation of resolved filters against option rows. Providers backed by
 /// a database are expected to translate filters into their own query language
 /// instead; this is the fallback for small, already-materialized sources such as
-/// Content Part Lists, and it defines the operator semantics every provider should match.
+/// Option lists, and it defines the operator semantics every provider should match.
 /// </summary>
 public static class OptionFilterMatcher
 {

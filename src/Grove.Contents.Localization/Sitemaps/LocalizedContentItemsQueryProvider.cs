@@ -60,7 +60,7 @@ public class LocalizedContentItemsQueryProvider : IContentItemsQueryProvider
                 return;
             }
 
-            if (contentType.Parts.Any(ctd => string.Equals(ctd.Name, nameof(LocalizationPart), StringComparison.Ordinal)))
+            if (contentType.FieldSets.Any(ctd => string.Equals(ctd.Name, ContentFieldSetName.Of<LocalizationFieldSet>(), StringComparison.Ordinal)))
             {
                 // When limiting items Content item is valid if it is for the default culture.
                 var defaultCulture = (await _localizationService.GetDefaultCultureAsync()).ToLowerInvariant();
@@ -113,7 +113,7 @@ public class LocalizedContentItemsQueryProvider : IContentItemsQueryProvider
             context.ContentItems = contentItems;
 
             // Provide all content items with localization as reference content items.
-            context.ReferenceContentItems = contentItems.Where(ci => ci.Has<LocalizationPart>());
+            context.ReferenceContentItems = contentItems.Where(ci => ci.Has<LocalizationFieldSet>());
         }
     }
 }

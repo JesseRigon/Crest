@@ -6,30 +6,30 @@ namespace Grove.Contents.Management;
 public static class ContentItemExtensions
 {
     /// <summary>
-    /// Tries to get a content part by its type.
+    /// Tries to get a field set by its type.
     /// </summary>
-    /// <typeparam name="TPart">The type of the content part.</typeparam>
+    /// <typeparam name="TFieldSet">The type of the field set.</typeparam>
     /// <param name="contentItem">The <see cref="ContentItem"/>.</param>
-    /// <param name="part">The <see cref="ContentPart"/> if one existed.</param>
+    /// <param name="part">The <see cref="ContentFieldSet"/> if one existed.</param>
     /// <returns>true if a part found, otherwise false.</returns>
-    public static bool TryGet<TPart>(this ContentItem contentItem, out TPart part) where TPart : ContentPart
-        => contentItem.TryGet(typeof(TPart).Name, out part);
+    public static bool TryGet<TFieldSet>(this ContentItem contentItem, out TFieldSet part) where TFieldSet : ContentFieldSet
+        => contentItem.TryGet(ContentFieldSetName.Of<TFieldSet>(), out part);
 
     /// <summary>
-    /// Tries to get a content part by its type.
+    /// Tries to get a field set by its type.
     /// </summary>
-    /// <typeparam name="TPart">The type of the content part.</typeparam>
+    /// <typeparam name="TFieldSet">The type of the field set.</typeparam>
     /// <param name="contentItem">The <see cref="ContentItem"/>.</param>
-    /// <param name="name">The name of the content part.</param>
-    /// <param name="part">The <see cref="ContentPart"/> if one existed.</param>
+    /// <param name="name">The name of the field set.</param>
+    /// <param name="part">The <see cref="ContentFieldSet"/> if one existed.</param>
     /// <returns>true if a part found, otherwise false.</returns>
-    public static bool TryGet<TPart>(this ContentItem contentItem, string name, out TPart part) where TPart : ContentPart
+    public static bool TryGet<TFieldSet>(this ContentItem contentItem, string name, out TFieldSet part) where TFieldSet : ContentFieldSet
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
 
         try
         {
-            part = contentItem.Get<TPart>(name);
+            part = contentItem.Get<TFieldSet>(name);
         }
         catch
         {
@@ -40,12 +40,12 @@ public static class ContentItemExtensions
     }
 
     /// <summary>
-    /// Tries to get a content part by its type.
+    /// Tries to get a field set by its type.
     /// </summary>
     /// <param name="contentItem">The <see cref="ContentItem"/>.</param>
-    /// <param name="contentElementType">The type of the content part.</param>
-    /// <param name="name">The name of the content part.</param>
-    /// <param name="part">The <see cref="ContentPart"/> if one existed.</param>
+    /// <param name="contentElementType">The type of the field set.</param>
+    /// <param name="name">The name of the field set.</param>
+    /// <param name="part">The <see cref="ContentFieldSet"/> if one existed.</param>
     /// <returns>true if a part found, otherwise false.</returns>
     public static bool TryGet(this ContentItem contentItem, Type contentElementType, string name, out ContentElement part)
     {
@@ -62,70 +62,70 @@ public static class ContentItemExtensions
     }
 
     /// <summary>
-    ///  Gets a content part by its type. ⚠️ Not recommended for use. Prefer <see cref="GetOrCreate{TPart}(ContentItem)"/> and <see cref="TryGet{TPart}(ContentItem, out TPart)"/> instead. 
+    ///  Gets a field set by its type. ⚠️ Not recommended for use. Prefer <see cref="GetOrCreate{TFieldSet}(ContentItem)"/> and <see cref="TryGet{TFieldSet}(ContentItem, out TFieldSet)"/> instead. 
     /// </summary>
     /// <param name="contentItem">The <see cref="ContentItem"/>.</param>
-    /// <typeparam name="TPart">The type of the content part.</typeparam>
-    /// <returns>The content part or. <code>null</code> if it doesn't exist.</returns>
-    [Obsolete("Use TryGet<TPart>, GetOrCreate<TPart> or Get<TPart> instead.")]
-    public static TPart As<TPart>(this ContentItem contentItem) where TPart : ContentPart
-        => contentItem.Get<TPart>(typeof(TPart).Name);
+    /// <typeparam name="TFieldSet">The type of the field set.</typeparam>
+    /// <returns>The field set or. <code>null</code> if it doesn't exist.</returns>
+    [Obsolete("Use TryGet<TFieldSet>, GetOrCreate<TFieldSet> or Get<TFieldSet> instead.")]
+    public static TFieldSet As<TFieldSet>(this ContentItem contentItem) where TFieldSet : ContentFieldSet
+        => contentItem.Get<TFieldSet>(ContentFieldSetName.Of<TFieldSet>());
 
     /// <summary>
-    /// Gets a content part by its type or create a new one.
+    /// Gets a field set by its type or create a new one.
     /// </summary>
     /// <param name="contentItem">The <see cref="ContentItem"/>.</param>
-    /// <typeparam name="TPart">The type of the content part.</typeparam>
-    /// <returns>The content part instance or a new one if it doesn't exist.</returns>
-    public static TPart GetOrCreate<TPart>(this ContentItem contentItem) where TPart : ContentPart, new()
-        => contentItem.GetOrCreate<TPart>(typeof(TPart).Name);
+    /// <typeparam name="TFieldSet">The type of the field set.</typeparam>
+    /// <returns>The field set instance or a new one if it doesn't exist.</returns>
+    public static TFieldSet GetOrCreate<TFieldSet>(this ContentItem contentItem) where TFieldSet : ContentFieldSet, new()
+        => contentItem.GetOrCreate<TFieldSet>(ContentFieldSetName.Of<TFieldSet>());
 
     /// <summary>
-    /// Removes a content part by its type.
+    /// Removes a field set by its type.
     /// </summary>
     /// <param name="contentItem">The <see cref="ContentItem"/>.</param>
-    /// <typeparam name="TPart">The type of the content part.</typeparam>
-    public static void Remove<TPart>(this ContentItem contentItem) where TPart : ContentPart, new()
-        => contentItem.Remove(typeof(TPart).Name);
+    /// <typeparam name="TFieldSet">The type of the field set.</typeparam>
+    public static void Remove<TFieldSet>(this ContentItem contentItem) where TFieldSet : ContentFieldSet, new()
+        => contentItem.Remove(ContentFieldSetName.Of<TFieldSet>());
 
     /// <summary>
-    /// Adds a content part by its type.
+    /// Adds a field set by its type.
     /// </summary>
     /// <param name="contentItem">The <see cref="ContentItem"/>.</param>
-    /// <param name="part">The content part to weld.</param>
-    /// <typeparam name="TPart">The type of the content part.</typeparam>
+    /// <param name="part">The field set to weld.</param>
+    /// <typeparam name="TFieldSet">The type of the field set.</typeparam>
     /// <returns>The current <see cref="ContentItem"/> instance.</returns>
-    public static ContentItem Weld<TPart>(this ContentItem contentItem, TPart part) where TPart : ContentPart
+    public static ContentItem Weld<TFieldSet>(this ContentItem contentItem, TFieldSet part) where TFieldSet : ContentFieldSet
     {
-        contentItem.Weld(typeof(TPart).Name, part);
+        contentItem.Weld(ContentFieldSetName.Of<TFieldSet>(), part);
 
         return contentItem;
     }
 
     /// <summary>
-    /// Updates the content part with the specified type.
+    /// Updates the field set with the specified type.
     /// </summary>
     /// <param name="contentItem">The <see cref="ContentItem"/>.</param>
-    /// <param name="part">The content part to update.</param>
-    /// <typeparam name="TPart">The type of the content part.</typeparam>
+    /// <param name="part">The field set to update.</param>
+    /// <typeparam name="TFieldSet">The type of the field set.</typeparam>
     /// <returns>The current <see cref="ContentItem"/> instance.</returns>
-    public static ContentItem Apply<TPart>(this ContentItem contentItem, TPart part) where TPart : ContentPart
+    public static ContentItem Apply<TFieldSet>(this ContentItem contentItem, TFieldSet part) where TFieldSet : ContentFieldSet
     {
-        contentItem.Apply(typeof(TPart).Name, part);
+        contentItem.Apply(ContentFieldSetName.Of<TFieldSet>(), part);
 
         return contentItem;
     }
 
     /// <summary>
-    /// Modifies a new or existing content part by name.
+    /// Modifies a new or existing field set by name.
     /// </summary>
     /// <param name="contentItem">The <see cref="ContentItem"/>.</param>
-    /// <param name="action">An action to apply on the content part.</param>
-    /// <typeparam name="TPart">The type of the content part.</typeparam>
-    /// <returns>The current <see cref="ContentPart"/> instance.</returns>
-    public static ContentItem Alter<TPart>(this ContentItem contentItem, Action<TPart> action) where TPart : ContentPart, new()
+    /// <param name="action">An action to apply on the field set.</param>
+    /// <typeparam name="TFieldSet">The type of the field set.</typeparam>
+    /// <returns>The current <see cref="ContentFieldSet"/> instance.</returns>
+    public static ContentItem Alter<TFieldSet>(this ContentItem contentItem, Action<TFieldSet> action) where TFieldSet : ContentFieldSet, new()
     {
-        var part = contentItem.GetOrCreate<TPart>();
+        var part = contentItem.GetOrCreate<TFieldSet>();
         action(part);
         contentItem.Apply(part);
 
@@ -133,15 +133,15 @@ public static class ContentItemExtensions
     }
 
     /// <summary>
-    /// Modifies a new or existing content part by name.
+    /// Modifies a new or existing field set by name.
     /// </summary>
     /// <param name="contentItem">The <see cref="ContentItem"/>.</param>
-    /// <param name="action">An action to apply on the content part.</param>
-    /// <typeparam name="TPart">The type of the content part.</typeparam>
+    /// <param name="action">An action to apply on the field set.</param>
+    /// <typeparam name="TFieldSet">The type of the field set.</typeparam>
     /// <returns>The current <see cref="ContentItem"/> instance.</returns>
-    public static async Task<ContentItem> AlterAsync<TPart>(this ContentItem contentItem, Func<TPart, Task> action) where TPart : ContentPart, new()
+    public static async Task<ContentItem> AlterAsync<TFieldSet>(this ContentItem contentItem, Func<TFieldSet, Task> action) where TFieldSet : ContentFieldSet, new()
     {
-        var part = contentItem.GetOrCreate<TPart>();
+        var part = contentItem.GetOrCreate<TFieldSet>();
         await action(part);
         contentItem.Apply(part);
 

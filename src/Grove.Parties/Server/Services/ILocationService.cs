@@ -6,7 +6,6 @@ using Grove.Parties.Indexes;
 using Grove.Parties.ViewModels;
 using Grove.Contents.Fields.Fields;
 using Grove.Contents.Management;
-using Grove.Contents.BagParts.Models;
 using YesSql;
 
 namespace Grove.Parties.Services;
@@ -77,13 +76,13 @@ public sealed class LocationService(ISession session, IContentManager contentMan
         foreach (var item in items)
         {
             var wanted = item.ContentItemId == contentItemId;
-            var current = item.Get<ContentPart>(PartiesConstants.ContentTypes.Location)?.Get<BooleanField>("IsPrimary")?.Value ?? false;
+            var current = item.Get<ContentFieldSet>(PartiesConstants.ContentTypes.Location)?.Get<BooleanField>("IsPrimary")?.Value ?? false;
             if (wanted == current)
             {
                 continue;
             }
 
-            item.Alter<ContentPart>(PartiesConstants.ContentTypes.Location, part => part.Alter<BooleanField>("IsPrimary", field => field.Value = wanted));
+            item.Alter<ContentFieldSet>(PartiesConstants.ContentTypes.Location, part => part.Alter<BooleanField>("IsPrimary", field => field.Value = wanted));
             await contentManager.UpdateAsync(item);
             await contentManager.PublishAsync(item);
         }
@@ -91,9 +90,9 @@ public sealed class LocationService(ISession session, IContentManager contentMan
 
     private async Task<LocationModel> ToModelAsync(ContentItem item, CancellationToken cancellationToken)
     {
-        var part = item.Get<ContentPart>(PartiesConstants.ContentTypes.Location);
+        var part = item.Get<ContentFieldSet>(PartiesConstants.ContentTypes.Location);
         var contactsModel = await contacts.ReadAsync(item, cancellationToken);
-        var points = (item.Get<BagPart>(PartiesConstants.Bags.Points)?.ContentItems ?? [])
+        var points = (item.Get<EmbeddedContentItems>(PartiesConstants.Bags.Points)?.ContentItems ?? [])
             .Select(ToPoint)
             .ToArray();
 
@@ -109,7 +108,7 @@ public sealed class LocationService(ISession session, IContentManager contentMan
 
     private static LocationPointModel ToPoint(ContentItem element)
     {
-        var part = element.Get<ContentPart>(PartiesConstants.ContentTypes.LocationPoint);
+        var part = element.Get<ContentFieldSet>(PartiesConstants.ContentTypes.LocationPoint);
         var geo = part?.Get<GeoStackField>("Geo") ?? new GeoStackField();
         return new LocationPointModel(
             element.ContentItemId,

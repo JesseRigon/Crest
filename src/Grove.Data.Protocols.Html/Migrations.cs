@@ -6,8 +6,10 @@ using Grove.Contents.Management.Metadata;
 using Grove.Contents.Management.Metadata.Settings;
 using Grove.Contents.Management.Records;
 using Grove.Data.Migration;
+using Grove.Data.Protocols.Html.Models;
 using Grove.Data.Protocols.Html.Settings;
 using YesSql;
+using Grove.Contents.Types;
 
 namespace Grove.Data.Protocols.Html;
 
@@ -29,12 +31,14 @@ public sealed class Migrations : DataMigration
 
     public async Task<int> CreateAsync()
     {
-        await _contentDefinitionManager.AlterPartDefinitionAsync("HtmlBodyPart", builder => builder
+        await _contentDefinitionManager.AlterFieldSetDefinitionAsync("HtmlBody", builder => builder
             .Attachable()
             .WithDescription("Provides an HTML Body for your content item."));
 
+        await DefineHtmlBodyFieldsAsync();
+
         // Shortcut other migration steps on new content definition schemas.
-        return 6;
+        return 7;
     }
 
     // This code can be removed in a later version.
@@ -55,13 +59,13 @@ public sealed class Migrations : DataMigration
         // Update content type definitions
         foreach (var contentType in await _contentDefinitionManager.LoadTypeDefinitionsAsync())
         {
-            if (contentType.Parts.Any(x => x.PartDefinition.Name == "BodyPart"))
+            if (contentType.FieldSets.Any(x => x.FieldSetDefinition.Name == "BodyPart"))
             {
-                await _contentDefinitionManager.AlterTypeDefinitionAsync(contentType.Name, x => x.RemovePart("BodyPart").WithPart("HtmlBodyPart"));
+                await _contentDefinitionManager.AlterTypeDefinitionAsync(contentType.Name, x => x.RemoveFieldSet("BodyPart").WithFieldSet("HtmlBody"));
             }
         }
 
-        await _contentDefinitionManager.DeletePartDefinitionAsync("BodyPart");
+        await _contentDefinitionManager.DeleteFieldSetDefinitionAsync("BodyPart");
 
         // We are patching all content item versions by moving the Title to DisplayText
         // This step doesn't need to be executed for a brand new site
@@ -105,7 +109,7 @@ public sealed class Migrations : DataMigration
 
                 if (!string.IsNullOrWhiteSpace(body))
                 {
-                    content["HtmlBodyPart"] = new JsonObject() { ["Html"] = body };
+                    content["HtmlBody"] = new JsonObject() { ["Html"] = body };
                     changed = true;
                 }
 
@@ -138,15 +142,32 @@ public sealed class Migrations : DataMigration
         // To keep the same behavior as before, RenderLiquid is initialized to the opposite of SanitizeHtml.
         foreach (var contentType in await _contentDefinitionManager.LoadTypeDefinitionsAsync())
         {
-            if (contentType.Parts.Any(p => p.PartDefinition.Name == "HtmlBodyPart"))
+            if (contentType.FieldSets.Any(p => p.FieldSetDefinition.Name == "HtmlBody"))
             {
-                await _contentDefinitionManager.AlterTypeDefinitionAsync(contentType.Name, t => t.WithPart("HtmlBodyPart", part =>
+                await _contentDefinitionManager.AlterTypeDefinitionAsync(contentType.Name, t => t.WithFieldSet("HtmlBody", part =>
                 {
-                    part.MergeSettings<HtmlBodyPartSettings>(s => s.RenderLiquid = !s.SanitizeHtml);
+                    part.MergeSettings<HtmlBodyFieldSetSettings>(s => s.RenderLiquid = !s.SanitizeHtml);
                 }));
             }
         }
 
         return 6;
     }
+
+    // The field set's values are fields (docs/content-engine.md › Behaviour is workflows); the ones its
+    // system flows require are locked by the module.
+    public async Task<int> UpdateFrom6Async()
+    {
+        await DefineHtmlBodyFieldsAsync();
+        return 7;
+    }
+
+    private Task DefineHtmlBodyFieldsAsync() =>
+        _contentDefinitionManager.AlterFieldSetDefinitionAsync("HtmlBody", builder => builder
+            .WithField(HtmlBodyFieldSet.HtmlField, field => field
+                .OfType("HtmlField")
+                .WithDisplayMode(ContentFieldDisplayModes.None)
+                .WithDisplayName("Body")
+                .WithPosition("0")
+                .Locked()));
 }

@@ -1,3 +1,4 @@
+using Grove.Contents.Fields;
 using Fluid;
 using Microsoft.Extensions.DependencyInjection;
 using Grove.Contents.Management;
@@ -18,7 +19,7 @@ public sealed class Startup : StartupBase
     {
 
         // Coordinate Field
-        services.AddContentField<GeoPointField>()
+        services.AddFieldType<GeoPointField, Grove.Data.Types.Spatial.Settings.GeoPointFieldSettings>()
             .UseDisplayDriver<GeoPointFieldDisplayDriver>()
             .AddHandler<GeoPointFieldHandler>();
 

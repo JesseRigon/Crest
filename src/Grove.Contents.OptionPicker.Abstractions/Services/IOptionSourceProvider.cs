@@ -4,13 +4,13 @@ namespace Grove.Services;
 
 /// <summary>
 /// A source an option picker field can draw from. Providers
-/// keep the field itself ignorant of users, items or content part lists, the same way
+/// keep the field itself ignorant of users, items or option lists, the same way
 /// Grove.Display.Icons hosts icon providers.
 /// </summary>
 public interface IOptionSourceProvider
 {
     /// <summary>Provider key matched against the first segment of a source key
-    /// ("contentpartlist" in "contentpartlist:pricing.side").</summary>
+    /// ("optionlist" in "optionlist:pricing.side").</summary>
     string Key { get; }
 
     /// <summary>
@@ -49,6 +49,28 @@ public interface IOptionSourceCreateLinks
 /// <summary>A link to create a record of a source.</summary>
 public sealed record OptionCreateLink(string Label, string Url);
 
+/// <summary>
+/// A source whose records can be added by name from the picker, when the attachment allows it
+/// (<c>OptionListFieldSettings.AllowCreate</c>): a tag added to a taxonomy. The attachment's
+/// static filters are passed so the source knows where the record goes (the taxonomy a field's
+/// terms come from). The source authorizes the caller.
+/// </summary>
+public interface IOptionSourceInlineCreate
+{
+    /// <summary>Adds a record named <paramref name="displayText"/>; the row of the new record, or the errors that refused it.</summary>
+    Task<OptionInlineCreateResult> CreateAsync(string qualifier, IReadOnlyList<ResolvedOptionFilter> filters, string displayText, CancellationToken cancellationToken = default);
+}
+
+/// <summary>A record added by name: its row, or why it was not added (<see cref="Forbidden"/> when the caller may not add records).</summary>
+public sealed record OptionInlineCreateResult(OptionRow? Row, IReadOnlyList<string> Errors, bool Forbidden = false)
+{
+    public static OptionInlineCreateResult Created(OptionRow row) => new(row, []);
+
+    public static OptionInlineCreateResult Refused(params string[] errors) => new(null, errors);
+
+    public static OptionInlineCreateResult Denied() => new(null, [], Forbidden: true);
+}
+
 /// <summary>A batched lookup of selected ids.</summary>
 /// <param name="TitlePattern">The attachment's Liquid label pattern, for sources that render
 /// one (content items); null for the source's own label.</param>
@@ -68,7 +90,7 @@ public sealed record OptionSourceColumnDescriptor(string Path, string Label, boo
 public sealed record OptionRow(string Id, IReadOnlyDictionary<string, string?> Values)
 {
     /// <summary>The technical key when the source has one distinct from the id
-    /// (Content Part Lists do; entity sources like users do not - their id IS the key).</summary>
+    /// (Option lists do; entity sources like users do not - their id IS the key).</summary>
     public string? Key { get; init; }
 
     /// <summary>Set for options a tenant hid: still resolvable for history, but not
@@ -78,6 +100,10 @@ public sealed record OptionRow(string Id, IReadOnlyDictionary<string, string?> V
     /// <summary>Where the record is edited, set on lookups that ask for it when the source has
     /// an editor and the caller may use it (a content item the user may edit).</summary>
     public string? EditUrl { get; init; }
+
+    /// <summary>Where the record is shown on the site (a taxonomy term's page), relative to the
+    /// shell's base, when the source's records have pages; the field's display links to it.</summary>
+    public string? Url { get; init; }
 
     // NOTE: there is deliberately no "redacted" row shape. A record the caller may not
     // see is ABSENT from the result rather than returned hollow - a placeholder row

@@ -18,7 +18,7 @@ public abstract class DynamicContentTypeBuilder : IContentTypeBuilder
 
     protected readonly IStringLocalizer S;
 
-    private readonly Dictionary<string, FieldType> _dynamicPartFields;
+    private readonly Dictionary<string, FieldType> _dynamicFieldSetFields;
 
     protected DynamicContentTypeBuilder(
         IHttpContextAccessor httpContextAccessor,
@@ -27,7 +27,7 @@ public abstract class DynamicContentTypeBuilder : IContentTypeBuilder
     {
         _httpContextAccessor = httpContextAccessor;
         _contentOptions = contentOptionsAccessor.Value;
-        _dynamicPartFields = [];
+        _dynamicFieldSetFields = [];
 
         S = localizer;
     }
@@ -43,12 +43,12 @@ public abstract class DynamicContentTypeBuilder : IContentTypeBuilder
         var serviceProvider = _httpContextAccessor.HttpContext.RequestServices;
         var contentFieldProviders = serviceProvider.GetServices<IContentFieldProvider>().ToArray();
 
-        foreach (var part in contentTypeDefinition.Parts)
+        foreach (var part in contentTypeDefinition.FieldSets)
         {
             var partName = part.Name;
 
             // This builder only handles parts with fields.
-            if (!part.PartDefinition.Fields.Any())
+            if (!part.FieldSetDefinition.Fields.Any())
             {
                 continue;
             }
@@ -58,14 +58,14 @@ public abstract class DynamicContentTypeBuilder : IContentTypeBuilder
                 continue;
             }
 
-            if (!part.PartDefinition.Fields.Any(field => contentFieldProviders.Any(fieldProvider => fieldProvider.HasField(schema, field))))
+            if (!part.FieldSetDefinition.Fields.Any(field => contentFieldProviders.Any(fieldProvider => fieldProvider.HasField(schema, field))))
             {
                 continue;
             }
 
             if (_contentOptions.ShouldCollapse(part))
             {
-                foreach (var field in part.PartDefinition.Fields)
+                foreach (var field in part.FieldSetDefinition.Fields)
                 {
                     foreach (var fieldProvider in contentFieldProviders)
                     {
@@ -116,7 +116,7 @@ public abstract class DynamicContentTypeBuilder : IContentTypeBuilder
 
                 if (partContentItemType != null)
                 {
-                    foreach (var field in part.PartDefinition.Fields)
+                    foreach (var field in part.FieldSetDefinition.Fields)
                     {
                         foreach (var fieldProvider in contentFieldProviders)
                         {
@@ -152,7 +152,7 @@ public abstract class DynamicContentTypeBuilder : IContentTypeBuilder
                 continue;
             }
 
-            if (_dynamicPartFields.TryGetValue(partName, out var fieldType))
+            if (_dynamicFieldSetFields.TryGetValue(partName, out var fieldType))
             {
                 if (graphType is IFilterInputObjectGraphType curInputGraphType)
                 {
@@ -168,18 +168,18 @@ public abstract class DynamicContentTypeBuilder : IContentTypeBuilder
 
             if (graphType is IFilterInputObjectGraphType inputGraphType)
             {
-                if (part.PartDefinition.Fields.Any(field => contentFieldProviders.Any(cfp => cfp.HasFieldIndex(field))))
+                if (part.FieldSetDefinition.Fields.Any(field => contentFieldProviders.Any(cfp => cfp.HasFieldIndex(field))))
                 {
                     var field = new FieldType
                     {
                         Name = partFieldName,
-                        Description = S["Represents a {0}.", part.PartDefinition.Name],
-                        Type = typeof(DynamicPartWhereInputGraphType),
-                        ResolvedType = new DynamicPartWhereInputGraphType(part, schema, contentFieldProviders, serviceProvider.GetRequiredService<IStringLocalizer<DynamicPartWhereInputGraphType>>()),
+                        Description = S["Represents a {0}.", part.FieldSetDefinition.Name],
+                        Type = typeof(DynamicFieldSetWhereInputGraphType),
+                        ResolvedType = new DynamicFieldSetWhereInputGraphType(part, schema, contentFieldProviders, serviceProvider.GetRequiredService<IStringLocalizer<DynamicFieldSetWhereInputGraphType>>()),
                     };
 
                     inputGraphType.AddField(field);
-                    _dynamicPartFields[partName] = field;
+                    _dynamicFieldSetFields[partName] = field;
                 }
             }
             else if (graphType is IObjectGraphType objectGraphType)
@@ -187,9 +187,9 @@ public abstract class DynamicContentTypeBuilder : IContentTypeBuilder
                 var field = new FieldType
                 {
                     Name = partFieldName,
-                    Description = S["Represents a {0}.", part.PartDefinition.Name],
-                    Type = typeof(DynamicPartGraphType),
-                    ResolvedType = new DynamicPartGraphType(part, schema, contentFieldProviders),
+                    Description = S["Represents a {0}.", part.FieldSetDefinition.Name],
+                    Type = typeof(DynamicFieldSetGraphType),
+                    ResolvedType = new DynamicFieldSetGraphType(part, schema, contentFieldProviders),
                     Resolver = new FuncFieldResolver<ContentElement, object>(context =>
                     {
                         var nameToResolve = partName;
@@ -200,13 +200,13 @@ public abstract class DynamicContentTypeBuilder : IContentTypeBuilder
                 };
 
                 objectGraphType.AddField(field);
-                _dynamicPartFields[partName] = field;
+                _dynamicFieldSetFields[partName] = field;
             }
         }
     }
 
     public void Clear()
     {
-        _dynamicPartFields.Clear();
+        _dynamicFieldSetFields.Clear();
     }
 }

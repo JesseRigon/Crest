@@ -14,16 +14,16 @@ public class TermShapes : ShapeTableProvider
 {
     public override ValueTask DiscoverAsync(ShapeTableBuilder builder)
     {
-        // Add standard alternates to a TermPart because it is rendered by a content display driver not a part display driver.
-        builder.Describe("TermPart")
+        // Add standard alternates to a TermFieldSet because it is rendered by a content display driver not a part display driver.
+        builder.Describe("Term")
             .OnDisplaying(context =>
             {
-                var viewModel = context.Shape as TermPartViewModel;
+                var viewModel = context.Shape as TermFieldSetViewModel;
 
                 var contentType = viewModel?.ContentItem?.ContentType;
                 var displayType = context.Shape.Metadata.DisplayType;
 
-                context.Shape.Metadata.Alternates.AddRange(TermAlternatesFactory.GetTermPartAlternates(contentType, displayType));
+                context.Shape.Metadata.Alternates.AddRange(TermAlternatesFactory.GetTermFieldSetAlternates(contentType, displayType));
             });
 
         builder.Describe("Term")
@@ -66,7 +66,7 @@ public class TermShapes : ShapeTableProvider
                 termShape.Properties["TaxonomyContentItem"] = taxonomyContentItem;
                 termShape.Properties["TaxonomyName"] = taxonomyContentItem.DisplayText;
 
-                if (!taxonomyContentItem.TryGet<TaxonomyPart>(out var taxonomyPart))
+                if (!taxonomyContentItem.TryGet<TaxonomyFieldSet>(out var taxonomyFieldSet))
                 {
                     return;
                 }
@@ -77,7 +77,7 @@ public class TermShapes : ShapeTableProvider
                 var termContentItemId = termShape.GetProperty<string>("TermContentItemId");
                 if (!string.IsNullOrEmpty(termContentItemId))
                 {
-                    level = FindTerm((JsonArray)taxonomyContentItem.Content.TaxonomyPart.Terms, termContentItemId, level, out var termContentItem);
+                    level = FindTerm(TaxonomyTerms.Roots(taxonomyContentItem), termContentItemId, level, out var termContentItem);
 
                     if (termContentItem == null)
                     {
@@ -91,7 +91,7 @@ public class TermShapes : ShapeTableProvider
                 }
                 else
                 {
-                    termItems = taxonomyPart.Terms;
+                    termItems = [.. TaxonomyFieldSet.Terms(taxonomyContentItem)];
                 }
 
                 if (termItems == null)
@@ -107,19 +107,15 @@ public class TermShapes : ShapeTableProvider
                     termShape.Classes.Add(("term-" + differentiator).HtmlClassify());
                 }
 
-                termShape.Classes.Add(("term-" + taxonomyPart.TermContentType).HtmlClassify());
-                termShape.Metadata.Alternates.AddRange(TermAlternatesFactory.GetTermAlternates(differentiator, taxonomyPart.TermContentType));
+                termShape.Classes.Add(("term-" + taxonomyFieldSet.TermContentType).HtmlClassify());
+                termShape.Metadata.Alternates.AddRange(TermAlternatesFactory.GetTermAlternates(differentiator, taxonomyFieldSet.TermContentType));
 
                 // The first level of term item shapes is created.
                 // Each other level is created when the term item is displayed.
 
                 foreach (var termContentItem in termItems)
                 {
-                    ContentItem[] childTerms = null;
-                    if (((JsonObject)termContentItem.Content)["Terms"] is JsonArray termsArray)
-                    {
-                        childTerms = termsArray.ToObject<ContentItem[]>();
-                    }
+                    var childTerms = TaxonomyFieldSet.Terms(termContentItem).ToArray();
 
                     var shape = await shapeFactory.CreateAsync("TermItem", Arguments.From(new
                     {
@@ -144,7 +140,7 @@ public class TermShapes : ShapeTableProvider
                 var termShape = termItem.GetProperty<IShape>("Term");
                 var level = termItem.GetProperty<int>("Level");
                 var taxonomyContentItem = termItem.GetProperty<ContentItem>("TaxonomyContentItem");
-                if (!taxonomyContentItem.TryGet<TaxonomyPart>(out var taxonomyPart))
+                if (!taxonomyContentItem.TryGet<TaxonomyFieldSet>(out var taxonomyFieldSet))
                 {
                     return;
                 }
@@ -156,11 +152,7 @@ public class TermShapes : ShapeTableProvider
                 {
                     foreach (var termContentItem in termItem.GetProperty<ContentItem[]>("Terms"))
                     {
-                        ContentItem[] childTerms = null;
-                        if (((JsonObject)termContentItem.Content)["Terms"] is JsonArray termsArray)
-                        {
-                            childTerms = termsArray.ToObject<ContentItem[]>();
-                        }
+                        var childTerms = TaxonomyFieldSet.Terms(termContentItem).ToArray();
                         var shape = await shapeFactory.CreateAsync("TermItem", Arguments.From(new
                         {
                             Level = level + 1,
@@ -179,7 +171,7 @@ public class TermShapes : ShapeTableProvider
 
                 // Use cached alternates and add them efficiently
                 var cachedAlternates = TermItemAlternatesFactory.GetTermItemAlternates(
-                    taxonomyPart.TermContentType,
+                    taxonomyFieldSet.TermContentType,
                     differentiator,
                     level);
 
@@ -218,7 +210,7 @@ public class TermShapes : ShapeTableProvider
                 return level;
             }
 
-            if (term["Terms"] is JsonArray children)
+            if (TaxonomyFieldSet.TermsArray(term) is { } children)
             {
                 level += 1;
                 level = FindTerm(children, termContentItemId, level, out var foundContentItem);

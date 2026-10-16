@@ -1,6 +1,6 @@
 using JetBrains.Annotations;
 using Grove.Contents.Management;
-using Grove.Workflows.Parts;
+using Grove.Workflows.FieldSets;
 using YesSql.Indexes;
 
 namespace Grove.Workflows.Indexes;
@@ -13,24 +13,24 @@ public class WorkflowDefinitionIndexProvider : IndexProvider<ContentItem>
         context.For<WorkflowDefinitionIndex>()
             .Map(contentItem =>
             {
-                var workflowDefinitionPart = contentItem.Get<WorkflowDefinitionPart>(typeof(WorkflowDefinitionPart).Name);
+                var workflowDefinitionFieldSet = contentItem.Get<WorkflowDefinitionFieldSet>(ContentFieldSetName.Of<WorkflowDefinitionFieldSet>());
                 
-                if(workflowDefinitionPart == null)
+                if(workflowDefinitionFieldSet == null)
                     return null!;
                 
                 return new()
                 {
                     DefinitionId = contentItem.ContentItemId,
                     DefinitionVersionId = contentItem.ContentItemVersionId,
-                    IsLatest = workflowDefinitionPart.ContentItem.Latest,
-                    IsPublished = workflowDefinitionPart.ContentItem.Published,
-                    IsSystem = workflowDefinitionPart.IsSystem,
-                    UsableAsActivity = workflowDefinitionPart.UsableAsActivity,
-                    MaterializerName = workflowDefinitionPart.MaterializerName,
-                    IsReadonly = workflowDefinitionPart.IsReadonly,
-                    Version = workflowDefinitionPart.Version,
-                    Name = workflowDefinitionPart.Name,
-                    Description = workflowDefinitionPart.Description,
+                    IsLatest = workflowDefinitionFieldSet.ContentItem.Latest,
+                    IsPublished = workflowDefinitionFieldSet.ContentItem.Published,
+                    IsSystem = workflowDefinitionFieldSet.IsSystem,
+                    UsableAsActivity = workflowDefinitionFieldSet.UsableAsActivity,
+                    MaterializerName = workflowDefinitionFieldSet.MaterializerName,
+                    IsReadonly = workflowDefinitionFieldSet.IsReadonly,
+                    Version = workflowDefinitionFieldSet.Version,
+                    Name = workflowDefinitionFieldSet.Name,
+                    Description = workflowDefinitionFieldSet.Description,
                 };
             });
     }

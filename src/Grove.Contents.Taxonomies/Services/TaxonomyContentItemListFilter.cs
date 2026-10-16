@@ -4,8 +4,8 @@ using Grove.Contents.Management.Metadata;
 using Grove.Contents.Services;
 using Grove.Entities;
 using Grove.Infrastructure.Settings;
-using Grove.Contents.Taxonomies.Fields;
-using Grove.Contents.Taxonomies.Indexing;
+using Grove.Data.Indexing;
+using YesSql.Services;
 using Grove.Contents.Taxonomies.Models;
 using Grove.Contents.Taxonomies.Settings;
 using YesSql;
@@ -15,8 +15,8 @@ namespace Grove.Contents.Taxonomies.Services;
 /// <summary>
 /// The content items list's taxonomy filters: one per taxonomy the taxonomy filters settings name
 /// (<c>?taxonomy-{taxonomyId}=Taxonomy:{taxonomyId}</c> for the items with any of its terms,
-/// <c>Term:{termId}</c> for one term's items). With a content type selected, only the taxonomies
-/// its taxonomy fields use.
+/// <c>Term:{termId}</c> for one term's items), over the option list field index. With a content
+/// type selected, only the taxonomies its fields on taxonomy terms use (<see cref="TaxonomyFields"/>).
 /// </summary>
 public sealed class TaxonomyContentItemListFilter(
     ISiteService siteService,
@@ -31,9 +31,10 @@ public sealed class TaxonomyContentItemListFilter(
         if (taxonomyIds.Length > 0 && !string.IsNullOrEmpty(contentType)
             && await contentDefinitionManager.GetTypeDefinitionAsync(contentType) is { } definition)
         {
-            var fieldTaxonomyIds = definition.Parts
-                .SelectMany(part => part.PartDefinition.Fields.Where(field => field.FieldDefinition.Name == nameof(TaxonomyField)))
-                .Select(field => field.GetSettings<TaxonomyFieldSettings>().TaxonomyContentItemId);
+            var fieldTaxonomyIds = definition.FieldSets
+                .SelectMany(part => part.FieldSetDefinition.Fields)
+                .Select(TaxonomyFields.TaxonomyOf)
+                .Where(taxonomyId => taxonomyId is not null);
             taxonomyIds = [.. taxonomyIds.Intersect(fieldTaxonomyIds)];
         }
 
@@ -45,20 +46,20 @@ public sealed class TaxonomyContentItemListFilter(
         var descriptors = new List<ContentItemListFilterDescriptor>();
         foreach (var taxonomy in await contentManager.GetAsync(taxonomyIds))
         {
-            if (!taxonomy.TryGet<TaxonomyPart>(out var taxonomyPart))
+            if (!taxonomy.TryGet<TaxonomyFieldSet>(out _))
             {
                 continue;
             }
 
             var options = new List<ContentItemListFilterOption> { new("Taxonomy:" + taxonomy.ContentItemId, "Show all") };
-            AddTerms(options, taxonomyPart.Terms, 0);
+            AddTerms(options, TaxonomyFieldSet.Terms(taxonomy), 0);
             descriptors.Add(new ContentItemListFilterDescriptor(ParameterPrefix + taxonomy.ContentItemId, taxonomy.DisplayText, options));
         }
 
         return descriptors;
     }
 
-    public Task FilterAsync(IQuery<ContentItem> query, IReadOnlyDictionary<string, string> parameters, CancellationToken cancellationToken = default)
+    public async Task FilterAsync(IQuery<ContentItem> query, IReadOnlyDictionary<string, string> parameters, CancellationToken cancellationToken = default)
     {
         foreach (var (name, value) in parameters)
         {
@@ -69,17 +70,17 @@ public sealed class TaxonomyContentItemListFilter(
 
             if (value.StartsWith("Taxonomy:", StringComparison.OrdinalIgnoreCase))
             {
-                var taxonomyId = value[9..];
-                query.All(_ => query.With<TaxonomyIndex>(index => index.TaxonomyContentItemId == taxonomyId));
+                // Filed under any of the taxonomy's terms.
+                var taxonomy = await contentManager.GetAsync(value[9..]);
+                var termIds = taxonomy is null ? [] : TaxonomyFields.AllTerms(taxonomy).Select(term => term.ContentItemId).ToArray();
+                query.All(_ => query.With<OptionListFieldIndex>(index => index.SelectedId.IsIn(termIds)));
             }
             else if (value.StartsWith("Term:", StringComparison.OrdinalIgnoreCase))
             {
                 var termId = value[5..];
-                query.All(_ => query.With<TaxonomyIndex>(index => index.TermContentItemId == termId));
+                query.All(_ => query.With<OptionListFieldIndex>(index => index.SelectedId == termId));
             }
         }
-
-        return Task.CompletedTask;
     }
 
     private static void AddTerms(List<ContentItemListFilterOption> options, IEnumerable<ContentItem> terms, int level)
@@ -87,10 +88,7 @@ public sealed class TaxonomyContentItemListFilter(
         foreach (var term in terms)
         {
             options.Add(new ContentItemListFilterOption("Term:" + term.ContentItemId, term.DisplayText, level));
-            if (((JsonObject)term.Content)["Terms"] is JsonArray children)
-            {
-                AddTerms(options, children.ToObject<ContentItem[]>(), level + 1);
-            }
+            AddTerms(options, TaxonomyFieldSet.Terms(term), level + 1);
         }
     }
 }

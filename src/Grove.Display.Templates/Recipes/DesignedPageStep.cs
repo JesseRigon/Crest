@@ -31,8 +31,17 @@ public sealed class DesignedPageStep(DesignedPageStore store) : NamedRecipeStepH
                 continue;
             }
 
-            var part = page.Deserialize<DesignedPagePart>(s_json) ?? new DesignedPagePart();
-            part.Name = name;
+            var declaration = page.Deserialize<Declaration>(s_json) ?? new Declaration();
+            var part = new DesignedPageFieldSet
+            {
+                Name = name,
+                Route = declaration.Route ?? string.Empty,
+                Bucket = declaration.Bucket ?? string.Empty,
+                Title = declaration.Title,
+                Description = declaration.Description,
+                AllowAnonymous = declaration.AllowAnonymous,
+                Source = declaration.Source ?? string.Empty,
+            };
             if (string.IsNullOrWhiteSpace(part.Bucket))
             {
                 part.Bucket = DesignedPagesConstants.SiteBucket;
@@ -42,5 +51,21 @@ public sealed class DesignedPageStep(DesignedPageStore store) : NamedRecipeStepH
             var saved = await store.SaveDraftAsync(match?.ContentItemId, part);
             await store.PublishAsync(saved.ContentItemId);
         }
+    }
+
+    // A page as the step declares it; the field set's values are fields, read through its accessors.
+    private sealed class Declaration
+    {
+        public string? Route { get; set; }
+
+        public string? Bucket { get; set; }
+
+        public string? Title { get; set; }
+
+        public string? Description { get; set; }
+
+        public bool AllowAnonymous { get; set; }
+
+        public string? Source { get; set; }
     }
 }

@@ -120,9 +120,9 @@ some global table ever cannot be overlaid, that is a defect in the store, not a 
 copy the table into tenants.
 
 A tenant's view of a list is the standard rows with its overlay applied plus its own
-additions — which is exactly what a Content Part List *is*, so
-`IContentPartListService` keeps its contract and sources the standard rows from the
-global store with the tenant overlay (`Overrides` on `GroveContentPartListPart`,
+additions — which is exactly what an option list *is*, so
+`IOptionListService` keeps its contract and sources the standard rows from the
+global store with the tenant overlay (`Overrides` on `OptionListFieldSet`,
 `OptionOverride`) applied. Consumers reading option keys are unaffected.
 
 Tenant additions can never collide with standard keys (namespaced), and a standard row
@@ -133,7 +133,7 @@ not an automatic one.
 
 **In the global store** — identical for every tenant, owned by a standard:
 
-- The `global.*` lists, declared in `Grove.Contents/PartLists/Data/global-lists.json` (the `Grove.Contents.PartLists` feature):
+- The `global.*` lists, declared in `Grove.Contents/OptionLists/Data/global-lists.json` (the `Grove.Contents.OptionLists` feature):
   `country-codes`, `subdivisions`, `postal-formats`, `phone-country-codes`, `us-area-codes`,
   `languages`, `uom`, `uom-rec20`, `honorifics`, `name-suffixes`, `naics` (all levels,
   arranged by each option's `Parent`), plus `items.base-classification`

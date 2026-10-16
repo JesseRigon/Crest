@@ -55,9 +55,27 @@ public sealed class WorkflowHookRunner(
 
         foreach (var attachment in attachments)
         {
+            // A system flow that should run here is not installed: a required one refuses the
+            // unit (never skipped silently), a best-effort one is reported.
+            if (WorkflowHookService.IsMissing(attachment))
+            {
+                var missing = $"the system flow '{attachment.FlowKey}' is not installed in this tenant";
+                logger.LogError("Hook {Slot}: {Missing}.", slot, missing);
+                if (attachment.Required)
+                {
+                    var exception = new WorkflowHookFailedException(slot, attachment.DefinitionName ?? attachment.FlowKey ?? slot, missing);
+                    unit.Fail(exception.Message, failingActivityId);
+                    throw exception;
+                }
+
+                bestEffortFailures.Add($"{attachment.FlowKey}: {missing}");
+                continue;
+            }
+
             // The attachment's own frame: Fail unit inside it fails the frame, and this runner
             // decides what that means for the unit.
             string? failure;
+            string? failurePath = null;
             string instanceId;
             using (var frame = unit.Enter())
             {
@@ -72,6 +90,7 @@ public sealed class WorkflowHookRunner(
                 ran++;
                 instanceId = response.WorkflowInstanceId;
 
+                failurePath = frame.Path;
                 failure = frame.IsFailed ? frame.Reason
                     : response.SubStatus == WorkflowSubStatus.Faulted ? response.Incidents.FirstOrDefault()?.Message ?? "faulted"
                     : response.Status != WorkflowStatus.Finished ? "the attachment suspended; a hook may not wait"
@@ -105,7 +124,7 @@ public sealed class WorkflowHookRunner(
 
             if (attachment.Required)
             {
-                var exception = new WorkflowHookFailedException(slot, name, failure);
+                var exception = new WorkflowHookFailedException(slot, name, failure, [new(failurePath ?? string.Empty, failure)]);
                 logger.LogWarning("{Message}", exception.Message);
                 unit.Fail(exception.Message, failingActivityId);
                 throw exception;

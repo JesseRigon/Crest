@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Grove.Contents.Management;
-using Grove.Contents.Preview.Handlers;
+using Grove.Contents.Management.Handlers;
 using Grove.Contents.Preview.Models;
 using Grove.Data.Migration;
 
@@ -14,8 +14,8 @@ public sealed class Startup : Modules.StartupBase
         services.AddApiContributor<Api.ContentPreviewApi>();
 
         // Preview Part
-        services.AddContentPart<PreviewPart>()
-            .AddHandler<PreviewPartHandler>();
+        services.AddContentFieldSet<PreviewFieldSet>();
+        services.AddContentFieldSetProjection<Projections.PreviewProjection>();
 
         services.AddDataMigration<Migrations>();
     }

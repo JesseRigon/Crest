@@ -1,11 +1,17 @@
+using System.Text.Json.Nodes;
+
 namespace Grove.Contents.Management.Metadata.Models;
 
-public class ContentFieldDefinition
+public class ContentFieldDefinition : ContentDefinition
 {
-    public ContentFieldDefinition(string name)
+    public ContentFieldDefinition(ContentFieldTypeDefinition fieldTypeDefinition, string name, JsonObject settings)
     {
         Name = name;
+        FieldTypeDefinition = fieldTypeDefinition;
+        Settings = settings;
     }
 
-    public string Name { get; private set; }
+    public ContentFieldTypeDefinition FieldTypeDefinition { get; private set; }
+    public ContentFieldSetDefinition FieldSetDefinition { get; set; }
+    public ContentTypeFieldSetDefinition ContentTypeFieldSetDefinition { get; set; }
 }

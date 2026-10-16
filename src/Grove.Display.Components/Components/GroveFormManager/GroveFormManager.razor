@@ -17,7 +17,7 @@
 {
     <GroveText TextStyle="TextStyle.Body2" class="rz-color-secondary">No content data is available for this item.</GroveText>
 }
-else if (Metadata?.Parts is { Length: > 0 } parts && _context is not null)
+else if (Metadata?.FieldSets is { Length: > 0 } parts && _context is not null)
 {
     <CascadingValue Value="_context" IsFixed="true">
         <GroveStack Gap="1rem" class="grove-form-manager">
@@ -85,7 +85,7 @@ else
 
         builder.OpenComponent(0, editor.Type);
         builder.SetKey(ContentEditorContext.Key(partName, field.Name));
-        builder.AddComponentParameter(1, nameof(FieldEditorBase.PartName), partName);
+        builder.AddComponentParameter(1, nameof(FieldEditorBase.FieldSetName), partName);
         builder.AddComponentParameter(2, nameof(FieldEditorBase.FieldName), field.Name);
         builder.CloseComponent();
     };

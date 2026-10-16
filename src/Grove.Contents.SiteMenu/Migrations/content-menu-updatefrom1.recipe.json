@@ -12,48 +12,39 @@
             },
             "FullTextAspectSettings": {}
           },
-          "ContentTypePartDefinitionRecords": [
+          "ContentTypeFieldSetDefinitionRecords": [
             {
-              "PartName": "ContentMenuItemPart",
-              "Name": "ContentMenuItemPart",
-              "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "0"
-                }
-              }
-            },
-            {
-              "PartName": "ContentMenuItem",
+              "FieldSetName": "ContentMenuItem",
               "Name": "ContentMenuItem",
               "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "1"
+                "ContentTypeFieldSetSettings": {
+                  "Position": "0"
                 }
               }
             }
           ]
         }
       ],
-      "ContentParts": [
+      "ContentFieldSets": [
         {
-          "Name": "ContentMenuItemPart",
+          "Name": "ContentMenuItem",
           "Settings": {
-            "ContentPartSettings": {
+            "ContentFieldSetSettings": {
               "Attachable": true,
               "DisplayName": "Content Menu Item",
               "Description": "Provides a menu link behavior with the Content Picker for your content item."
             }
           },
-          "ContentPartFieldDefinitionRecords": [
+          "ContentFieldDefinitionRecords": [
             {
-              "FieldName": "OptionPickerField",
+              "FieldName": "OptionListField",
               "Name": "SelectedContentItem",
               "Settings": {
-                "ContentPartFieldSettings": {
+                "ContentFieldSettings": {
                   "DisplayName": "Selected Content Item",
                   "Position": "0"
                 },
-                "OptionPickerFieldSettings": {
+                "OptionListFieldSettings": {
                   "SourceKey": "contentitem:*",
                   "Required": true,
                   "Multiple": false

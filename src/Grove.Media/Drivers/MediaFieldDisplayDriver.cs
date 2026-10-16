@@ -41,8 +41,8 @@ public sealed class MediaFieldDisplayDriver : ContentFieldDisplayDriver<MediaFie
         return Initialize<DisplayMediaFieldViewModel>(GetDisplayShapeType(context), async model =>
         {
             model.Field = field;
-            model.Part = context.ContentPart;
-            model.PartFieldDefinition = context.PartFieldDefinition;
+            model.FieldSet = context.ContentFieldSet;
+            model.FieldDefinition = context.FieldDefinition;
 
             var anchors = field.GetAnchors();
             model.Items = [.. (await _references.ResolveAsync(field))

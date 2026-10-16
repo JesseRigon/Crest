@@ -8,7 +8,8 @@ public class ContentTypeDefinitionBuilder
 {
     private string _name;
     private string _displayName;
-    private readonly List<ContentTypePartDefinition> _parts;
+    private readonly List<ContentTypeFieldSetDefinition> _parts;
+    private readonly List<EmbeddedContentDefinition> _embeddings;
     private readonly JsonObject _settings;
 
     public ContentTypeDefinition Current { get; }
@@ -25,13 +26,15 @@ public class ContentTypeDefinitionBuilder
         if (existing == null)
         {
             _parts = [];
+            _embeddings = [];
             _settings = [];
         }
         else
         {
             _name = existing.Name;
             _displayName = existing.DisplayName;
-            _parts = existing.Parts.ToList();
+            _parts = existing.FieldSets.ToList();
+            _embeddings = existing.Embeddings.ToList();
             _settings = existing.Settings.Clone();
         }
     }
@@ -51,7 +54,15 @@ public class ContentTypeDefinitionBuilder
             throw new ArgumentException("Content type name is reserved for internal use", "name");
         }
 
-        return new ContentTypeDefinition(_name, _displayName, _parts, _settings);
+        foreach (var embedding in _embeddings)
+        {
+            if (_parts.Any(part => string.Equals(part.Name, embedding.Name, StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new ArgumentException($"The embedding '{embedding.Name}' has the name of a field-set attachment of '{_name}'.", "name");
+            }
+        }
+
+        return new ContentTypeDefinition(_name, _displayName, _parts, _settings, _embeddings);
     }
 
     [Obsolete("This method has been deprecated, please use WithName() instead.")]
@@ -114,88 +125,121 @@ public class ContentTypeDefinitionBuilder
         return this;
     }
 
-    public ContentTypeDefinitionBuilder RemovePart<TPart>()
-        where TPart : ContentPart
-        => RemovePart(typeof(TPart).Name);
-
-    public ContentTypeDefinitionBuilder RemovePart(string partName)
+    /// <summary>Declares or reconfigures the embedding <paramref name="name"/> (docs/content-engine.md › Embedded content items).</summary>
+    public ContentTypeDefinitionBuilder WithEmbedding(string name, Action<EmbeddedContentDefinitionBuilder> configuration)
     {
-        var existingPart = _parts.SingleOrDefault(x => string.Equals(x.Name, partName, StringComparison.OrdinalIgnoreCase));
-        if (existingPart != null)
+        if (string.IsNullOrWhiteSpace(name) || !char.IsLetter(name[0]) || !string.Equals(name, name.ToSafeName(), StringComparison.OrdinalIgnoreCase))
         {
-            _parts.Remove(existingPart);
+            throw new ArgumentException("An embedding name must start with a letter and contain only letters and digits.", nameof(name));
+        }
+
+        var index = _embeddings.FindIndex(embedding => string.Equals(embedding.Name, name, StringComparison.OrdinalIgnoreCase));
+        var record = index >= 0 ? _embeddings[index].ToRecord() : new Records.EmbeddedContentDefinitionRecord { Name = name };
+        var builder = new EmbeddedContentDefinitionBuilder(record);
+        configuration(builder);
+
+        var built = builder.Build();
+        built.ContentTypeDefinition = Current;
+        if (index >= 0)
+        {
+            _embeddings[index] = built;
+        }
+        else
+        {
+            _embeddings.Add(built);
+        }
+
+        return this;
+    }
+
+    public ContentTypeDefinitionBuilder RemoveEmbedding(string name)
+    {
+        _embeddings.RemoveAll(embedding => string.Equals(embedding.Name, name, StringComparison.OrdinalIgnoreCase));
+        return this;
+    }
+
+    public ContentTypeDefinitionBuilder RemoveFieldSet<TFieldSet>()
+        where TFieldSet : ContentFieldSet
+        => RemoveFieldSet(ContentFieldSetName.Of<TFieldSet>());
+
+    public ContentTypeDefinitionBuilder RemoveFieldSet(string fieldSetName)
+    {
+        var existingFieldSet = _parts.SingleOrDefault(x => string.Equals(x.Name, fieldSetName, StringComparison.OrdinalIgnoreCase));
+        if (existingFieldSet != null)
+        {
+            _parts.Remove(existingFieldSet);
         }
         return this;
     }
 
-    public ContentTypeDefinitionBuilder WithPart(string partName)
-        => WithPart(partName, configuration => { });
+    public ContentTypeDefinitionBuilder WithFieldSet(string fieldSetName)
+        => WithFieldSet(fieldSetName, configuration => { });
 
-    public ContentTypeDefinitionBuilder WithPart(string name, string partName)
-        => WithPart(name, new ContentPartDefinition(partName), configuration => { });
+    public ContentTypeDefinitionBuilder WithFieldSet(string name, string fieldSetName)
+        => WithFieldSet(name, new ContentFieldSetDefinition(fieldSetName), configuration => { });
 
-    public ContentTypeDefinitionBuilder WithPart(string partName, Action<ContentTypePartDefinitionBuilder> configuration)
-        => WithPart(partName, new ContentPartDefinition(partName), configuration);
+    public ContentTypeDefinitionBuilder WithFieldSet(string fieldSetName, Action<ContentTypeFieldSetDefinitionBuilder> configuration)
+        => WithFieldSet(fieldSetName, new ContentFieldSetDefinition(fieldSetName), configuration);
 
-    public ContentTypeDefinitionBuilder WithPart(string name, ContentPartDefinition partDefinition, Action<ContentTypePartDefinitionBuilder> configuration)
+    public ContentTypeDefinitionBuilder WithFieldSet(string name, ContentFieldSetDefinition fieldSetDefinition, Action<ContentTypeFieldSetDefinitionBuilder> configuration)
     {
-        var existingPart = _parts.FirstOrDefault(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
-        if (existingPart != null)
+        var existingFieldSet = _parts.FirstOrDefault(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
+        if (existingFieldSet != null)
         {
-            _parts.Remove(existingPart);
+            _parts.Remove(existingFieldSet);
         }
         else
         {
-            existingPart = new ContentTypePartDefinition(name, partDefinition, [])
+            existingFieldSet = new ContentTypeFieldSetDefinition(name, fieldSetDefinition, [])
             {
                 ContentTypeDefinition = Current,
             };
         }
 
-        var configurer = new PartConfigurerImpl(existingPart);
+        var configurer = new FieldSetConfigurerImpl(existingFieldSet);
         configuration(configurer);
         _parts.Add(configurer.Build());
         return this;
     }
 
-    public ContentTypeDefinitionBuilder WithPart(string name, string partName, Action<ContentTypePartDefinitionBuilder> configuration)
-        => WithPart(name, new ContentPartDefinition(partName), configuration);
+    public ContentTypeDefinitionBuilder WithFieldSet(string name, string fieldSetName, Action<ContentTypeFieldSetDefinitionBuilder> configuration)
+        => WithFieldSet(name, new ContentFieldSetDefinition(fieldSetName), configuration);
 
-    public ContentTypeDefinitionBuilder WithPart<TPart>() where TPart : ContentPart
-        => WithPart(typeof(TPart).Name, configuration => { });
+    public ContentTypeDefinitionBuilder WithFieldSet<TFieldSet>() where TFieldSet : ContentFieldSet
+        => WithFieldSet(ContentFieldSetName.Of<TFieldSet>(), configuration => { });
 
-    public ContentTypeDefinitionBuilder WithPart<TPart>(string name) where TPart : ContentPart
-        => WithPart(name, new ContentPartDefinition(typeof(TPart).Name), configuration => { });
+    public ContentTypeDefinitionBuilder WithFieldSet<TFieldSet>(string name) where TFieldSet : ContentFieldSet
+        => WithFieldSet(name, new ContentFieldSetDefinition(ContentFieldSetName.Of<TFieldSet>()), configuration => { });
 
-    public ContentTypeDefinitionBuilder WithPart<TPart>(string name, Action<ContentTypePartDefinitionBuilder> configuration) where TPart : ContentPart
-        => WithPart(name, new ContentPartDefinition(typeof(TPart).Name), configuration);
+    public ContentTypeDefinitionBuilder WithFieldSet<TFieldSet>(string name, Action<ContentTypeFieldSetDefinitionBuilder> configuration) where TFieldSet : ContentFieldSet
+        => WithFieldSet(name, new ContentFieldSetDefinition(ContentFieldSetName.Of<TFieldSet>()), configuration);
 
-    public ContentTypeDefinitionBuilder WithPart<TPart>(Action<ContentTypePartDefinitionBuilder> configuration) where TPart : ContentPart
-        => WithPart(typeof(TPart).Name, configuration);
+    public ContentTypeDefinitionBuilder WithFieldSet<TFieldSet>(Action<ContentTypeFieldSetDefinitionBuilder> configuration) where TFieldSet : ContentFieldSet
+        => WithFieldSet(ContentFieldSetName.Of<TFieldSet>(), configuration);
 
-    public Task<ContentTypeDefinitionBuilder> WithPartAsync(string name, string partName, Func<ContentTypePartDefinitionBuilder, Task> configurationAsync)
-        => WithPartAsync(name, new ContentPartDefinition(partName), configurationAsync);
+    public Task<ContentTypeDefinitionBuilder> WithFieldSetAsync(string name, string fieldSetName, Func<ContentTypeFieldSetDefinitionBuilder, Task> configurationAsync)
+        => WithFieldSetAsync(name, new ContentFieldSetDefinition(fieldSetName), configurationAsync);
 
-    public Task<ContentTypeDefinitionBuilder> WithPartAsync(string partName, Func<ContentTypePartDefinitionBuilder, Task> configurationAsync)
-        => WithPartAsync(partName, new ContentPartDefinition(partName), configurationAsync);
+    public Task<ContentTypeDefinitionBuilder> WithFieldSetAsync(string fieldSetName, Func<ContentTypeFieldSetDefinitionBuilder, Task> configurationAsync)
+        => WithFieldSetAsync(fieldSetName, new ContentFieldSetDefinition(fieldSetName), configurationAsync);
 
-    public async Task<ContentTypeDefinitionBuilder> WithPartAsync(string name, ContentPartDefinition partDefinition, Func<ContentTypePartDefinitionBuilder, Task> configurationAsync)
+    public async Task<ContentTypeDefinitionBuilder> WithFieldSetAsync(string name, ContentFieldSetDefinition fieldSetDefinition, Func<ContentTypeFieldSetDefinitionBuilder, Task> configurationAsync)
     {
-        var existingPart = _parts.FirstOrDefault(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
+        var existingFieldSet = _parts.FirstOrDefault(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
 
-        if (existingPart != null)
+        if (existingFieldSet != null)
         {
-            _parts.Remove(existingPart);
+            _parts.Remove(existingFieldSet);
         }
         else
         {
-            existingPart = new ContentTypePartDefinition(name, partDefinition, [])
+            existingFieldSet = new ContentTypeFieldSetDefinition(name, fieldSetDefinition, [])
             {
                 ContentTypeDefinition = Current,
             };
         }
 
-        var configurer = new PartConfigurerImpl(existingPart);
+        var configurer = new FieldSetConfigurerImpl(existingFieldSet);
 
         await configurationAsync(configurer);
 
@@ -204,30 +248,30 @@ public class ContentTypeDefinitionBuilder
         return this;
     }
 
-    private sealed class PartConfigurerImpl : ContentTypePartDefinitionBuilder
+    private sealed class FieldSetConfigurerImpl : ContentTypeFieldSetDefinitionBuilder
     {
-        private readonly ContentPartDefinition _partDefinition;
+        private readonly ContentFieldSetDefinition _partDefinition;
 
-        public PartConfigurerImpl(ContentTypePartDefinition part)
+        public FieldSetConfigurerImpl(ContentTypeFieldSetDefinition part)
             : base(part)
         {
             Current = part;
-            _partDefinition = part.PartDefinition;
+            _partDefinition = part.FieldSetDefinition;
         }
 
-        public override ContentTypePartDefinition Build()
+        public override ContentTypeFieldSetDefinition Build()
         {
             if (!char.IsLetter(Current.Name[0]))
             {
-                throw new ArgumentException("Content part name must start with a letter", "name");
+                throw new ArgumentException("Field set name must start with a letter", "name");
             }
 
             if (!string.Equals(Current.Name, Current.Name.ToSafeName(), StringComparison.OrdinalIgnoreCase))
             {
-                throw new ArgumentException("Content part name contains invalid characters", "name");
+                throw new ArgumentException("Field set name contains invalid characters", "name");
             }
 
-            return new ContentTypePartDefinition(Current.Name, _partDefinition, _settings)
+            return new ContentTypeFieldSetDefinition(Current.Name, _partDefinition, _settings)
             {
                 ContentTypeDefinition = Current.ContentTypeDefinition,
             };

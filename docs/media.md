@@ -633,7 +633,7 @@ an in-place rework of the module, not a Grove-owned copy beside it.
   - *Shapes and views:* `MediaField` (display: library), `MediaField_Edit` and its `Attached`
     and `Gallery` editors (the media picker on paths; ids kept: library), `MediaField_Option`,
     `MediaField_DisplayOption`, `MediaFieldSettings_Edit`, `MediaApiSettings_Edit`,
-    `Media_Wrapper__HtmlField` / `__HtmlBodyPart` / `__MarkdownBodyPart` (ContentFields, Html
+    `Media_Wrapper__HtmlField` / `__HtmlBodyFieldSet` / `__MarkdownBodyFieldSet` (ContentFields, Html
     and Markdown insert `/media` URLs, which resolve), `NavigationItemText-media.Id`.
     `DisplayMediaFieldViewModel` keeps `Paths` and adds `Items`.
   - *Liquid:* `asset_url` (library), `resize_url` and `img_tag` (any URL), the `a` tag's

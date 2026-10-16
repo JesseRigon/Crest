@@ -69,22 +69,22 @@
 //        }
 
 //        [Fact]
-//        public void StubPartDefinitionsAreCreatedWhenContentTypesAreStored()
+//        public void StubFieldSetDefinitionsAreCreatedWhenContentTypesAreStored()
 //        {
 //            var manager = _serviceProvider.GetService<IContentDefinitionManager>();
 //            manager.StoreTypeDefinition(new ContentTypeDefinitionBuilder()
 //                                  .Named("alpha")
-//                                  .WithPart("foo", pb => { })
+//                                  .WithFieldSet("foo", pb => { })
 //                                  .Build());
 
-//            var foo = manager.GetPartDefinition("foo");
+//            var foo = manager.GetFieldSetDefinition("foo");
 //            Assert.NotNull(foo);
 //            Assert.Equal("foo", foo.Name);
 
 //            var alpha = manager.GetTypeDefinition("alpha");
 //            Assert.NotNull(alpha);
 //            Assert.Equal(1, alpha.Parts.Count());
-//            Assert.Equal("foo", alpha.Parts.Single().PartDefinition.Name);
+//            Assert.Equal("foo", alpha.Parts.Single().FieldSetDefinition.Name);
 //        }
 
 //        [Fact]
@@ -94,60 +94,60 @@
 //            Assert.Null(manager.GetTypeDefinition("no such name"));
 //            Assert.Null(manager.GetTypeDefinition(string.Empty));
 //            Assert.Null(manager.GetTypeDefinition(null));
-//            Assert.Null(manager.GetPartDefinition("no such name"));
-//            Assert.Null(manager.GetPartDefinition(string.Empty));
-//            Assert.Null(manager.GetPartDefinition(null));
+//            Assert.Null(manager.GetFieldSetDefinition("no such name"));
+//            Assert.Null(manager.GetFieldSetDefinition(string.Empty));
+//            Assert.Null(manager.GetFieldSetDefinition(null));
 //        }
 
 //        //[Fact]
-//        //public void PartsAreRemovedWhenNotReferencedButPartDefinitionRemains()
+//        //public void FieldSetsAreRemovedWhenNotReferencedButFieldSetDefinitionRemains()
 //        //{
 //        //    var manager = _serviceProvider.GetService<IContentDefinitionManager>();
 //        //    manager.StoreTypeDefinition(
 //        //        new ContentTypeDefinitionBuilder()
 //        //            .Named("alpha")
-//        //            .WithPart("foo", pb => { })
-//        //            .WithPart("bar", pb => { })
+//        //            .WithFieldSet("foo", pb => { })
+//        //            .WithFieldSet("bar", pb => { })
 //        //            .Build());
 
-//        //    AssertThatTypeHasParts("alpha", "foo", "bar");
-//        //    Assert.That(manager.ListPartDefinitions().Count(), Is.EqualTo(2));
+//        //    AssertThatTypeHasFieldSets("alpha", "foo", "bar");
+//        //    Assert.That(manager.ListFieldSetDefinitions().Count(), Is.EqualTo(2));
 //        //    ResetSession();
-//        //    AssertThatTypeHasParts("alpha", "foo", "bar");
-//        //    Assert.That(manager.ListPartDefinitions().Count(), Is.EqualTo(2));
+//        //    AssertThatTypeHasFieldSets("alpha", "foo", "bar");
+//        //    Assert.That(manager.ListFieldSetDefinitions().Count(), Is.EqualTo(2));
 
 //        //    manager.StoreTypeDefinition(
 //        //        new ContentTypeDefinitionBuilder(manager.GetTypeDefinition("alpha"))
-//        //            .WithPart("frap", pb => { })
-//        //            .RemovePart("bar")
+//        //            .WithFieldSet("frap", pb => { })
+//        //            .RemoveFieldSet("bar")
 //        //            .Build());
 
-//        //    AssertThatTypeHasParts("alpha", "foo", "frap");
-//        //    Assert.That(manager.ListPartDefinitions().Count(), Is.EqualTo(3));
+//        //    AssertThatTypeHasFieldSets("alpha", "foo", "frap");
+//        //    Assert.That(manager.ListFieldSetDefinitions().Count(), Is.EqualTo(3));
 //        //    ResetSession();
-//        //    AssertThatTypeHasParts("alpha", "foo", "frap");
-//        //    Assert.That(manager.ListPartDefinitions().Count(), Is.EqualTo(3));
+//        //    AssertThatTypeHasFieldSets("alpha", "foo", "frap");
+//        //    Assert.That(manager.ListFieldSetDefinitions().Count(), Is.EqualTo(3));
 //        //}
 
 //        //[Fact]
-//        //public void PartsCanBeDeleted()
+//        //public void FieldSetsCanBeDeleted()
 //        //{
 //        //    var manager = _serviceProvider.GetService<IContentDefinitionManager>();
 //        //    manager.StoreTypeDefinition(
 //        //        new ContentTypeDefinitionBuilder()
 //        //            .Named("alpha")
-//        //            .WithPart("foo", pb => { })
-//        //            .WithPart("bar", pb => { })
+//        //            .WithFieldSet("foo", pb => { })
+//        //            .WithFieldSet("bar", pb => { })
 //        //            .Build());
 
-//        //    AssertThatTypeHasParts("alpha", "foo", "bar");
-//        //    Assert.That(manager.ListPartDefinitions().Count(), Is.EqualTo(2));
+//        //    AssertThatTypeHasFieldSets("alpha", "foo", "bar");
+//        //    Assert.That(manager.ListFieldSetDefinitions().Count(), Is.EqualTo(2));
 
-//        //    manager.DeletePartDefinition("foo");
+//        //    manager.DeleteFieldSetDefinition("foo");
 //        //    ResetSession();
 
-//        //    AssertThatTypeHasParts("alpha", "bar");
-//        //    Assert.That(manager.ListPartDefinitions().Count(), Is.EqualTo(1));
+//        //    AssertThatTypeHasFieldSets("alpha", "bar");
+//        //    Assert.That(manager.ListFieldSetDefinitions().Count(), Is.EqualTo(1));
 //        //}
 
 //        //[Fact]
@@ -157,8 +157,8 @@
 //        //    manager.StoreTypeDefinition(
 //        //        new ContentTypeDefinitionBuilder()
 //        //            .Named("alpha")
-//        //            .WithPart("foo", pb => { })
-//        //            .WithPart("bar", pb => { })
+//        //            .WithFieldSet("foo", pb => { })
+//        //            .WithFieldSet("bar", pb => { })
 //        //            .Build());
 
 //        //    Assert.That(manager.GetTypeDefinition("alpha"), Is.Not.Null);
@@ -169,11 +169,11 @@
 //        //}
 
 //        //[Fact]
-//        //public void MultipleFieldsCanBeAddedToImplicitParts()
+//        //public void MultipleFieldsCanBeAddedToImplicitFieldSets()
 //        //{
 //        //    var manager = _serviceProvider.GetService<IContentDefinitionManager>();
-//        //    manager.StorePartDefinition(
-//        //        new ContentPartDefinitionBuilder()
+//        //    manager.StoreFieldSetDefinition(
+//        //        new ContentFieldSetDefinitionBuilder()
 //        //            .Named("alpha")
 //        //            .WithField("field1", f => f.OfType("TextField"))
 //        //            .WithField("field2", f => f.OfType("TextField"))
@@ -183,7 +183,7 @@
 //        //    manager.StoreTypeDefinition(
 //        //        new ContentTypeDefinitionBuilder()
 //        //            .Named("alpha")
-//        //            .WithPart("foo")
+//        //            .WithFieldSet("foo")
 //        //            .Build()
 //        //        );
 
@@ -191,7 +191,7 @@
 
 //        //    var types = manager.ListTypeDefinitions();
 //        //    Assert.That(types.Count(), Is.EqualTo(1));
-//        //    var parts = manager.ListPartDefinitions();
+//        //    var parts = manager.ListFieldSetDefinitions();
 //        //    Assert.That(parts.Count(), Is.EqualTo(2));
 //        //    var fields = manager.ListFieldDefinitions();
 //        //    Assert.That(fields.Count(), Is.EqualTo(1));
@@ -199,17 +199,17 @@
 //        //    var alpha = manager.GetTypeDefinition("alpha");
 //        //    Assert.That(alpha.Parts.Count(), Is.EqualTo(1));
 
-//        //    var part = manager.GetPartDefinition("alpha");
+//        //    var part = manager.GetFieldSetDefinition("alpha");
 //        //    Assert.That(part.Fields.Count(), Is.EqualTo(2));
 
-//        //    manager.AlterPartDefinition("alpha", p => p
+//        //    manager.AlterFieldSetDefinition("alpha", p => p
 //        //            .WithField("field3", f => f.OfType("TextField"))
 //        //            .WithField("field4", f => f.OfType("TextField"))
 //        //        );
 
 //        //    ResetSession();
 
-//        //    part = manager.GetPartDefinition("alpha");
+//        //    part = manager.GetFieldSetDefinition("alpha");
 //        //    Assert.That(part.Fields.Count(), Is.EqualTo(4));
 
 //        //    alpha = manager.GetTypeDefinition("alpha");
@@ -217,11 +217,11 @@
 //        //}
 
 //        //[Fact]
-//        //public void DontCreateMultiplePartsWhenAddingMultipleFields()
+//        //public void DontCreateMultipleFieldSetsWhenAddingMultipleFields()
 //        //{
 //        //    var manager = _serviceProvider.GetService<IContentDefinitionManager>();
 
-//        //    manager.AlterPartDefinition("alpha",
+//        //    manager.AlterFieldSetDefinition("alpha",
 //        //            part => part
 //        //                .WithField("StartDate", cfg => cfg
 //        //                    .WithDisplayName("Start Date")
@@ -233,20 +233,20 @@
 //        //                    .WithSetting("DateTimeFieldSettings.Display", "DateAndTime"))
 //        //        );
 
-//        //    Assert.That(manager.ListPartDefinitions().Count(), Is.EqualTo(1));
+//        //    Assert.That(manager.ListFieldSetDefinitions().Count(), Is.EqualTo(1));
 
-//        //    var p = manager.GetPartDefinition("alpha");
+//        //    var p = manager.GetFieldSetDefinition("alpha");
 //        //    Assert.That(p.Fields.Count(), Is.EqualTo(2));
 //        //}
 
-//        //private void AssertThatTypeHasParts(string typeName, params string[] partNames)
+//        //private void AssertThatTypeHasFieldSets(string typeName, params string[] partNames)
 //        //{
 //        //    var type = _serviceProvider.GetService<IContentDefinitionManager>().GetTypeDefinition(typeName);
 //        //    Assert.That(type, Is.Not.Null);
 //        //    Assert.That(type.Parts.Count(), Is.EqualTo(partNames.Count()));
 //        //    foreach (var partName in partNames)
 //        //    {
-//        //        Assert.That(type.Parts.Select(p => p.PartDefinition.Name), Has.Some.EqualTo(partName));
+//        //        Assert.That(type.Parts.Select(p => p.FieldSetDefinition.Name), Has.Some.EqualTo(partName));
 //        //    }
 //        //}
 

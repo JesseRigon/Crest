@@ -7,23 +7,23 @@ namespace Grove.Contents.Management;
 public static class ServiceCollectionExtensions
 {
     /// <summary>
-    /// Registers a content part type. This method may be called multiple times safely,
+    /// Registers a field set type. This method may be called multiple times safely,
     /// to reconfigure an existing part.
     /// </summary>
-    public static ContentPartOptionBuilder AddContentPart<TContentPart>(this IServiceCollection services)
-        where TContentPart : ContentPart
+    public static ContentFieldSetOptionBuilder AddContentFieldSet<TContentFieldSet>(this IServiceCollection services)
+        where TContentFieldSet : ContentFieldSet
     {
-        return services.AddContentPart(typeof(TContentPart));
+        return services.AddContentFieldSet(typeof(TContentFieldSet));
     }
 
     /// <summary>
-    /// Registers a content part type. This method may be called multiple times safely,
+    /// Registers a field set type. This method may be called multiple times safely,
     /// to reconfigure an existing part.
     /// </summary>
-    public static ContentPartOptionBuilder AddContentPart(this IServiceCollection services, Type contentPartType)
+    public static ContentFieldSetOptionBuilder AddContentFieldSet(this IServiceCollection services, Type contentFieldSetType)
     {
-        services.Configure<ContentOptions>(o => o.GetOrAddContentPart(contentPartType));
-        return new ContentPartOptionBuilder(services, contentPartType);
+        services.Configure<ContentOptions>(o => o.GetOrAddContentFieldSet(contentFieldSetType));
+        return new ContentFieldSetOptionBuilder(services, contentFieldSetType);
     }
 
     /// <summary>
@@ -47,48 +47,48 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Register a handler for use with a content part.
+    /// Register a handler for use with a field set.
     /// </summary>
-    /// <typeparam name="TContentPartHandler"></typeparam>
-    public static ContentPartOptionBuilder AddHandler<TContentPartHandler>(this ContentPartOptionBuilder builder)
-        where TContentPartHandler : class, IContentPartHandler
+    /// <typeparam name="TContentFieldSetHandler"></typeparam>
+    public static ContentFieldSetOptionBuilder AddHandler<TContentFieldSetHandler>(this ContentFieldSetOptionBuilder builder)
+        where TContentFieldSetHandler : class, IContentFieldSetHandler
     {
-        return builder.AddHandler(typeof(TContentPartHandler));
+        return builder.AddHandler(typeof(TContentFieldSetHandler));
     }
 
     /// <summary>
-    /// Register a handler for use with a content part.
+    /// Register a handler for use with a field set.
     /// </summary>
-    public static ContentPartOptionBuilder AddHandler(this ContentPartOptionBuilder builder, Type handlerType)
+    public static ContentFieldSetOptionBuilder AddHandler(this ContentFieldSetOptionBuilder builder, Type handlerType)
     {
         builder.Services.TryAddScoped(handlerType);
         builder.Services.Configure<ContentOptions>(o =>
         {
-            o.AddPartHandler(builder.ContentPartType, handlerType);
+            o.AddFieldSetHandler(builder.ContentFieldSetType, handlerType);
         });
 
         return builder;
     }
 
     /// <summary>
-    /// Remove a handler registration from a content part.
+    /// Remove a handler registration from a field set.
     /// </summary>
-    /// <typeparam name="TContentPartHandler"></typeparam>
-    public static ContentPartOptionBuilder RemoveHandler<TContentPartHandler>(this ContentPartOptionBuilder builder)
-        where TContentPartHandler : class, IContentPartHandler
+    /// <typeparam name="TContentFieldSetHandler"></typeparam>
+    public static ContentFieldSetOptionBuilder RemoveHandler<TContentFieldSetHandler>(this ContentFieldSetOptionBuilder builder)
+        where TContentFieldSetHandler : class, IContentFieldSetHandler
     {
-        return builder.RemoveHandler(typeof(TContentPartHandler));
+        return builder.RemoveHandler(typeof(TContentFieldSetHandler));
     }
 
     /// <summary>
-    /// Remove a handler registration from a content part.
+    /// Remove a handler registration from a field set.
     /// </summary>
-    public static ContentPartOptionBuilder RemoveHandler(this ContentPartOptionBuilder builder, Type handlerType)
+    public static ContentFieldSetOptionBuilder RemoveHandler(this ContentFieldSetOptionBuilder builder, Type handlerType)
     {
         builder.Services.RemoveAll(handlerType);
         builder.Services.Configure<ContentOptions>(o =>
         {
-            o.RemovePartHandler(builder.ContentPartType, handlerType);
+            o.RemoveFieldSetHandler(builder.ContentFieldSetType, handlerType);
         });
 
         return builder;

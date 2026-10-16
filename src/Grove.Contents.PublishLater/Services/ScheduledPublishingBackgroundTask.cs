@@ -28,7 +28,7 @@ public sealed class ScheduledPublishingBackgroundTask : IBackgroundTask
     {
         var itemsToPublish = await serviceProvider
             .GetRequiredService<ISession>()
-            .QueryIndex<PublishLaterPartIndex>(index => index.Latest && !index.Published && index.ScheduledPublishDateTimeUtc < _clock.UtcNow)
+            .QueryIndex<PublishLaterIndex>(index => index.Latest && !index.Published && index.ScheduledPublishDateTimeUtc < _clock.UtcNow)
             .ListAsync(cancellationToken);
 
         if (!itemsToPublish.Any())
@@ -42,11 +42,7 @@ public sealed class ScheduledPublishingBackgroundTask : IBackgroundTask
         {
             var contentItem = await contentManager.GetAsync(item.ContentItemId, VersionOptions.Latest);
 
-            if (contentItem.TryGet<PublishLaterPart>(out var part))
-            {
-                part.ScheduledPublishUtc = null;
-                part.Apply();
-            }
+            // The schedule is cleared by the field set's system flow when the item is published.
 
             if (_logger.IsEnabled(LogLevel.Debug))
             {

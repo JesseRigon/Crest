@@ -1647,28 +1647,47 @@ public sealed record ContentType(
     string Name,
     string DisplayName,
     JsonObject Settings,
-    ContentTypePart[] Parts);
+    ContentTypeFieldSet[] FieldSets,
+    ContentTypeEmbedding[]? Embeddings = null);
+
+// An embedding on a type - docs/content-engine.md › Embedded content items.
+public sealed record ContentTypeEmbedding(
+    string Name,
+    string? DisplayName,
+    string? Description,
+    string? Position,
+    string[] AllowedTypes,
+    int? MinCount,
+    int? MaxCount,
+    bool Ordered,
+    string? DisplayType,
+    bool Nested,
+    bool Collapsed,
+    bool Referenceable,
+    string Mode,
+    string[] CopiedValues,
+    string Lock = "None");
 
 // Lock: the definition lock (None, Tenant, Module) the server reports - docs/content-engine.md › Definition locks.
-public sealed record ContentTypePart(
+public sealed record ContentTypeFieldSet(
     string Name,
     JsonObject Settings,
-    ContentPart Part,
+    ContentFieldSet FieldSet,
     string Lock = "None");
 
-public sealed record ContentPart(
+public sealed record ContentFieldSet(
     string Name,
     JsonObject Settings,
-    ContentPartField[] Fields,
+    ContentField[] Fields,
     string Lock = "None");
 
-public sealed record ContentPartField(
+public sealed record ContentField(
     string Name,
     JsonObject Settings,
-    ContentField Field,
+    ContentFieldType FieldType,
     string Lock = "None");
 
-public sealed record ContentField(string Name);
+public sealed record ContentFieldType(string Name);
 
 public sealed record ContentItem(
     string ContentItemId,

@@ -1,7 +1,7 @@
 namespace Grove.Parties.Constants;
 
 /// <summary>
-/// The logical keys of the Content Part Lists this module owns. Code resolves sets by
+/// The logical keys of the Option lists this module owns. Code resolves sets by
 /// these keys; the sets themselves are tenant-editable content, so a tenant can
 /// relabel or extend them without any of these values changing. The shared
 /// vocabularies that cross every domain boundary (honorifics, languages, countries,

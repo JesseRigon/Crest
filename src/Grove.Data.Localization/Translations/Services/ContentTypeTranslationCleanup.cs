@@ -46,16 +46,15 @@ public sealed class ContentTypeTranslationCleanup : IContentDefinitionEventHandl
     public void ContentTypeUpdated(ContentTypeUpdatedContext context) { }
     public void ContentTypeImporting(ContentTypeImportingContext context) { }
     public void ContentTypeImported(ContentTypeImportedContext context) { }
-    public void ContentPartCreated(ContentPartCreatedContext context) { }
-    public void ContentPartUpdated(ContentPartUpdatedContext context) { }
-    public void ContentPartRemoved(ContentPartRemovedContext context) { }
-    public void ContentPartAttached(ContentPartAttachedContext context) { }
-    public void ContentPartDetached(ContentPartDetachedContext context) { }
-    public void ContentPartImporting(ContentPartImportingContext context) { }
-    public void ContentPartImported(ContentPartImportedContext context) { }
-    public void ContentTypePartUpdated(ContentTypePartUpdatedContext context) { }
+    public void ContentFieldSetCreated(ContentFieldSetCreatedContext context) { }
+    public void ContentFieldSetUpdated(ContentFieldSetUpdatedContext context) { }
+    public void ContentFieldSetRemoved(ContentFieldSetRemovedContext context) { }
+    public void ContentFieldSetAttached(ContentFieldSetAttachedContext context) { }
+    public void ContentFieldSetDetached(ContentFieldSetDetachedContext context) { }
+    public void ContentFieldSetImporting(ContentFieldSetImportingContext context) { }
+    public void ContentFieldSetImported(ContentFieldSetImportedContext context) { }
+    public void ContentTypeFieldSetUpdated(ContentTypeFieldSetUpdatedContext context) { }
     public void ContentFieldAttached(ContentFieldAttachedContext context) { }
-    public void ContentFieldUpdated(ContentFieldUpdatedContext context) { }
     public void ContentFieldDetached(ContentFieldDetachedContext context) { }
-    public void ContentPartFieldUpdated(ContentPartFieldUpdatedContext context) { }
+    public void ContentFieldUpdated(ContentFieldUpdatedContext context) { }
 }

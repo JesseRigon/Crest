@@ -16,21 +16,21 @@ public static class ContentFieldAlternatesFactory
     /// <summary>
     /// Gets or creates cached alternates for a content field configuration.
     /// </summary>
-    /// <param name="typePartDefinition">The content type part definition.</param>
-    /// <param name="partFieldDefinition">The content part field definition.</param>
+    /// <param name="typeFieldSetDefinition">The content type part definition.</param>
+    /// <param name="partFieldDefinition">The field set field definition.</param>
     /// <param name="shapeType">The shape type being rendered.</param>
     /// <returns>A cached array of alternates.</returns>
     public static string[] GetAlternates(
-        ContentTypePartDefinition typePartDefinition,
-        ContentPartFieldDefinition partFieldDefinition,
+        ContentTypeFieldSetDefinition typeFieldSetDefinition,
+        ContentFieldDefinition partFieldDefinition,
         string shapeType,
         string displayType)
     {
         var key = new FieldAlternatesCacheKey(
-            typePartDefinition.ContentTypeDefinition.Name,
-            typePartDefinition.PartDefinition.Name,
-            typePartDefinition.Name,
-            partFieldDefinition.FieldDefinition.Name,
+            typeFieldSetDefinition.ContentTypeDefinition.Name,
+            typeFieldSetDefinition.FieldSetDefinition.Name,
+            typeFieldSetDefinition.Name,
+            partFieldDefinition.FieldTypeDefinition.Name,
             partFieldDefinition.Name,
             partFieldDefinition.Editor() ?? string.Empty,
             partFieldDefinition.DisplayMode() ?? string.Empty,
@@ -45,8 +45,8 @@ public static class ContentFieldAlternatesFactory
     /// </summary>
     internal readonly record struct FieldAlternatesCacheKey(
         string ContentType,
-        string PartType,
-        string PartName,
+        string FieldSetType,
+        string FieldSetName,
         string FieldType,
         string FieldName,
         string Editor,
@@ -68,14 +68,14 @@ public static class ContentFieldAlternatesFactory
         {
             foreach (var dt in displayTypes)
             {
-                // [PartType]__[FieldName], e.g. HtmlBodyPart-Description
-                alternates.Add($"{key.PartType}{dt}__{key.FieldName}");
+                // [FieldSetType]__[FieldName], e.g. HtmlBodyFieldSet-Description
+                alternates.Add($"{key.FieldSetType}{dt}__{key.FieldName}");
 
                 // [ContentType]__[FieldType], e.g. Blog-TextField, LandingPage-TextField
                 alternates.Add($"{key.ContentType}{dt}__{key.FieldType}");
 
-                // [ContentType]__[PartName]__[FieldName], e.g. Blog-HtmlBodyPart-Description, LandingPage-Services-Description
-                alternates.Add($"{key.ContentType}{dt}__{key.PartType}__{key.FieldName}");
+                // [ContentType]__[FieldSetName]__[FieldName], e.g. Blog-HtmlBodyFieldSet-Description, LandingPage-Services-Description
+                alternates.Add($"{key.ContentType}{dt}__{key.FieldSetType}__{key.FieldName}");
             }
         }
         else
@@ -108,14 +108,14 @@ public static class ContentFieldAlternatesFactory
                 // [FieldType]__[ShapeType], e.g. TextField-TextFieldSummary
                 alternates.Add($"{key.FieldType}{dt}__{shapeType}");
 
-                // [PartType]__[FieldName]__[ShapeType], e.g. HtmlBodyPart-Description-TextFieldSummary
-                alternates.Add($"{key.PartType}{dt}__{key.FieldName}__{shapeType}");
+                // [FieldSetType]__[FieldName]__[ShapeType], e.g. HtmlBodyFieldSet-Description-TextFieldSummary
+                alternates.Add($"{key.FieldSetType}{dt}__{key.FieldName}__{shapeType}");
 
                 // [ContentType]__[FieldType]__[ShapeType], e.g. Blog-TextField-TextFieldSummary, LandingPage-TextField-TextFieldSummary
                 alternates.Add($"{key.ContentType}{dt}__{key.FieldType}__{shapeType}");
 
-                // [ContentType]__[PartName]__[FieldName]__[ShapeType], e.g. Blog-HtmlBodyPart-Description-TextFieldSummary, LandingPage-Services-Description-TextFieldSummary
-                alternates.Add($"{key.ContentType}{dt}__{key.PartName}__{key.FieldName}__{shapeType}");
+                // [ContentType]__[FieldSetName]__[FieldName]__[ShapeType], e.g. Blog-HtmlBodyFieldSet-Description-TextFieldSummary, LandingPage-Services-Description-TextFieldSummary
+                alternates.Add($"{key.ContentType}{dt}__{key.FieldSetName}__{key.FieldName}__{shapeType}");
             }
         }
 

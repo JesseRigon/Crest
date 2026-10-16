@@ -75,7 +75,7 @@ public sealed record WorkflowActivityDescriptor(
 /// <summary>
 /// A content field an activity reads or writes (docs/workflows.md › Posting on workflows:
 /// contracts are per-activity field dependencies, not a record-level contract). The path is
-/// <c>Part.Field</c>; <see cref="Required"/> is the per-field marker - a required field that
+/// <c>FieldSet.Field</c>; <see cref="Required"/> is the per-field marker - a required field that
 /// is empty at runtime ends the activity on Failed with the field named, an optional one
 /// reads null. <see cref="ContentType"/> narrows the check to one type; null means any type
 /// carrying the part. <see cref="Writes"/> marks a field the activity writes rather than
@@ -132,7 +132,7 @@ public static class WorkflowFieldDependencyStatuses
 {
     public const string Ok = "ok";
     /// <summary>No content type carries the part.</summary>
-    public const string MissingPart = "missing-part";
+    public const string MissingFieldSet = "missing-field-set";
     /// <summary>The part exists but has no such field.</summary>
     public const string MissingField = "missing-field";
     /// <summary>The activity requires the field but the tenant's definition does not.</summary>
@@ -184,6 +184,53 @@ public sealed record WorkflowHookAttachmentDescriptor(string Slot, string FlowKe
 public interface IWorkflowHookSlotProvider
 {
     IEnumerable<WorkflowHookSlotDescriptor> HookSlots { get; }
+}
+
+/// <summary>
+/// Hook slots that come from tenant data rather than code: the content lifecycle's slots, one per
+/// content type and lifecycle point (docs/workflows.md › Hook slots). Read when asked, so a type
+/// created at runtime has its slots at once; a source also resolves the system attachments of
+/// its slots.
+/// </summary>
+public interface IWorkflowHookSlotSource
+{
+    Task<IReadOnlyList<WorkflowHookSlotDescriptor>> ListHookSlotsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>The slot with this key, or null when the source has none.</summary>
+    Task<WorkflowHookSlotDescriptor?> FindHookSlotAsync(string key, CancellationToken cancellationToken = default);
+
+    /// <summary>The system attachments of one of the source's slots.</summary>
+    Task<IReadOnlyList<WorkflowHookAttachmentDescriptor>> ListHookAttachmentsAsync(WorkflowHookSlotDescriptor slot, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// A stamp of what the source's slots and attachments are read from (the content definitions'
+    /// identifier): a slot's resolved attachments are cached until it changes.
+    /// </summary>
+    Task<string> StampAsync(CancellationToken cancellationToken = default) => Task.FromResult(string.Empty);
+}
+
+/// <summary>
+/// A system attachment declared against a field set: the owning module attaches one of its
+/// shipped flows (by flow key) to a content lifecycle point (<c>publishing</c>, ...) of every type
+/// that attaches the field set, so the field set and its system flows attach and detach together
+/// (docs/content-engine.md › Behaviour is workflows). <see cref="FieldSet"/> is the field set's
+/// stored name.
+/// </summary>
+public sealed record WorkflowFieldSetHookAttachmentDescriptor(string FieldSet, string Point, string FlowKey, int Position = 0, bool Required = true);
+
+public interface IWorkflowFieldSetHookAttachmentProvider
+{
+    IEnumerable<WorkflowFieldSetHookAttachmentDescriptor> FieldSetHookAttachments { get; }
+}
+
+/// <summary>
+/// The field sets a type's items carry beyond the type's attachments: a field set a module welds on
+/// them (a contained item's <c>ParentContentItem</c>). Their system flows run on the type's lifecycle
+/// as an attached field set's do.
+/// </summary>
+public interface IWorkflowWeldedFieldSetSource
+{
+    Task<IReadOnlyCollection<string>> FieldSetsAsync(string contentType, CancellationToken cancellationToken = default);
 }
 
 public interface IWorkflowHookAttachmentProvider
@@ -277,13 +324,20 @@ public interface IWorkflowObjectLock
     Task<IAsyncDisposable> LockAsync(string objectId, CancellationToken cancellationToken = default);
 }
 
+/// <summary>One error of a failed hook attachment: the field path it is about (<c>FieldSet.Field</c>,
+/// <c>FieldSet</c>, or <c>""</c>) and the message. A content hook answers them as the error contract's map.</summary>
+public sealed record WorkflowHookError(string Path, string Message);
+
 /// <summary>A required hook attachment failed: the unit it ran in is failed and will not commit.</summary>
-public sealed class WorkflowHookFailedException(string slot, string attachment, string reason)
+public sealed class WorkflowHookFailedException(string slot, string attachment, string reason, IReadOnlyList<WorkflowHookError>? errors = null)
     : Exception($"Hook '{slot}': required attachment '{attachment}' failed - {reason}.")
 {
     public string Slot { get; } = slot;
     public string Attachment { get; } = attachment;
     public string Reason { get; } = reason;
+
+    /// <summary>What the attachment refused, by field path; one error under <c>""</c> when it named no field.</summary>
+    public IReadOnlyList<WorkflowHookError> Errors { get; } = errors is { Count: > 0 } ? errors : [new(string.Empty, reason)];
 }
 
 /// <summary>
@@ -320,4 +374,18 @@ public sealed record WorkflowDefinitionAccessModel(IReadOnlyList<string> Edit, I
 {
     /// <summary>Who may read the definition's instances; empty = every View holder.</summary>
     public IReadOnlyList<string> View { get; init; } = View ?? [];
+}
+
+/// <summary>Reads a flow definition a module embeds under its <c>Data/workflows</c>.</summary>
+public static class ShippedFlows
+{
+    public static string Read(System.Reflection.Assembly assembly, string fileName)
+    {
+        var name = assembly.GetManifestResourceNames().FirstOrDefault(candidate =>
+                candidate.EndsWith(fileName, StringComparison.OrdinalIgnoreCase) && candidate.Contains("workflows", StringComparison.OrdinalIgnoreCase))
+            ?? throw new InvalidOperationException($"The embedded workflow definition '{fileName}' is missing from {assembly.GetName().Name}.");
+        using var stream = assembly.GetManifestResourceStream(name)!;
+        using var reader = new StreamReader(stream);
+        return reader.ReadToEnd();
+    }
 }

@@ -3,7 +3,7 @@ using Grove.Data.Indexing;
 namespace Grove.Search.Lucene.Model;
 
 /// <summary>
-/// Represents the indexing settings for a content part or a field.
+/// Represents the indexing settings for a field set or a field.
 /// </summary>
 public class LuceneContentIndexSettings : IContentIndexSettings
 {

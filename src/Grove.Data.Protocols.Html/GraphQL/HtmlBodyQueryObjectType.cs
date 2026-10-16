@@ -15,11 +15,11 @@ using Shortcodes;
 
 namespace Grove.Data.Protocols.Html.GraphQL;
 
-public class HtmlBodyQueryObjectType : ObjectGraphType<HtmlBodyPart>
+public class HtmlBodyQueryObjectType : ObjectGraphType<HtmlBodyFieldSet>
 {
     public HtmlBodyQueryObjectType(IStringLocalizer<HtmlBodyQueryObjectType> S)
     {
-        Name = "HtmlBodyPart";
+        Name = "HtmlBodyFieldSet";
         Description = S["Content stored as HTML."];
 
         Field<StringGraphType>("html")
@@ -27,23 +27,23 @@ public class HtmlBodyQueryObjectType : ObjectGraphType<HtmlBodyPart>
             .ResolveLockedAsync(RenderHtml);
     }
 
-    private static async ValueTask<object> RenderHtml(IResolveFieldContext<HtmlBodyPart> ctx)
+    private static async ValueTask<object> RenderHtml(IResolveFieldContext<HtmlBodyFieldSet> ctx)
     {
         var shortcodeService = ctx.RequestServices.GetRequiredService<IShortcodeService>();
         var contentDefinitionManager = ctx.RequestServices.GetRequiredService<IContentDefinitionManager>();
 
         var contentTypeDefinition = await contentDefinitionManager.GetTypeDefinitionAsync(ctx.Source.ContentItem.ContentType);
-        var contentTypePartDefinition = contentTypeDefinition.Parts.FirstOrDefault(x => string.Equals(x.PartDefinition.Name, "HtmlBodyPart", StringComparison.Ordinal));
-        var settings = contentTypePartDefinition.GetSettings<HtmlBodyPartSettings>();
+        var contentTypeFieldSetDefinition = contentTypeDefinition.FieldSets.FirstOrDefault(x => string.Equals(x.FieldSetDefinition.Name, "HtmlBody", StringComparison.Ordinal));
+        var settings = contentTypeFieldSetDefinition.GetSettings<HtmlBodyFieldSetSettings>();
 
         var html = ctx.Source.Html;
 
         if (settings.RenderLiquid)
         {
-            var model = new HtmlBodyPartViewModel()
+            var model = new HtmlBodyFieldSetViewModel()
             {
                 Html = ctx.Source.Html,
-                HtmlBodyPart = ctx.Source,
+                HtmlBodyFieldSet = ctx.Source,
                 ContentItem = ctx.Source.ContentItem,
             };
             var liquidTemplateManager = ctx.RequestServices.GetRequiredService<ILiquidTemplateManager>();
@@ -56,7 +56,7 @@ public class HtmlBodyQueryObjectType : ObjectGraphType<HtmlBodyPart>
             new Context
             {
                 ["ContentItem"] = ctx.Source.ContentItem,
-                ["TypePartDefinition"] = contentTypePartDefinition,
+                ["TypeFieldSetDefinition"] = contentTypeFieldSetDefinition,
             });
     }
 }

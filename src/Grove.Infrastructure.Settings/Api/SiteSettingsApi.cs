@@ -43,8 +43,8 @@ public sealed class SiteSettingsHandlers(
 
     // Anonymous, permission-shaped like ContentItemsController.ViewAsync: any caller may
     // ask "what is the site's home content item", the same way any caller may load the
-    // home page in a browser. ISite.HomeRoute is written by AutoroutePartHandler when a
-    // content item's AutoroutePart.SetHomepage is published (Grove.Routes.Auto,
+    // home page in a browser. ISite.HomeRoute is written by the Autoroute system flow when a
+    // content item's AutorouteFieldSet.SetHomepage is published (Grove.Routes.Auto,
     // now a real Grove.Infrastructure.Server manifest dependency - see Manifest.cs) - reading it here
     // via IOptions<AutorouteOptions>.ContentItemIdKey ("contentItemId", configured in
     // Grove.Contents/Startup.cs) is the same lookup HomeRouteTransformer performs

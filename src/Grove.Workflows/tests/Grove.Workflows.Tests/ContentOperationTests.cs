@@ -16,12 +16,12 @@ public class ContentOperationTests
         "Invoice",
         "Invoice",
         [
-            new ContentTypePartDefinition("Invoice", new ContentPartDefinition("Invoice",
+            new ContentTypeFieldSetDefinition("Invoice", new ContentFieldSetDefinition("Invoice",
             [
-                new ContentPartFieldDefinition(new ContentFieldDefinition("TextField"), "Number", new JsonObject()),
-                new ContentPartFieldDefinition(new ContentFieldDefinition("NumericField"), "Amount", new JsonObject()),
-                new ContentPartFieldDefinition(new ContentFieldDefinition("OptionPickerField"), "Customer", new JsonObject()),
-                new ContentPartFieldDefinition(new ContentFieldDefinition("MediaField"), "Scan", new JsonObject()),
+                new ContentFieldDefinition(new ContentFieldTypeDefinition("TextField"), "Number", new JsonObject()),
+                new ContentFieldDefinition(new ContentFieldTypeDefinition("NumericField"), "Amount", new JsonObject()),
+                new ContentFieldDefinition(new ContentFieldTypeDefinition("OptionListField"), "Customer", new JsonObject()),
+                new ContentFieldDefinition(new ContentFieldTypeDefinition("MediaField"), "Scan", new JsonObject()),
             ], new JsonObject()), new JsonObject()),
         ],
         new JsonObject());
@@ -99,7 +99,7 @@ public class ContentOperationTests
     {
         Assert.Equal("INV-1", ContentFieldValues.ToJson("TextField", "INV-1")!["Text"]!.GetValue<string>());
         Assert.Equal(12.5m, ContentFieldValues.ToJson("NumericField", 12.5)!["Value"]!.GetValue<decimal>());
-        Assert.Equal(["a", "b"], ((JsonArray)ContentFieldValues.ToJson("OptionPickerField", "a, b")!["SelectedIds"]!).Select(node => node!.GetValue<string>()));
+        Assert.Equal(["a", "b"], ((JsonArray)ContentFieldValues.ToJson("OptionListField", "a, b")!["SelectedIds"]!).Select(node => node!.GetValue<string>()));
         Assert.Null(ContentFieldValues.ToJson("MediaField", "x"));
     }
 }

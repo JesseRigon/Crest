@@ -19,20 +19,20 @@ public sealed record GroveModel(
     public static GroveModel? FromContentItem(GroveContentItem? item) =>
         item is null ? null : new(item, item.Content);
 
-    public string? GetText(string partName, string fieldName)
+    public string? GetText(string fieldSetName, string fieldName)
     {
-        return ContentItem?.Content?[partName]?[fieldName]?["Text"]?.GetValue<string>();
+        return ContentItem?.Content?[fieldSetName]?[fieldName]?["Text"]?.GetValue<string>();
     }
 
-    public decimal? GetNumber(string partName, string fieldName)
+    public decimal? GetNumber(string fieldSetName, string fieldName)
     {
-        var node = ContentItem?.Content?[partName]?[fieldName]?["Value"];
+        var node = ContentItem?.Content?[fieldSetName]?[fieldName]?["Value"];
         return node is null ? null : node.GetValue<decimal>();
     }
 
-    public string GetPickerIds(string partName, string fieldName)
+    public string GetPickerIds(string fieldSetName, string fieldName)
     {
-        var ids = ContentItem?.Content?[partName]?[fieldName]?["SelectedIds"]?.AsArray();
+        var ids = ContentItem?.Content?[fieldSetName]?[fieldName]?["SelectedIds"]?.AsArray();
         return ids is null
             ? string.Empty
             : string.Join(", ", ids.Select(id => id?.GetValue<string>()).Where(id => !string.IsNullOrWhiteSpace(id)));
@@ -58,9 +58,9 @@ public sealed record GroveContentItem(
 public sealed record GroveContentItemMetadata(
     string ContentType,
     string DisplayName,
-    GroveContentPartMetadata[] Parts);
+    GroveContentFieldSetMetadata[] FieldSets);
 
-public sealed record GroveContentPartMetadata(
+public sealed record GroveContentFieldSetMetadata(
     string Name,
     string DisplayName,
     GroveContentFieldMetadata[] Fields,

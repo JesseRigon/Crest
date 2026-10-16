@@ -26,14 +26,14 @@ public sealed class TypedContentTypeBuilder : IContentTypeBuilder
     public void Build(ISchema schema, FieldType contentQuery, ContentTypeDefinition contentTypeDefinition, ContentItemType contentItemType)
     {
         var serviceProvider = _httpContextAccessor.HttpContext.RequestServices;
-        var typeActivator = serviceProvider.GetService<ITypeActivatorFactory<ContentPart>>();
+        var typeActivator = serviceProvider.GetService<ITypeActivatorFactory<ContentFieldSet>>();
 
         if (_contentOptions.ShouldHide(contentTypeDefinition))
         {
             return;
         }
 
-        foreach (var part in contentTypeDefinition.Parts)
+        foreach (var part in contentTypeDefinition.FieldSets)
         {
             if (_contentOptions.ShouldSkip(part))
             {
@@ -50,13 +50,13 @@ public sealed class TypedContentTypeBuilder : IContentTypeBuilder
             }
 
             var queryGraphType = schema.AdditionalTypeInstances
-                .FirstOrDefault(x => x is IObjectGraphType && x.GetType().BaseType.GetGenericArguments().First().Name == part.PartDefinition.Name) as IObjectGraphType;
+                .FirstOrDefault(x => x is IObjectGraphType && ContentFieldSetName.Of(x.GetType().BaseType.GetGenericArguments().First()) == part.FieldSetDefinition.Name) as IObjectGraphType;
 
-            var collapsePart = _contentOptions.ShouldCollapse(part);
+            var collapseFieldSet = _contentOptions.ShouldCollapse(part);
 
             if (queryGraphType != null)
             {
-                if (collapsePart)
+                if (collapseFieldSet)
                 {
                     foreach (var field in queryGraphType.Fields)
                     {
@@ -66,7 +66,7 @@ public sealed class TypedContentTypeBuilder : IContentTypeBuilder
                             continue;
                         }
 
-                        var partActivator = typeActivator.GetTypeActivator(part.PartDefinition.Name);
+                        var partActivator = typeActivator.GetTypeActivator(part.FieldSetDefinition.Name);
                         var partType = partActivator.Type;
                         var rolledUpField = new FieldType
                         {
@@ -78,12 +78,12 @@ public sealed class TypedContentTypeBuilder : IContentTypeBuilder
                             Resolver = new FuncFieldResolver<ContentItem, object>(context =>
                             {
                                 var nameToResolve = partName;
-                                var resolvedPart = context.Source.Get(partType, nameToResolve);
+                                var resolvedFieldSet = context.Source.Get(partType, nameToResolve);
 
                                 return field.Resolver.ResolveAsync(new ResolveFieldContext
                                 {
                                     Arguments = context.Arguments,
-                                    Source = resolvedPart,
+                                    Source = resolvedFieldSet,
                                     FieldDefinition = field,
                                     UserContext = context.UserContext,
                                     RequestServices = context.RequestServices,
@@ -110,7 +110,7 @@ public sealed class TypedContentTypeBuilder : IContentTypeBuilder
             }
 
             var inputGraphTypeResolved = schema.AdditionalTypeInstances
-                .FirstOrDefault(x => x is IInputObjectGraphType && x.GetType().BaseType.GetGenericArguments().FirstOrDefault()?.Name == part.PartDefinition.Name) as IInputObjectGraphType;
+                .FirstOrDefault(x => x is IInputObjectGraphType && x.GetType().BaseType.GetGenericArguments().FirstOrDefault()?.Name == part.FieldSetDefinition.Name) as IInputObjectGraphType;
 
             if (inputGraphTypeResolved != null)
             {
@@ -122,11 +122,11 @@ public sealed class TypedContentTypeBuilder : IContentTypeBuilder
 
                 var whereInput = (ContentItemWhereInput)whereArgument.ResolvedType;
 
-                if (collapsePart)
+                if (collapseFieldSet)
                 {
                     foreach (var field in inputGraphTypeResolved.Fields)
                     {
-                        whereInput.AddField(field.WithPartCollapsedMetaData().WithPartNameMetaData(partName));
+                        whereInput.AddField(field.WithFieldSetCollapsedMetaData().WithFieldSetNameMetaData(partName));
                     }
                 }
                 else
@@ -136,7 +136,7 @@ public sealed class TypedContentTypeBuilder : IContentTypeBuilder
                         Type = inputGraphTypeResolved.GetType(),
                         Name = partFieldName,
                         Description = inputGraphTypeResolved.Description,
-                    }.WithPartNameMetaData(partName));
+                    }.WithFieldSetNameMetaData(partName));
                 }
             }
         }

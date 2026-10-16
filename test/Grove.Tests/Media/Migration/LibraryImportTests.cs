@@ -174,14 +174,14 @@ public sealed class LibraryImportTests : IDisposable
                 ["Image"] = new JsonObject { ["Paths"] = new JsonArray("logo.png", "missing.png"), ["MediaTexts"] = new JsonArray("Logo", "") },
                 ["Title"] = new JsonObject { ["Text"] = "Paths" },
             },
-            ["BagPart"] = new JsonObject
+            ["Slides"] = new JsonObject
             {
                 ["ContentItems"] = new JsonArray(new JsonObject
                 {
                     ["Slide"] = new JsonObject { ["Image"] = new JsonObject { ["Paths"] = new JsonArray("docs/a.txt") } },
                 }),
             },
-            ["SeoMetaPart"] = new JsonObject { ["OpenGraphImage"] = new JsonObject { ["Paths"] = new JsonArray("logo.png") } },
+            ["SeoMeta"] = new JsonObject { ["OpenGraphImage"] = new JsonObject { ["Paths"] = new JsonArray("logo.png") } },
         };
 
         var names = new HashSet<string>(MediaFieldRewriter.KnownPropertyFields) { "Image" };
@@ -190,17 +190,17 @@ public sealed class LibraryImportTests : IDisposable
 
         Assert.True(changed);
         Assert.Equal([logo, string.Empty], Ids(content["Article"]!["Image"]!));
-        Assert.Equal([a], Ids(content["BagPart"]!["ContentItems"]![0]!["Slide"]!["Image"]!));
-        Assert.Equal([logo], Ids(content["SeoMetaPart"]!["OpenGraphImage"]!));
+        Assert.Equal([a], Ids(content["Slides"]!["ContentItems"]![0]!["Slide"]!["Image"]!));
+        Assert.Equal([logo], Ids(content["SeoMeta"]!["OpenGraphImage"]!));
 
         // Paths stay beside the ids, and a second pass changes nothing.
         Assert.Equal("logo.png", content["Article"]!["Image"]!["Paths"]![0]!.GetValue<string>());
         Assert.False(await MediaFieldRewriter.RewriteAsync(content, names, path => library.ResolvePathAsync(path, Token), Exists));
 
         // An id from another tenant is replaced by this tenant's placement for the path.
-        content["SeoMetaPart"]!["OpenGraphImage"]!["PlacementIds"] = new JsonArray("0123456789abcdefghjkmnpqrs");
+        content["SeoMeta"]!["OpenGraphImage"]!["PlacementIds"] = new JsonArray("0123456789abcdefghjkmnpqrs");
         Assert.True(await MediaFieldRewriter.RewriteAsync(content, names, path => library.ResolvePathAsync(path, Token), Exists));
-        Assert.Equal([logo], Ids(content["SeoMetaPart"]!["OpenGraphImage"]!));
+        Assert.Equal([logo], Ids(content["SeoMeta"]!["OpenGraphImage"]!));
     }
 
     [Fact]

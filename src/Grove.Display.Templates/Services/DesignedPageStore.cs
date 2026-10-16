@@ -80,7 +80,7 @@ public sealed class DesignedPageStore(IServiceProvider services, ISession sessio
         return null;
     }
 
-    public async Task<DesignedPageRecord> SaveDraftAsync(string? contentItemId, DesignedPagePart values)
+    public async Task<DesignedPageRecord> SaveDraftAsync(string? contentItemId, DesignedPageFieldSet values)
     {
         var item = contentItemId is null ? null : await ContentManager.GetAsync(contentItemId, VersionOptions.DraftRequired);
         if (item is null)
@@ -122,10 +122,10 @@ public sealed class DesignedPageStore(IServiceProvider services, ISession sessio
         return true;
     }
 
-    private static void Apply(ContentItem item, DesignedPagePart values)
+    private static void Apply(ContentItem item, DesignedPageFieldSet values)
     {
         item.DisplayText = string.IsNullOrWhiteSpace(values.Title) ? values.Name : values.Title;
-        item.Alter<DesignedPagePart>(part =>
+        item.Alter<DesignedPageFieldSet>(part =>
         {
             part.Name = values.Name.Trim();
             part.Route = DesignedPageRoutes.Normalize(values.Route);
@@ -138,7 +138,7 @@ public sealed class DesignedPageStore(IServiceProvider services, ISession sessio
     }
 
     private static DesignedPageRecord? ToRecord(ContentItem? item) =>
-        item?.As<DesignedPagePart>() is { } part && !string.IsNullOrEmpty(part.Name)
+        item?.As<DesignedPageFieldSet>() is { } part && !string.IsNullOrEmpty(part.Name)
             ? new(item.ContentItemId, item.ContentItemVersionId, part.Name, part.Route, part.Bucket, part.Title, part.Description, part.AllowAnonymous, part.Source, item.Published, item.ModifiedUtc)
             : null;
 }

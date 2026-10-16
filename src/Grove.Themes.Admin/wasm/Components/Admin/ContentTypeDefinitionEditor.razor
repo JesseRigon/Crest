@@ -24,18 +24,18 @@
             <GroveText TextStyle="TextStyle.Subtitle2" Text="@T["Type settings"]" />
             <DefinitionSettingsJson Url="@($"{Base}/settings")" Settings="Model.Settings" OnSaved="Changed" />
 
-            <GroveText TextStyle="TextStyle.Subtitle2" Text="@T["Parts on this type"]" />
+            <GroveText TextStyle="TextStyle.Subtitle2" Text="@T["Field groups on this type"]" />
             @for (var index = 0; index < Order.Count; index++)
             {
                 var name = Order[index];
-                var part = Model.Parts.First(candidate => candidate.Name == name);
+                var part = Model.FieldSets.First(candidate => candidate.Name == name);
                 var at = index;
-                <GroveFieldset Text="@($"{part.Name}{(part.Name == part.PartName ? string.Empty : $" ({part.PartName})")}")" AllowCollapse="true" Collapsed="true">
+                <GroveFieldset Text="@($"{part.Name}{(part.Name == part.FieldSetName ? string.Empty : $" ({part.FieldSetName})")}")" AllowCollapse="true" Collapsed="true">
                     <GroveStack Orientation="Orientation.Horizontal" Gap="0.25rem">
                         <GroveButton Icon="arrow_upward" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Click="@(() => MoveAsync(at, -1))" Disabled="@(Busy || at == 0)" />
                         <GroveButton Icon="arrow_downward" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Click="@(() => MoveAsync(at, 1))" Disabled="@(Busy || at == Order.Count - 1)" />
                     </GroveStack>
-                    <DefinitionSettingsJson Url="@($"{Base}/parts/{Uri.EscapeDataString(part.Name)}/settings")" Settings="part.Settings" Rows="6" OnSaved="Changed" />
+                    <DefinitionSettingsJson Url="@($"{Base}/field-sets/{Uri.EscapeDataString(part.Name)}/settings")" Settings="part.Settings" Rows="6" OnSaved="Changed" />
                 </GroveFieldset>
             }
 
@@ -79,8 +79,8 @@
         {
             Model = await Http.GetFromJsonAsync<TypeSettings>($"{Base}/settings");
             DisplayName = Model?.DisplayName;
-            Order = Model?.Parts
-                .OrderBy(part => decimal.TryParse(part.Settings["ContentTypePartSettings"]?["Position"]?.ToString(), System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var position) ? position : decimal.MaxValue)
+            Order = Model?.FieldSets
+                .OrderBy(part => decimal.TryParse(part.Settings["ContentTypeFieldSetSettings"]?["Position"]?.ToString(), System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var position) ? position : decimal.MaxValue)
                 .Select(part => part.Name)
                 .ToList() ?? [];
             ConfirmDelete = false;
@@ -94,7 +94,7 @@
     private Task MoveAsync(int index, int by)
     {
         (Order[index], Order[index + by]) = (Order[index + by], Order[index]);
-        return SendAsync(() => Http.PutAsJsonAsync($"{Base}/parts/order", new { Names = Order }));
+        return SendAsync(() => Http.PutAsJsonAsync($"{Base}/field-sets/order", new { Names = Order }));
     }
 
     private async Task DeleteAsync()
@@ -122,6 +122,6 @@
         finally { Busy = false; }
     }
 
-    private sealed record TypePart(string Name, string PartName, JsonObject Settings);
-    private sealed record TypeSettings(string Name, string DisplayName, JsonObject Settings, TypePart[] Parts);
+    private sealed record TypeFieldSet(string Name, string FieldSetName, JsonObject Settings);
+    private sealed record TypeSettings(string Name, string DisplayName, JsonObject Settings, TypeFieldSet[] FieldSets);
 }

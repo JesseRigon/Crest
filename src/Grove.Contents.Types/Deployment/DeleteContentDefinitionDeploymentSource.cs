@@ -12,7 +12,7 @@ public sealed class DeleteContentDefinitionDeploymentSource
         {
             ["name"] = "DeleteContentDefinition",
             ["ContentTypes"] = JArray.FromObject(step.ContentTypes),
-            ["ContentParts"] = JArray.FromObject(step.ContentParts),
+            ["ContentFieldSets"] = JArray.FromObject(step.ContentFieldSets),
         });
 
         return Task.CompletedTask;

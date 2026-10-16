@@ -14,7 +14,7 @@
     <GroveStack Gap="1rem">
         <GroveStack Gap="0.25rem">
             <GroveText TextStyle="TextStyle.H6" Text="@T["Option picker: {0}", FieldName]" />
-            <GroveText TextStyle="TextStyle.Caption" Text="@($"{PartName} · {FieldName}")" />
+            <GroveText TextStyle="TextStyle.Caption" Text="@($"{FieldSetName} · {FieldName}")" />
             @if (Attachment is { FieldExists: true, IsOptionPicker: false })
             {
                 <GroveAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">
@@ -40,10 +40,10 @@
                         <GroveDropDown @bind-Value="ProviderKey" TValue="string" Data="@ProviderChoices" TextProperty="Label" ValueProperty="Value"
                                        Change="@(_ => OnSourceChangedAsync())" Disabled="@IsBusy" data-testid="picker-provider" />
                     </GroveFormField>
-                    @if (ProviderKey == "contentpartlist")
+                    @if (ProviderKey == "optionlist")
                     {
-                        <GroveFormField Text="@T["Content part list"]">
-                            <GroveDropDown @bind-Value="Qualifier" TValue="string" Data="@ContentPartListChoices" TextProperty="Label" ValueProperty="Value"
+                        <GroveFormField Text="@T["Option list"]">
+                            <GroveDropDown @bind-Value="Qualifier" TValue="string" Data="@OptionListChoices" TextProperty="Label" ValueProperty="Value"
                                            Change="@(_ => OnSourceChangedAsync())" Disabled="@IsBusy" data-testid="picker-list" />
                         </GroveFormField>
                     }
@@ -94,7 +94,7 @@
 
             <GroveFieldset Text="@T["Sorting and search"]" AllowCollapse="true">
                 <GroveStack Gap="0.5rem">
-                    <GroveText TextStyle="TextStyle.Caption" Text="@T["Sort is applied in the listed order; the first column is the primary sort, later ones break ties. Empty keeps the source's natural order (for content part lists: the manual position order)."]" />
+                    <GroveText TextStyle="TextStyle.Caption" Text="@T["Sort is applied in the listed order; the first column is the primary sort, later ones break ties. Empty keeps the source's natural order (for option lists: the manual position order)."]" />
                     @PathListEditor(T["Sort by"], Settings.SortColumns, "picker-sort-columns")
                     @PathListEditor(T["Search in"], Settings.SearchColumns, "picker-search-columns")
                 </GroveStack>
@@ -184,7 +184,7 @@
 @code {
     /// <summary>The part DEFINITION the field lives on. For fields directly on a
     /// type, Grove's implicit part shares the type's name.</summary>
-    [Parameter] public string PartName { get; set; } = string.Empty;
+    [Parameter] public string FieldSetName { get; set; } = string.Empty;
 
     [Parameter] public string FieldName { get; set; } = string.Empty;
 
@@ -203,12 +203,12 @@
     private bool IsBusy => IsLoading || IsSaving;
     private string? ErrorMessage;
 
-    private string ProviderKey = "contentpartlist";
+    private string ProviderKey = "optionlist";
     private string Qualifier = string.Empty;
     private string NewColumnPath = string.Empty;
 
     private string[] Providers = [];
-    private ContentPartListModel[] ContentPartListsAvailable = [];
+    private OptionListModel[] OptionListsAvailable = [];
     private OptionSourceColumnModel[] SourceColumns = [];
 
     private string SourceKey =>
@@ -220,7 +220,7 @@
 
     private Choice[] ProviderChoices => [.. Providers.Select(provider => new Choice(provider switch
     {
-        "contentpartlist" => T["Content part list"],
+        "optionlist" => T["Option list"],
         "users" => T["Users"],
         "contentitem" => T["Content items"],
         "currency" => T["Currencies"],
@@ -229,7 +229,7 @@
         _ => provider,
     }, provider))];
 
-    private Choice[] ContentPartListChoices => [.. ContentPartListsAvailable.Select(list => new Choice(list.DisplayText, list.Key))];
+    private Choice[] OptionListChoices => [.. OptionListsAvailable.Select(list => new Choice(list.DisplayText, list.Key))];
 
     private Choice[] ColumnChoices => [.. SourceColumns.Select(column => new Choice($"{column.Label} ({column.Path})", column.Path))];
 
@@ -260,26 +260,26 @@
         {
             Providers = await Http.GetFromJsonAsync<string[]>("api/grove/option-sources") ?? [];
 
-            // The Content Part Lists feature is opt-in; a 404 here just means the provider
+            // The Option lists feature is opt-in; a 404 here just means the provider
             // is not among the sources either, so the dropdown stays consistent.
-            if (Providers.Contains("contentpartlist", StringComparer.OrdinalIgnoreCase))
+            if (Providers.Contains("optionlist", StringComparer.OrdinalIgnoreCase))
             {
                 try
                 {
-                    ContentPartListsAvailable = await Http.GetFromJsonAsync<ContentPartListModel[]>("api/grove/content-part-lists") ?? [];
+                    OptionListsAvailable = await Http.GetFromJsonAsync<OptionListModel[]>("api/grove/option-lists") ?? [];
                 }
                 catch
                 {
-                    ContentPartListsAvailable = [];
+                    OptionListsAvailable = [];
                 }
             }
 
             Attachment = await Http.GetFromJsonAsync<OptionPickerAttachmentModel>(
-                $"api/grove/option-picker/attachment?part={Uri.EscapeDataString(PartName)}&field={Uri.EscapeDataString(FieldName)}");
+                $"api/grove/option-picker/attachment?fieldSet={Uri.EscapeDataString(FieldSetName)}&field={Uri.EscapeDataString(FieldName)}");
             Settings = Attachment?.Settings ?? new OptionPickerSettingsModel();
 
             var (provider, qualifier) = Split(Settings.SourceKey);
-            ProviderKey = provider.Length > 0 ? provider : "contentpartlist";
+            ProviderKey = provider.Length > 0 ? provider : "optionlist";
             Qualifier = qualifier;
 
             await LoadSourceColumnsAsync();
@@ -361,7 +361,7 @@
         try
         {
             var parent = await Http.GetFromJsonAsync<OptionPickerAttachmentModel>(
-                $"api/grove/option-picker/attachment?part={Uri.EscapeDataString(PartName)}&field={Uri.EscapeDataString(parentField)}");
+                $"api/grove/option-picker/attachment?fieldSet={Uri.EscapeDataString(FieldSetName)}&field={Uri.EscapeDataString(parentField)}");
 
             // Only a picker parent projects columns; a scalar parent's raw value
             // passes straight through and there is nothing to choose.
@@ -429,7 +429,7 @@
             Settings.SourceKey = SourceKey;
             using var response = await Http.PutAsJsonAsync("api/grove/option-picker/attachment", new
             {
-                Part = PartName,
+                FieldSet = FieldSetName,
                 Field = FieldName,
                 DisplayName = (string?)null,
                 Settings,

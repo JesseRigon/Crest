@@ -13,25 +13,25 @@ public interface IContentDefinitionManager
 
     Task<IEnumerable<ContentTypeDefinition>> ListTypeDefinitionsAsync();
 
-    Task<IEnumerable<ContentPartDefinition>> LoadPartDefinitionsAsync();
+    Task<IEnumerable<ContentFieldSetDefinition>> LoadFieldSetDefinitionsAsync();
 
-    Task<IEnumerable<ContentPartDefinition>> ListPartDefinitionsAsync();
+    Task<IEnumerable<ContentFieldSetDefinition>> ListFieldSetDefinitionsAsync();
 
     Task<ContentTypeDefinition> LoadTypeDefinitionAsync(string name);
 
     Task<ContentTypeDefinition> GetTypeDefinitionAsync(string name);
 
-    Task<ContentPartDefinition> LoadPartDefinitionAsync(string name);
+    Task<ContentFieldSetDefinition> LoadFieldSetDefinitionAsync(string name);
 
-    Task<ContentPartDefinition> GetPartDefinitionAsync(string name);
+    Task<ContentFieldSetDefinition> GetFieldSetDefinitionAsync(string name);
 
     Task DeleteTypeDefinitionAsync(string name);
 
-    Task DeletePartDefinitionAsync(string name);
+    Task DeleteFieldSetDefinitionAsync(string name);
 
     Task StoreTypeDefinitionAsync(ContentTypeDefinition contentTypeDefinition);
 
-    Task StorePartDefinitionAsync(ContentPartDefinition contentPartDefinition);
+    Task StoreFieldSetDefinitionAsync(ContentFieldSetDefinition contentFieldSetDefinition);
 
     /// <summary>
     /// Returns an unique identifier that is updated when content definitions have changed.

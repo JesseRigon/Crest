@@ -6,7 +6,8 @@ namespace Grove.Contents.OptionPicker.ContentItems;
 /// <summary>
 /// Old recipes still import: a content definition step's content picker fields become option
 /// pickers over the content items source, and a content step's values in the retired shape
-/// (<c>ContentItemIds</c>) become <c>SelectedIds</c>, on the way in (<see cref="ContentPickerConversion"/>).
+/// (<c>ContentItemIds</c>) become <c>SelectedIds</c>, on the way in (<see cref="ContentPickerConversion"/>);
+/// the retired taxonomy, user and localization set pickers likewise (<see cref="RetiredPickerConversion"/>).
 /// </summary>
 public sealed class ContentPickerRecipeMapping : IRecipeEventHandler
 {
@@ -16,9 +17,11 @@ public sealed class ContentPickerRecipeMapping : IRecipeEventHandler
         {
             case "ContentDefinition" or "ReplaceContentDefinition":
                 ContentPickerConversion.ConvertDefinitionStep(context.Step);
+                RetiredPickerConversion.ConvertDefinitionStep(context.Step);
                 break;
             case "Content":
                 ContentPickerConversion.ConvertValues(context.Step["data"] ?? context.Step["Data"]);
+                RetiredPickerConversion.ConvertValues(context.Step["data"] ?? context.Step["Data"]);
                 break;
         }
 

@@ -14,7 +14,7 @@ public sealed class PartiesContentGroupProvider : IContentGroupProvider
     public void Build(ContentGroupBuilder builder) => builder
         .Group(Key, "Parties", 10)
         .Types(PartiesConstants.ContentTypes.Person, PartiesConstants.ContentTypes.Organization, PartiesConstants.ContentTypes.Association)
-        .Lists(
+        .OptionLists(
             PartiesOptionSets.ContactPointKind,
             PartiesOptionSets.AddressKind,
             PartiesOptionSets.OrganizationType,

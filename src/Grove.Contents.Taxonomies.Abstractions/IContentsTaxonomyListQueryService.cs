@@ -7,5 +7,5 @@ namespace Grove.Contents.Taxonomies;
 
 public interface IContentsTaxonomyListQueryService
 {
-    Task<IQuery<ContentItem>> QueryAsync(TermPart termPart, Pager pager);
+    Task<IQuery<ContentItem>> QueryAsync(TermFieldSet termFieldSet, Pager pager);
 }

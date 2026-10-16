@@ -6,5 +6,5 @@ namespace Grove.Contents.Taxonomies;
 
 public interface IContentsTaxonomyListFilter
 {
-    Task FilterAsync(IQuery<ContentItem> query, TermPart termPart);
+    Task FilterAsync(IQuery<ContentItem> query, TermFieldSet termFieldSet);
 }

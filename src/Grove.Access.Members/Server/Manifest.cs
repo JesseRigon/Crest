@@ -17,7 +17,7 @@ using Grove.Modules.Manifest;
         "Grove.Contents",
         "Grove.Contents.Fields",
         "Grove.Contents.Title",
-        "Grove.Contents.PartLists",
+        "Grove.Contents.OptionLists",
         "Grove.Parties"
     ],
     Category = "Business"

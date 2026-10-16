@@ -140,7 +140,7 @@ public sealed class ContentTypeShareableKind(IContentShareLookup lookup) : IShar
 /// its owner holds Manager on it; rules test its <c>contenttype</c>. Lists of
 /// <see cref="ContentItemIndex"/> filter on the access index by <c>ContentItemId</c>. An item
 /// not saved yet (being created) has no owner: the decision is its type's, so creating takes
-/// Editor on the type. An item filed in a folder (<see cref="ContentShareFolderPart"/>,
+/// Editor on the type. An item filed in a folder (<see cref="ContentShareFolderFieldSet"/>,
 /// requirement 74) follows the folder's chain instead of its type's, with its content type still
 /// its <c>contenttype</c> for rules; a folder that no longer exists puts it back under its type.
 /// </summary>
@@ -193,7 +193,7 @@ public sealed class ContentShareableKind(IContentShareLookup lookup, IServicePro
         if (_saved.TryGetValue(id, out var saved) && !string.IsNullOrEmpty(saved.ContentType))
         {
             (contentType, owner) = (saved.ContentType, saved.Owner);
-            folder = saved.As<ContentShareFolderPart>()?.Folder;
+            folder = saved.As<ContentShareFolderFieldSet>()?.Folder;
         }
         else if (await lookup.ItemAsync(id) is { } stored)
         {

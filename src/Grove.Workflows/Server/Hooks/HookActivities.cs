@@ -57,20 +57,25 @@ public class Hook : Activity
 /// <summary>
 /// Fails the unit this flow runs in, with a reason: inside a hook attachment, after a Failed
 /// port, it is how a flow says "the host must not go through". The flow faults with the
-/// reason as its incident; the hosting burst discards every write at commit.
+/// reason as its incident; the hosting burst discards every write at commit. Inside a content
+/// lifecycle hook the reason is the refusal's message and <see cref="Field"/> its field path, so
+/// the content items API answers 400 with the error under that field.
 /// </summary>
 [Activity("Grove.Workflows", "Grove", "Fails the current unit of work: the hosting flow faults and nothing written in the burst stands.", DisplayName = "Fail unit")]
 [UsedImplicitly]
 public class FailUnit : Activity
 {
-    [Input(DisplayName = "Reason", Description = "What went wrong, for the journal.", UIHint = InputUIHints.SingleLine)]
+    [Input(DisplayName = "Reason", Description = "What went wrong, for the journal; inside a content hook, the message the editor shows.", UIHint = InputUIHints.SingleLine)]
     public Input<string?> Reason { get; set; } = null!;
+
+    [Input(DisplayName = "Field", Description = "Optional. Inside a content hook, the field the refusal is about: FieldSet.Field, a field set, or blank for the item.", UIHint = InputUIHints.SingleLine)]
+    public Input<string?> Field { get; set; } = null!;
 
     protected override ValueTask ExecuteAsync(ActivityExecutionContext context)
     {
         var reason = Reason.GetOrDefault(context);
         reason = string.IsNullOrWhiteSpace(reason) ? "The flow failed its unit of work." : reason.Trim();
-        context.GetRequiredService<WorkflowUnitOfWork>().Fail(reason, context.Activity.Id);
+        context.GetRequiredService<WorkflowUnitOfWork>().Fail(reason, context.Activity.Id, Field.GetOrDefault(context)?.Trim());
         throw new WorkflowUnitFailedException(reason);
     }
 }

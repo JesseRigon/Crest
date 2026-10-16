@@ -3,6 +3,7 @@ using Grove.Contents.Management.Metadata.Settings;
 using Grove.Data.Migration;
 using Grove.Contents.Markdown.Fields;
 using Grove.Contents.Markdown.Settings;
+using Grove.Contents.Types;
 
 namespace Grove.Contents.Markdown;
 
@@ -17,12 +18,14 @@ public sealed class Migrations : DataMigration
 
     public async Task<int> CreateAsync()
     {
-        await _contentDefinitionManager.AlterPartDefinitionAsync("MarkdownBodyPart", builder => builder
+        await _contentDefinitionManager.AlterFieldSetDefinitionAsync("MarkdownBody", builder => builder
             .Attachable()
             .WithDescription("Provides a Markdown formatted body for your content item."));
 
+        await DefineMarkdownBodyFieldsAsync();
+
         // Shortcut other migration steps on new content definition schemas.
-        return 5;
+        return 6;
     }
 
     // Migrate FieldSettings. This only needs to run on old content definition schemas.
@@ -44,23 +47,23 @@ public sealed class Migrations : DataMigration
         // To keep the same behavior as before, RenderLiquid is initialized to the opposite of SanitizeHtml.
         foreach (var contentType in await _contentDefinitionManager.LoadTypeDefinitionsAsync())
         {
-            if (contentType.Parts.Any(x => x.PartDefinition.Name == "MarkdownBodyPart"))
+            if (contentType.FieldSets.Any(x => x.FieldSetDefinition.Name == "MarkdownBody"))
             {
-                await _contentDefinitionManager.AlterTypeDefinitionAsync(contentType.Name, x => x.WithPart("MarkdownBodyPart", part =>
+                await _contentDefinitionManager.AlterTypeDefinitionAsync(contentType.Name, x => x.WithFieldSet("MarkdownBody", part =>
                 {
-                    part.MergeSettings<MarkdownBodyPartSettings>(s => s.RenderLiquid = !s.SanitizeHtml);
+                    part.MergeSettings<MarkdownBodyFieldSetSettings>(s => s.RenderLiquid = !s.SanitizeHtml);
                 }));
             }
         }
 
-        var partDefinitions = await _contentDefinitionManager.LoadPartDefinitionsAsync();
+        var partDefinitions = await _contentDefinitionManager.LoadFieldSetDefinitionsAsync();
         foreach (var partDefinition in partDefinitions)
         {
-            if (partDefinition.Fields.Any(x => x.FieldDefinition.Name == "MarkdownField"))
+            if (partDefinition.Fields.Any(x => x.FieldTypeDefinition.Name == "MarkdownField"))
             {
-                await _contentDefinitionManager.AlterPartDefinitionAsync(partDefinition.Name, partBuilder =>
+                await _contentDefinitionManager.AlterFieldSetDefinitionAsync(partDefinition.Name, partBuilder =>
                 {
-                    foreach (var fieldDefinition in partDefinition.Fields.Where(x => x.FieldDefinition.Name == "MarkdownField"))
+                    foreach (var fieldDefinition in partDefinition.Fields.Where(x => x.FieldTypeDefinition.Name == "MarkdownField"))
                     {
                         partBuilder.WithField(fieldDefinition.Name, fieldBuilder =>
                         {
@@ -73,4 +76,21 @@ public sealed class Migrations : DataMigration
 
         return 5;
     }
+
+    // The field set's values are fields (docs/content-engine.md › Behaviour is workflows); the ones its
+    // system flows require are locked by the module.
+    public async Task<int> UpdateFrom5Async()
+    {
+        await DefineMarkdownBodyFieldsAsync();
+        return 6;
+    }
+
+    private Task DefineMarkdownBodyFieldsAsync() =>
+        _contentDefinitionManager.AlterFieldSetDefinitionAsync("MarkdownBody", builder => builder
+            .WithField(Models.MarkdownBodyFieldSet.MarkdownField, field => field
+                .OfType("MarkdownField")
+                .WithDisplayMode(ContentFieldDisplayModes.None)
+                .WithDisplayName("Body")
+                .WithPosition("0")
+                .Locked()));
 }

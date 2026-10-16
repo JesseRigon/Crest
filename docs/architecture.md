@@ -12,7 +12,7 @@ Grove has two halves in one repository. **The platform** (the projects listed in
 `src/Grove.Infrastructure.Build/Platform.Projects.props`, and `test/`) is a hard fork of OrchardCore: tenants, users, permissions, content, features, settings and the module
 system. Grove develops it as its own code. **The application layer** is everything a business-facing
 application needs that is not a line of business. Its foundation is built — the Blazor admin and
-site shells, the content-item API, icons, localization, Content Part Lists, the global
+site shells, the content-item API, icons, localization, Option lists, the global
 store and the geographic tree. Three modules complete it:
 
 | Module | What it is |
@@ -23,8 +23,8 @@ store and the geographic tree. Three modules complete it:
 | `Grove.Data.Queries` | The read side: the structured query model (a step list compiled through YesSql into parameterised SQL with the caller's scope conjoined for every table), the SQL source for external databases with its scope rewriter, the `System` source (`item`, `user`, `site`) that display slots bind, query descriptors and the catalog the workflow engine's registry reads. Every run is paged, cancellable, typed and caller-scoped. Queries owns no connections: it consumes SQL connections from the data layer and external connections from the protocol modules ([queries.md › Connections](queries.md#connections-the-protocol-modules-and-the-data-layer)). |
 | `Grove.Workflows` | The action side: a workflow service built on a vendored fork of Elsa 3 (MIT). Its registry (activities, triggers, hook slots, flows, and queries as `RunQuery` activities) is the operation registry; units of work (one burst, one session, one transaction, with inline hooks and durable background calls); the access gate as engine middleware with the actor rule (a run acts as the caller who started it, or as the system when published so); connectors with API-key, bearer, basic and OAuth2 authentication and OpenAPI import (☐ the connection model moves into the protocol modules, the activities stay as consumers); approvals; field dependencies; ownership tiers and per-flow access; the platform modules' activities and triggers (the stock OrchardCore workflow module is gone); the designer bridge. |
 | `Grove.Data.Types.Money` | The money type and the `PriceField` a tenant puts on any content type: `Amount` bound to an `ICurrency`, ISO 4217 metadata from the global store so minor units are never a per-tenant guess, and a default currency. Adapted from OrchardCore.Commerce (MIT). See [types.md](types.md). |
-| `Grove.Contents.OptionPicker` | The one field type for picking: `OptionPickerField` over option sources (content part lists, users, content items, currencies, cultures, time zones), with cascading filters, its index, its API and its UI (the picker component and the field editor, from the module's own client library). Content items are a source, not a separate picker field. Every host gets it through `Grove.Application.Cms.Core.Targets`. See [server.md](server.md) § 3. |
-| Content Part Lists | Tenant-editable option sets with shared global sets: the `Grove.Contents.PartLists` feature of `Grove.Contents`, opt-in per tenant. See [content-engine.md](content-engine.md) › Option lists. |
+| `Grove.Contents.OptionPicker` | The one field type for picking: `OptionListField` over option sources (option lists, users, content items, currencies, cultures, time zones), with cascading filters, its index, its API and its UI (the picker component and the field editor, from the module's own client library). Content items are a source, not a separate picker field. Every host gets it through `Grove.Application.Cms.Core.Targets`. See [server.md](server.md) § 3. |
+| Option lists | Tenant-editable option sets with shared global sets: the `Grove.Contents.OptionLists` feature of `Grove.Contents`, opt-in per tenant. See [content-engine.md](content-engine.md) › Option lists. |
 | `Grove.Data.Kinds` | The kind-registry contract, server-free: `IKindDescriptor` and `KindCatalog<TKind>` (merge what the enabled features register by key, order it, find by key or content type). Party types are one registry on it; a downstream module's own registries (asset kinds, transaction kinds) are others. `KindPageSource<TKind>` in Grove.Infrastructure.Server.Abstractions builds a registry's pages (menu items and route gates) from it. |
 
 The thesis: **all an application needs is parties, workflows and content items.** A
@@ -139,7 +139,7 @@ for them.
 
 Grove has the party **model** — there is no engine to speak of: content types (Person,
 Organization, Address, ContactPoint, Position, Location, the `parties.*` vocabularies on
-the `Grove.Contents.PartLists` feature, the address's geo stack (`GeoStackField`) on `Grove.Data.Regions`), the contacts /
+the `Grove.Contents.OptionLists` feature, the address's geo stack (`GeoStackField`) on `Grove.Data.Regions`), the contacts /
 positions / locations services and API, the Person ↔ portal-user link, three indexes, the
 `IPartyTypeProvider` registry with the menu and generic role pages generated from its
 catalog, and two workflow activities. It is Grove's for two reasons, neither of them
@@ -148,10 +148,10 @@ points at an Organization), and every product needs people and organizations bef
 anything else. It ships no party role of its own.
 
 Parties defines **no field types of its own**: the party picker on a role is an
-`OptionPickerField` over content items constrained to Person or Organization, the portal-user link a stock
-`UserPickerField`, an address's country and the levels below it a `GeoStackField` from
+`OptionListField` over content items constrained to Person or Organization, the portal-user link an
+`OptionListField` over the `users` source, an address's country and the levels below it a `GeoStackField` from
 `Grove.Data.Regions`, and honorific, address kind, phone country, organization type and
-industry are `OptionPickerField`s (Grove.Contents.OptionPicker) over content part lists. The only Parties-specific
+industry are `OptionListField`s (Grove.Contents.OptionPicker) over option lists. The only Parties-specific
 helper is `PartyRoleDefinitions` ("define a role type: party picker + number field +
 profile"), which downstream modules and products call. The role content types are defined
 and registered by the modules that own them.
@@ -161,7 +161,7 @@ and registered by the modules that own them.
 Field types are platform vocabulary: a tenant composes content from them in the type
 editor, and an application on Grove alone must be able to model prices, places and option
 sets without a line-of-business module. So **every custom `ContentField` belongs to Grove**
-unless it is proprietary or depends on proprietary code. Three exist: `OptionPickerField`
+unless it is proprietary or depends on proprietary code. Three exist: `OptionListField`
 (Grove.Contents.OptionPicker, [server.md](server.md) S2), `GeoStackField` (Grove.Data.Regions) and `PriceField` (Grove.Data.Types.Money,
 [types.md](types.md)).
 
@@ -179,22 +179,17 @@ project must be renameable by renaming its modules alone. The same rule holds fo
 projects. Routes, JSON property names and recipe step names are not renamed for it.
 
 The rule is about services: `Grove…` service, controller, claim, settings-key and permission
-names are not used (`IGlobalStore`, `ContentPartListService`, `AuthController`,
+names are not used (`IGlobalStore`, `OptionListService`, `AuthController`,
 `ClientWebAssemblyHost`, `LazyModulesManifest`, `[BlazorComponent]`,
 `ManageGlobalReferenceData`). The UI component library (`GroveButton`, `GroveDataGrid`, …)
 keeps its prefix for conflict resolution with HTML and Blazor names. Where a Grove service
 would clash with a platform service of the same name, the Grove one keeps the prefix. Names
 that still carry it, and why:
 
-- **Stored by type name** (renaming would orphan data): the content parts `GroveOptionPart`,
-  `GroveContentPartListPart`, `GroveRegionalProfilePart`, `GroveRegionalProfileReferencePart`,
-  `GroveAssignmentPart`, `GroveOrganizationPart`, `GroveBlazorComponentPart`; the indexes
-  `GroveAssignmentIndex`, `GroveOrganizationIndex`; the migrations (the migration record keys
-  on the class name) `GroveContentPartListMigrations`, `GroveAssignmentIndexMigrations`,
-  `GroveOrganizationIndexMigrations`; the documents `GroveAdminMenuLayoutDocument`,
-  `GroveContentGroupsDocument`, `GroveMenuPlacementDocument`,
-  `GroveGlobalSchemaState`; the definition and entity settings `GroveOptionFieldSettings`,
-  `GroveDefinitionLockSettings`, `GroveFieldVisibilitySettings`, `GroveContentTypeMenuSettings`,
+- **Stored by type name** (renaming would orphan data): the index `GroveOrganizationIndex` and
+  its migrations `GroveOrganizationIndexMigrations` (the migration record keys on the class
+  name); the documents `GroveAdminMenuLayoutDocument`, `GroveMenuPlacementDocument`,
+  `GroveGlobalSchemaState`; the definition and entity settings `GroveContentTypeMenuSettings`,
   `GroveContentGroupsSettings`, `GroveLocalizationSettings`, `GroveMemberThemeSettings`,
   `GroveUserMenuPreferences`, `GroveMemberInfo`; and the site-settings keys `GroveTitleBar`,
   `GroveIconProviders`, `GroveAdminPrimaryNavMenu`. They go together at the first tenant reset
@@ -203,12 +198,15 @@ that still carry it, and why:
   API view models and their client mirrors that duplicate a module's own model
   (`GroveUser`, `GroveTenant`, `GroveQuery`, `GroveLoginSettings`, `GroveTemplatePreview`,
   `GroveDeploymentPlan`, `GroveLayer`, `GroveMediaOptions`, the icon catalog records and about
-  25 more), `GroveMediaProfilesController`, `GroveAntiforgeryToken`. Each
+  25 more), `GroveOptionModel` and `GroveOptionFieldModel` (beside the component library's
+  `OptionModel` and `OptionFieldModel`), `GroveMediaProfilesController`, `GroveAntiforgeryToken`. Each
   folds into its module's own model when the API it serves moves out of Grove.Infrastructure.Server into the
   module that declares it ([MVC/api.md](MVC/api.md) § Placement).
 - **The component library**, `Grove.Display.Components` whole, including its client plumbing
   (`[GroveShell]`, `[GroveEager]`, `[GroveJSComponent]`, `GroveShellContext`,
-  `GroveLateServiceProviders`, `GroveApiLocalizer`, the files and sharing clients); whether that plumbing counts as
+  `GroveLateServiceProviders`, `GroveApiLocalizer`, the files and sharing clients, the content
+  editor's metadata records `GroveContentItemMetadata`, `GroveContentTypeMetadata`,
+  `GroveContentFieldSetMetadata` and `GroveContentFieldMetadata`); whether that plumbing counts as
   components is an open question (below).
 - **Still to rename:** the Workflows permission names (`ViewGroveWorkflows` and siblings; the
   connection one becomes the connection system's `ManageConnections`, [queries.md](queries.md)),
@@ -347,7 +345,7 @@ and registrations do not exist.
   `ModuleName` list.
 - A module client library (`*.BlazorWasm`) belongs to the longest module or feature id its name
   starts with, and is served while that module or feature is enabled
-  (`Grove.Contents.PartLists.BlazorWasm` follows its feature, not all of Grove.Contents).
+  (`Grove.Contents.OptionLists.BlazorWasm` follows its feature, not all of Grove.Contents).
 
 ## The rules that keep it composable
 
@@ -441,9 +439,9 @@ the piece lives. The global store's host-call rough edge is in [globals.md](glob
     are not pages uses the catalog only;
   - gap-free record numbering, `IRecordNumbering` in Grove.Infrastructure.Server (named sequences per tenant in
     one document, a number taken only when the record commits; `Format(prefix, n)`);
-  - the content-part-list import, `IContentPartListImporter` in the `Grove.Contents.PartLists` feature (upsert
+  - the option-list import, `IOptionListImporter` in the `Grove.Contents.OptionLists` feature (upsert
     by key, a tenant's label, position and hidden flag never overwritten, failing rows reported)
-    and `POST api/grove/content-part-lists/{key}/import` (manage permission; refused under an
+    and `POST api/grove/option-lists/{key}/import` (manage permission; refused under an
     edit lock);
   - shared dev tooling: `tools/dev-lib.sh` (`ensure_feed`, `pack_into_output`, `restore_host`,
     `stop_server`, `start_test_server` / `stop_test_server`, `wait_until_provisioned`,

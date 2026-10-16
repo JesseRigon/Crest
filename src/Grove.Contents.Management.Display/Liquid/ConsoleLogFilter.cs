@@ -44,9 +44,9 @@ public class ConsoleLogFilter : ILiquidFilter
         {
             sb.Append(ConvertContentItem(contentItem).ToString());
         }
-        else if (content is ContentPart contentPart)
+        else if (content is ContentFieldSet contentFieldSet)
         {
-            sb.Append(ConvertContentPart(contentPart).ToString());
+            sb.Append(ConvertContentFieldSet(contentFieldSet).ToString());
         }
         else if (content is IShape shape)
         {
@@ -81,9 +81,9 @@ public class ConsoleLogFilter : ILiquidFilter
         [nameof(ContentItem.Content)] = contentItem.Content,
     };
 
-    private static JsonObject ConvertContentPart(ContentPart contentPart) => new()
+    private static JsonObject ConvertContentFieldSet(ContentFieldSet contentFieldSet) => new()
     {
-        [nameof(ContentPart.ContentItem)] = ConvertContentItem(contentPart.ContentItem),
-        [nameof(ContentPart.Content)] = JObject.FromObject(contentPart.Content),
+        [nameof(ContentFieldSet.ContentItem)] = ConvertContentItem(contentFieldSet.ContentItem),
+        [nameof(ContentFieldSet.Content)] = JObject.FromObject(contentFieldSet.Content),
     };
 }

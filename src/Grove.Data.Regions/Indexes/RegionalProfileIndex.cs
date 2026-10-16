@@ -26,7 +26,7 @@ public sealed class RegionalProfileIndexProvider : IndexProvider<ContentItem>
                     return null;
                 }
 
-                var part = contentItem.Get<GroveRegionalProfilePart>(typeof(GroveRegionalProfilePart).Name);
+                var part = contentItem.Get<RegionalProfileFieldSet>(ContentFieldSetName.Of<RegionalProfileFieldSet>());
                 if (part is null)
                 {
                     return null;

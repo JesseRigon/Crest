@@ -18,9 +18,9 @@ public class MediaFieldHandler : ContentFieldHandler<MediaField>
 
     public override Task ValidatingAsync(ValidateContentFieldContext context, MediaField field)
     {
-        var settings = context.ContentPartFieldDefinition.GetSettings<MediaFieldSettings>();
+        var settings = context.ContentFieldDefinition.GetSettings<MediaFieldSettings>();
         var paths = field.Paths ?? [];
-        var name = context.ContentPartFieldDefinition.DisplayName();
+        var name = context.ContentFieldDefinition.DisplayName();
 
         if (settings.Required && paths.Length < 1)
         {

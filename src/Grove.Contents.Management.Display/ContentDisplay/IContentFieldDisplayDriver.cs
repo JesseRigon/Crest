@@ -6,5 +6,5 @@ namespace Grove.Contents.Management.Display.ContentDisplay;
 
 public interface IContentFieldDisplayDriver
 {
-    Task<IDisplayResult> BuildDisplayAsync(ContentPart contentPart, ContentPartFieldDefinition partFieldDefinition, ContentTypePartDefinition typePartDefinition, BuildDisplayContext context);
+    Task<IDisplayResult> BuildDisplayAsync(ContentFieldSet contentFieldSet, ContentFieldDefinition partFieldDefinition, ContentTypeFieldSetDefinition typeFieldSetDefinition, BuildDisplayContext context);
 }

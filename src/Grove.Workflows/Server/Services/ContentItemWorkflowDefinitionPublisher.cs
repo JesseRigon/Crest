@@ -11,7 +11,7 @@ using Grove.Workflows.Management.Notifications;
 using Grove.Workflows.Management.Stores;
 using Grove.Workflows.Models;
 using Grove.Contents.Management;
-using Grove.Workflows.Parts;
+using Grove.Workflows.FieldSets;
 using Grove.Workflows.Registry;
 
 namespace Grove.Workflows.Services;
@@ -26,8 +26,8 @@ public class ContentItemWorkflowDefinitionPublisher(
     IMediator mediator,
     IWorkflowDefinitionCacheManager workflowDefinitionCacheManager,
     ICacheManager cacheManager,
-    WorkflowDefinitionPartMapper workflowDefinitionPartMapper,
-    WorkflowDefinitionPartSerializer workflowDefinitionPartSerializer,
+    WorkflowDefinitionFieldSetMapper workflowDefinitionFieldSetMapper,
+    WorkflowDefinitionFieldSetSerializer workflowDefinitionFieldSetSerializer,
     WorkflowOwnershipGuard ownershipGuard) : IWorkflowDefinitionPublisher
 {
     public WorkflowDefinition New(IActivity? root = null)
@@ -104,7 +104,7 @@ public class ContentItemWorkflowDefinitionPublisher(
         definition.IsPublished = true;
         definition.Id = contentItem.ContentItemVersionId;
 
-        contentItem.Alter<WorkflowDefinitionPart>(part =>
+        contentItem.Alter<WorkflowDefinitionFieldSet>(part =>
         {
             part.DefinitionId = definition.DefinitionId;
             part.DefinitionVersionId = definition.Id;
@@ -120,7 +120,7 @@ public class ContentItemWorkflowDefinitionPublisher(
             part.ProviderName = definition.ProviderName;
             part.ToolVersion = definition.ToolVersion;
             part.UsableAsActivity = definition.Options.UsableAsActivity == true;
-            workflowDefinitionPartSerializer.UpdateSerializedData(part);
+            workflowDefinitionFieldSetSerializer.UpdateSerializedData(part);
         });
 
         await contentManager.PublishAsync(contentItem);
@@ -157,7 +157,7 @@ public class ContentItemWorkflowDefinitionPublisher(
     // What the caller gets back: the definition as it is now, unpublished.
     private WorkflowDefinition Unpublished(ContentItem contentItem)
     {
-        var definition = workflowDefinitionPartMapper.Map(contentItem.Get<WorkflowDefinitionPart>(typeof(WorkflowDefinitionPart).Name));
+        var definition = workflowDefinitionFieldSetMapper.Map(contentItem.Get<WorkflowDefinitionFieldSet>(ContentFieldSetName.Of<WorkflowDefinitionFieldSet>()));
         definition.IsPublished = false;
         return definition;
     }
@@ -166,7 +166,7 @@ public class ContentItemWorkflowDefinitionPublisher(
     {
         // Reverting is an edit: a shipped flow forks, a system one refuses.
         var ownership = await ownershipGuard.AuthorizeChangeAsync(definitionId, WorkflowChange.Save);
-        var allVersions = (await contentManager.GetAllVersionsAsync(definitionId)).Select(x => x.Get<WorkflowDefinitionPart>(typeof(WorkflowDefinitionPart).Name)).ToList();
+        var allVersions = (await contentManager.GetAllVersionsAsync(definitionId)).Select(x => x.Get<WorkflowDefinitionFieldSet>(ContentFieldSetName.Of<WorkflowDefinitionFieldSet>())).ToList();
         var specifiedVersion = allVersions.FirstOrDefault(x => x.Version == version);
         
         if (specifiedVersion == null)
@@ -174,14 +174,14 @@ public class ContentItemWorkflowDefinitionPublisher(
 
         var latestVersion = allVersions.OrderByDescending(x => x.Version).First();
         
-        // latestVersion.ContentItem.Alter<WorkflowDefinitionPart>(part =>
+        // latestVersion.ContentItem.Alter<WorkflowDefinitionFieldSet>(part =>
         // {
         //     part.IsLatest = false;
         // });
         
         var draft = await contentManager.GetAsync(definitionId, VersionOptions.DraftRequired);
         
-        draft.Alter<WorkflowDefinitionPart>(part =>
+        draft.Alter<WorkflowDefinitionFieldSet>(part =>
         {
             part.DefinitionVersionId = draft.ContentItemVersionId;
             part.Version = latestVersion.Version + 1;
@@ -202,17 +202,17 @@ public class ContentItemWorkflowDefinitionPublisher(
 
         if (!ownership.IsTenant)
         {
-            var model = workflowDefinitionPartMapper.MapModel(draft.Get<WorkflowDefinitionPart>(typeof(WorkflowDefinitionPart).Name));
+            var model = workflowDefinitionFieldSetMapper.MapModel(draft.Get<WorkflowDefinitionFieldSet>(ContentFieldSetName.Of<WorkflowDefinitionFieldSet>()));
             model.CustomProperties ??= new Dictionary<string, object>();
             ownership.Stamp(model.CustomProperties);
-            draft.Alter<WorkflowDefinitionPart>(part => workflowDefinitionPartMapper.Map(model, part));
+            draft.Alter<WorkflowDefinitionFieldSet>(part => workflowDefinitionFieldSetMapper.Map(model, part));
         }
 
         await contentManager.SaveDraftAsync(latestVersion.ContentItem);
         await contentManager.SaveDraftAsync(draft);
         
         await RefreshCacheAsync(definitionId, cancellationToken);
-        return workflowDefinitionPartMapper.Map(specifiedVersion);
+        return workflowDefinitionFieldSetMapper.Map(specifiedVersion);
     }
 
     public async Task<WorkflowDefinition?> GetDraftAsync(string definitionId, global::Grove.Workflows.Common.Models.VersionOptions versionOptions, CancellationToken cancellationToken = default)
@@ -226,7 +226,7 @@ public class ContentItemWorkflowDefinitionPublisher(
         if (contentItem == null)
             return null;
 
-        contentItem.Alter<WorkflowDefinitionPart>(part =>
+        contentItem.Alter<WorkflowDefinitionFieldSet>(part =>
         {
             var isNewVersion = part.DefinitionVersionId != contentItem.ContentItemVersionId;
             // part.IsPublished = false;
@@ -236,10 +236,10 @@ public class ContentItemWorkflowDefinitionPublisher(
             if (isNewVersion)
                 part.Version++;
 
-            workflowDefinitionPartSerializer.UpdateSerializedData(part);
+            workflowDefinitionFieldSetSerializer.UpdateSerializedData(part);
         });
 
-        return workflowDefinitionPartMapper.Map(contentItem.Get<WorkflowDefinitionPart>(typeof(WorkflowDefinitionPart).Name));
+        return workflowDefinitionFieldSetMapper.Map(contentItem.Get<WorkflowDefinitionFieldSet>(ContentFieldSetName.Of<WorkflowDefinitionFieldSet>()));
     }
 
     public async Task<WorkflowDefinition> SaveDraftAsync(WorkflowDefinition definition, CancellationToken cancellationToken = default)

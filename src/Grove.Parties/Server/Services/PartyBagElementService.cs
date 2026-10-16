@@ -1,14 +1,13 @@
 using Grove.Contents.Fields.Fields;
 using Grove.Contents.Management;
 using Grove.Fields;
-using Grove.Contents.BagParts.Models;
 using Grove.Models;
 using Grove.Parties.Constants;
 
 namespace Grove.Parties.Services;
 
 /// <summary>
-/// One kinded bag on a party: which BagPart, which element type lives in it, which
+/// One kinded bag on a party: which embedding, which element type lives in it, which
 /// option list types its entries, and which boolean field marks the one entry per kind
 /// (exclusive: setting it on one entry clears it on the others of that kind).
 /// </summary>
@@ -39,7 +38,7 @@ public static class PartyBags
 public sealed class PartyBagElementService(IContentManager contentManager, PartyOptionKeys optionKeys)
 {
     public IReadOnlyList<ContentItem> Elements(ContentItem party, PartyBag bag) =>
-        party.Get<BagPart>(bag.BagName)?.ContentItems ?? [];
+        party.Get<EmbeddedContentItems>(bag.BagName)?.ContentItems ?? [];
 
     /// <summary>The element's kind as an option key; null when unset or no longer in the list.</summary>
     public Task<string?> KindKeyAsync(ContentItem element, PartyBag bag, CancellationToken cancellationToken = default) =>
@@ -56,7 +55,7 @@ public sealed class PartyBagElementService(IContentManager contentManager, Party
         apply(element);
         SetFlag(element, bag.ElementType, bag.ExclusiveField, exclusive);
 
-        party.Alter<BagPart>(bag.BagName, part =>
+        party.Alter<EmbeddedContentItems>(bag.BagName, part =>
         {
             if (exclusive)
             {
@@ -74,7 +73,7 @@ public sealed class PartyBagElementService(IContentManager contentManager, Party
     public async Task<ContentItem?> UpdateAsync(ContentItem party, PartyBag bag, string elementId, string kindId, bool exclusive, Action<ContentItem> apply)
     {
         ContentItem? updated = null;
-        party.Alter<BagPart>(bag.BagName, part =>
+        party.Alter<EmbeddedContentItems>(bag.BagName, part =>
         {
             updated = part.ContentItems.FirstOrDefault(item => item.ContentItemId == elementId);
             if (updated is null)
@@ -102,7 +101,7 @@ public sealed class PartyBagElementService(IContentManager contentManager, Party
     public async Task<bool> RemoveAsync(ContentItem party, PartyBag bag, string elementId)
     {
         var removed = false;
-        party.Alter<BagPart>(bag.BagName, part => removed = part.ContentItems.RemoveAll(item => item.ContentItemId == elementId) > 0);
+        party.Alter<EmbeddedContentItems>(bag.BagName, part => removed = part.ContentItems.RemoveAll(item => item.ContentItemId == elementId) > 0);
 
         if (removed)
         {
@@ -127,7 +126,7 @@ public sealed class PartyBagElementService(IContentManager contentManager, Party
     }
 
     // One exclusive entry per kind: marking one clears the rest of that kind.
-    private static void ClearOthers(BagPart part, PartyBag bag, string exceptId, string kindId)
+    private static void ClearOthers(EmbeddedContentItems part, PartyBag bag, string exceptId, string kindId)
     {
         foreach (var sibling in part.ContentItems)
         {
@@ -141,24 +140,24 @@ public sealed class PartyBagElementService(IContentManager contentManager, Party
     // --- element field access, shared by every bag's element-specific code ---
 
     public static string? Text(ContentItem element, string part, string field) =>
-        element.Get<ContentPart>(part)?.Get<TextField>(field)?.Text;
+        element.Get<ContentFieldSet>(part)?.Get<TextField>(field)?.Text;
 
     public static bool Flag(ContentItem element, string part, string field) =>
-        element.Get<ContentPart>(part)?.Get<BooleanField>(field)?.Value ?? false;
+        element.Get<ContentFieldSet>(part)?.Get<BooleanField>(field)?.Value ?? false;
 
     public static string? PickerId(ContentItem element, string part, string field) =>
-        element.Get<ContentPart>(part)?.Get<OptionPickerField>(field)?.SelectedIds.FirstOrDefault();
+        element.Get<ContentFieldSet>(part)?.Get<OptionListField>(field)?.SelectedIds.FirstOrDefault();
 
     public static void SetText(ContentItem element, string part, string field, string? value) =>
-        element.Alter<ContentPart>(part, p => p.Alter<TextField>(field, f => f.Text = string.IsNullOrWhiteSpace(value) ? null : value.Trim()));
+        element.Alter<ContentFieldSet>(part, p => p.Alter<TextField>(field, f => f.Text = string.IsNullOrWhiteSpace(value) ? null : value.Trim()));
 
     public static void SetFlag(ContentItem element, string part, string field, bool value) =>
-        element.Alter<ContentPart>(part, p => p.Alter<BooleanField>(field, f => f.Value = value));
+        element.Alter<ContentFieldSet>(part, p => p.Alter<BooleanField>(field, f => f.Value = value));
 
     public static void SetPicker(ContentItem element, string part, string field, string listKey, string? optionId) =>
-        element.Alter<ContentPart>(part, p => p.Alter<OptionPickerField>(field, f =>
+        element.Alter<ContentFieldSet>(part, p => p.Alter<OptionListField>(field, f =>
         {
-            f.SourceKey = OptionSourceKeys.ForContentPartList(listKey);
+            f.SourceKey = OptionSourceKeys.ForOptionList(listKey);
             f.SelectedIds = optionId is null ? [] : [optionId];
         }));
 }

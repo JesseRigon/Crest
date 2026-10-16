@@ -23,7 +23,7 @@ define a component model, a registry or a node format of its own:
 - **Three objects, edited differently.** A *template* (a tree bound to a shape name, no URL), a
   *designed page* (a page record with its route, bucket and permissions plus its tree; no
   overrides, blazor-display.md § 6a and decision 9) and an *item body* (an item's own
-  `DisplayTreePart`, blazor-display.md § 7). The content editor is the designer in a reduced
+  `DisplayTreeFieldSet`, blazor-display.md § 7). The content editor is the designer in a reduced
   mode: the same trees, a palette limited by role.
 - **Permissions** are the per-page sets of blazor-display.md § 10 (Design, Schema, Data, Shared
   components, Publish). A designer sees the schema without the data unless it has the data

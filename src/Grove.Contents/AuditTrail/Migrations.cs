@@ -5,6 +5,7 @@ using Grove.Contents.AuditTrail.Indexes;
 using Grove.Data.Migration;
 using YesSql.Sql;
 using Grove.Modules;
+using Grove.Contents.AuditTrail.Models;
 
 namespace Grove.Contents.AuditTrail;
 
@@ -20,7 +21,7 @@ public sealed class Migrations : DataMigration
 
     public async Task<int> CreateAsync()
     {
-        await _contentDefinitionManager.AlterPartDefinitionAsync("AuditTrailPart", part => part
+        await _contentDefinitionManager.AlterFieldSetDefinitionAsync("AuditTrail", part => part
             .Attachable()
             .WithDescription("Allows editors to enter a comment to be saved into the Audit Trail event when saving a content item."));
 
@@ -38,6 +39,24 @@ public sealed class Migrations : DataMigration
             table.CreateIndex("IDX_ContentHistoryIndex_Item", "DocumentId", "ContentItemId", "Sequence", "HasFullState", "IsPublishedSnapshot"),
             collection: AuditTrailEvent.Collection);
 
-        return 1;
+        await DefineAuditTrailFieldsAsync();
+
+        return 2;
     }
+
+    // The field set's values are fields (docs/content-engine.md › Behaviour is workflows).
+    public async Task<int> UpdateFrom1Async()
+    {
+        await DefineAuditTrailFieldsAsync();
+        return 2;
+    }
+
+    private Task DefineAuditTrailFieldsAsync() =>
+        _contentDefinitionManager.AlterFieldSetDefinitionAsync("AuditTrail", builder => builder
+            .WithField(nameof(AuditTrailFieldSet.Comment), field => field
+                .OfType("TextField")
+                .WithDisplayMode(ContentFieldDisplayModes.None)
+                .WithDisplayName("Comment")
+                .WithPosition("0")
+                .WithEditor("TextArea")));
 }

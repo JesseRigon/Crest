@@ -18,8 +18,9 @@ public sealed class DataLocalizationStartupTests
     [Theory]
     [InlineData(false, false, 0)]
     [InlineData(false, true, 0)]
-    [InlineData(true, false, 2)]
-    [InlineData(true, true, 3)]
+    // Type names, field labels and the other definition labels; with the admin menu, its nodes too.
+    [InlineData(true, false, 3)]
+    [InlineData(true, true, 4)]
     public async Task ConfigureServices_FeatureCombinations_ResolvesExpectedProviders(
         bool dataLocalizationEnabled,
         bool adminMenuEnabled,

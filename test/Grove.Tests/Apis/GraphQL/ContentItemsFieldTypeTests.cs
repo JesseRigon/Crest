@@ -342,7 +342,7 @@ public class ContentItemsFieldTypeTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Filter_ThePartHasNoPrefix_Succeeds()
+    public async Task Filter_TheFieldSetHasNoPrefix_Succeeds()
     {
         _store.RegisterIndexes<AnimalIndexProvider>();
 
@@ -377,7 +377,7 @@ public class ContentItemsFieldTypeTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Filter_PartNameHasNoPrefix_Succeeds()
+    public async Task Filter_FieldSetNameHasNoPrefix_Succeeds()
     {
         _store.RegisterIndexes<AnimalLocalizationIndexProvider>();
 
@@ -419,7 +419,7 @@ public class ContentItemsFieldTypeTests : IAsyncLifetime
     [InlineData("animal")]
     [InlineData("ANIMAL")]
     [InlineData("Animal")]
-    public async Task Filter_NestedPartInputRegardlessOfInputFieldCase_Succeeds(string fieldName)
+    public async Task Filter_NestedFieldSetInputRegardlessOfInputFieldCase_Succeeds(string fieldName)
     {
         _store.RegisterIndexes<AnimalLocalizationIndexProvider>();
 
@@ -454,7 +454,7 @@ public class ContentItemsFieldTypeTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Filter_ByCollapsedWhereInputForCollapsedParts_Succeeds()
+    public async Task Filter_ByCollapsedWhereInputForCollapsedFieldSets_Succeeds()
     {
         _store.RegisterIndexes<AnimalIndexProvider>();
 
@@ -554,7 +554,7 @@ public class AnimalPartWhereInput : WhereInputObjectGraphType
             Type = typeof(StringGraphType),
             ResolvedType = new StringGraphType(),
         };
-        fieldType.Metadata["PartName"] = "AnimalPart";
+        fieldType.Metadata["FieldSetName"] = "AnimalPart";
         AddField(fieldType);
     }
 }
@@ -572,8 +572,8 @@ public class AnimalPartCollapsedWhereInput : WhereInputObjectGraphType
             Type = typeof(StringGraphType),
             ResolvedType = new StringGraphType(),
         };
-        fieldType.Metadata["PartName"] = "AnimalPart";
-        fieldType.Metadata["PartCollapsed"] = true;
+        fieldType.Metadata["FieldSetName"] = "AnimalPart";
+        fieldType.Metadata["FieldSetCollapsed"] = true;
         AddField(fieldType);
     }
 }
@@ -591,7 +591,7 @@ public class AnimalNestedPartWhereInput : WhereInputObjectGraphType
             Type = typeof(AnimalNestedPartInput),
             ResolvedType = new AnimalNestedPartInput(nestedStringLocalizer),
         };
-        fieldType.Metadata["PartName"] = "AnimalPart";
+        fieldType.Metadata["FieldSetName"] = "AnimalPart";
         AddField(fieldType);
     }
 }
@@ -607,7 +607,7 @@ public class AnimalNestedPartInput : WhereInputObjectGraphType
     }
 }
 
-public class Animal : ContentPart
+public class Animal : ContentFieldSet
 {
     public string Name { get; set; }
 

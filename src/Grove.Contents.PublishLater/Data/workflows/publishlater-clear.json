@@ -1,0 +1,71 @@
+{
+  "name": "Scheduled publish: clear",
+  "description": "System flow of the PublishLater field set, on publishing: the item's schedule is cleared.",
+  "customProperties": {
+    "Grove.RunsAsSystem": "true"
+  },
+  "root": {
+    "type": "Grove.Workflows.Flowchart",
+    "id": "flow",
+    "version": 1,
+    "activities": [
+      {
+        "type": "Grove.Contents.PublishLater.ClearPublishSchedule",
+        "id": "step1",
+        "version": 1,
+        "metadata": {
+          "designer": {
+            "position": {
+              "x": 0,
+              "y": 0
+            }
+          }
+        }
+      },
+      {
+        "type": "Grove.Workflows.FailUnit",
+        "id": "refuse1",
+        "version": 1,
+        "reason": {
+          "typeName": "String",
+          "expression": {
+            "type": "JavaScript",
+            "value": "getOutputFrom(\"step1\", \"Error\")"
+          }
+        },
+        "field": {
+          "typeName": "String",
+          "expression": {
+            "type": "JavaScript",
+            "value": "getOutputFrom(\"step1\", \"Field\")"
+          }
+        },
+        "metadata": {
+          "designer": {
+            "position": {
+              "x": 0,
+              "y": 160
+            }
+          }
+        }
+      }
+    ],
+    "connections": [
+      {
+        "source": {
+          "activity": "step1",
+          "port": "Refused"
+        },
+        "target": {
+          "activity": "refuse1",
+          "port": "In"
+        }
+      }
+    ]
+  },
+  "variables": [],
+  "inputs": [],
+  "outputs": [],
+  "outcomes": [],
+  "options": {}
+}

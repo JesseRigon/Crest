@@ -72,12 +72,12 @@ public sealed class ElasticsearchContentIndexProfileHandler : IndexProfileHandle
             mapping.Properties[ContentIndexingConstants.OwnerKey] = new KeywordProperty();
             mapping.Properties[ContentIndexingConstants.FullTextKey] = new TextProperty();
 
-            mapping.Properties[ContentIndexingConstants.ContainedPartKey] = new ObjectProperty
+            mapping.Properties[ContentIndexingConstants.ParentContentItemKey] = new ObjectProperty
             {
                 Properties = new Properties
                 {
-                    [nameof(ContainedPartModel.Ids)] = new KeywordProperty(),
-                    [nameof(ContainedPartModel.Order)] = new FloatNumberProperty(),
+                    [nameof(ParentContentItemModel.Ids)] = new KeywordProperty(),
+                    [nameof(ParentContentItemModel.Order)] = new FloatNumberProperty(),
                 },
             };
 

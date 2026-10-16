@@ -332,8 +332,8 @@ public sealed class Startup : StartupBase
         // through the route table and forwards a legacy-owned path to MVC; this answers which.
         services.AddSingleton<Grove.Routing.ILegacyRouteOwnership, Grove.Routing.LegacyRouteOwnership>();
 
-        // The option picker (field, sources, API) is the Grove.Contents.OptionPicker module; Content Part
-        // Lists are the Grove.Contents.PartLists feature.
+        // The option picker (field, sources, API) is the Grove.Contents.OptionPicker module; option
+        // lists are the Grove.Contents.OptionLists feature.
 
         // HtmlRenderer (the display tree's HTML renderer, for Static SSR)
         // instantiates components via this same service provider, and component base

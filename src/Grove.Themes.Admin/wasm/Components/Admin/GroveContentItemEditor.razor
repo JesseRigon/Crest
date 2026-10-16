@@ -75,7 +75,7 @@
     [Parameter] public string? ContentType { get; set; }
     [Parameter] public string? ContentItemId { get; set; }
 
-    /// <summary>A new item created into a list: the list's id (ListPartEditor's "New" links).</summary>
+    /// <summary>A new item created into a list: the list's id (ChildContentItemsFieldSetEditor's "New" links).</summary>
     [SupplyParameterFromQuery(Name = "containerId")] public string? ContainerId { get; set; }
 
     private bool IsCreate => !string.IsNullOrWhiteSpace(ContentType);
@@ -167,7 +167,7 @@
             // An item created into a list names its list; the server completes the rest (its type, its order).
             if (IsCreate && !string.IsNullOrWhiteSpace(ContainerId))
             {
-                content["ContainedPart"] = new JsonObject { ["ListContentItemId"] = ContainerId };
+                content["ParentContentItem"] = new JsonObject { ["ListContentItemId"] = new JsonObject { ["Text"] = ContainerId } };
             }
 
             var request = new ContentItemWriteRequest(EditedType, DisplayText, content, Publish);
@@ -236,7 +236,7 @@
         : "Contents/ContentItems");
 
     // A refused save: the error contract's map goes under the tree's ContentEditor node, which
-    // shows each error under its editor (keys Part.Field, Part); what names no editor is shown here.
+    // shows each error under its editor (keys FieldSet.Field, Part); what names no editor is shown here.
     private async Task ShowErrorsAsync(HttpResponseMessage response)
     {
         var text = await response.Content.ReadAsStringAsync();

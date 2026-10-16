@@ -2,7 +2,6 @@ using Grove.Fields;
 using Grove.Data.Regions.Fields;
 using Grove.Parties.Constants;
 using Grove.Contents.Management;
-using Grove.Contents.BagParts.Models;
 using YesSql.Indexes;
 
 namespace Grove.Parties.Indexes;
@@ -33,7 +32,7 @@ public sealed class AddressGeoNodeIndexProvider : IndexProvider<ContentItem>
                     return [];
                 }
 
-                var bag = contentItem.Get<BagPart>(PartiesConstants.Bags.Addresses);
+                var bag = contentItem.Get<EmbeddedContentItems>(PartiesConstants.Bags.Addresses);
                 if (bag is null)
                 {
                     return [];
@@ -42,14 +41,14 @@ public sealed class AddressGeoNodeIndexProvider : IndexProvider<ContentItem>
                 var rows = new List<AddressGeoNodeIndex>();
                 foreach (var address in bag.ContentItems)
                 {
-                    var part = address.Get<ContentPart>(PartiesConstants.ContentTypes.Address);
+                    var part = address.Get<ContentFieldSet>(PartiesConstants.ContentTypes.Address);
                     var geo = part?.Get<GeoStackField>("Geo");
                     if (geo is null)
                     {
                         continue;
                     }
 
-                    var kindId = part?.Get<OptionPickerField>("Kind")?.SelectedIds.FirstOrDefault();
+                    var kindId = part?.Get<OptionListField>("Kind")?.SelectedIds.FirstOrDefault();
                     foreach (var entry in geo.Stack)
                     {
                         rows.Add(new AddressGeoNodeIndex

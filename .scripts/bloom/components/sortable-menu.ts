@@ -15,7 +15,7 @@
  * relative depths, once it's dropped - so the whole subtree moves as a unit.
  *
  * The tree is serialized into the hidden "Hierarchy" field on every change,
- * using the { index, children } shape the server-side MenuPart / TaxonomyPart
+ * using the { index, children } shape the server-side MenuFieldSet / TaxonomyFieldSet
  * display drivers both parse identically, reconstructed from the flat depth
  * sequence.
  *

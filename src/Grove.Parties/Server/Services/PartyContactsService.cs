@@ -8,7 +8,6 @@ using Grove.Parties.Constants;
 using Grove.Parties.ViewModels;
 using Grove.Contents.Fields.Fields;
 using Grove.Contents.Management;
-using Grove.Contents.BagParts.Models;
 
 namespace Grove.Parties.Services;
 
@@ -173,7 +172,7 @@ public sealed class PartyContactsService(
     private async Task<AddressModel> ToAddressAsync(ContentItem element, CancellationToken cancellationToken)
     {
         var part = PartiesConstants.ContentTypes.Address;
-        var geoField = element.Get<ContentPart>(part)?.Get<GeoStackField>("Geo") ?? new GeoStackField();
+        var geoField = element.Get<ContentFieldSet>(part)?.Get<GeoStackField>("Geo") ?? new GeoStackField();
         return new AddressModel(
             element.ContentItemId,
             await bags.KindKeyAsync(element, PartyBags.Addresses, cancellationToken),
@@ -205,7 +204,7 @@ public sealed class PartyContactsService(
         SetText(element, part, "Line2", write.Line2);
         SetText(element, part, "Locality", write.Locality);
         SetText(element, part, "PostalCode", write.PostalCode);
-        element.Alter<ContentPart>(part, p => p.Alter<GeoStackField>("Geo", field =>
+        element.Alter<ContentFieldSet>(part, p => p.Alter<GeoStackField>("Geo", field =>
         {
             field.Stack = resolved.Stack.Nodes.Select(node => new GeoStackEntry { Level = node.Level, NodeId = node.NodeId }).ToList();
             // Re-resolved on every write: a re-entered address keeps nothing from the old

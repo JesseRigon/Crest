@@ -3,7 +3,6 @@ using Grove.Workflows;
 using Microsoft.Extensions.DependencyInjection;
 using Grove.Contents.Management;
 using Grove.Contents.Management.Handlers;
-using Grove.Workflows.Contents.Handlers;
 using Grove.Workflows.Contents.UIHints;
 using Grove.Modules;
 
@@ -20,7 +19,8 @@ public class Startup : StartupBase
         });
 
         services
-            .AddScoped<IContentHandler, ContentEventHandler>()
+            .AddScoped<IContentLifecycleHandler, Hooks.WorkflowContentLifecycleHandler>()
+            .AddScoped<IWorkflowHookSlotSource, Hooks.ContentHookSlotSource>()
             .AddScoped<IPropertyUIHandler, ContentTypeCheckListOptionsProvider>()
             .AddScoped<IPropertyUIHandler, ContentTypeOptionsProvider>();
     }

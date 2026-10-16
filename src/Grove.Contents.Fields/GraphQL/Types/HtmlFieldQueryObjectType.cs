@@ -42,9 +42,9 @@ public class HtmlFieldQueryObjectType : ObjectGraphType<HtmlField>
         var partName = paths[0];
         var fieldName = paths[1];
         var contentTypeDefinition = await contentDefinitionManager.GetTypeDefinitionAsync(ctx.Source.ContentItem.ContentType);
-        var contentPartDefinition = contentTypeDefinition.Parts.FirstOrDefault(x => string.Equals(x.Name, partName, StringComparison.Ordinal));
-        var contentPartFieldDefinition = contentPartDefinition.PartDefinition.Fields.FirstOrDefault(x => string.Equals(x.Name, fieldName, StringComparison.Ordinal));
-        var settings = contentPartFieldDefinition.GetSettings<HtmlFieldSettings>();
+        var contentFieldSetDefinition = contentTypeDefinition.FieldSets.FirstOrDefault(x => string.Equals(x.Name, partName, StringComparison.Ordinal));
+        var contentFieldDefinition = contentFieldSetDefinition.FieldSetDefinition.Fields.FirstOrDefault(x => string.Equals(x.Name, fieldName, StringComparison.Ordinal));
+        var settings = contentFieldDefinition.GetSettings<HtmlFieldSettings>();
 
         var html = ctx.Source.Html;
 
@@ -54,8 +54,8 @@ public class HtmlFieldQueryObjectType : ObjectGraphType<HtmlField>
             {
                 Html = ctx.Source.Html,
                 Field = ctx.Source,
-                Part = ctx.Source.ContentItem.Get<ContentPart>(partName),
-                PartFieldDefinition = contentPartFieldDefinition,
+                FieldSet = ctx.Source.ContentItem.Get<ContentFieldSet>(partName),
+                FieldDefinition = contentFieldDefinition,
             };
             var liquidTemplateManager = serviceProvider.GetRequiredService<ILiquidTemplateManager>();
             var htmlEncoder = serviceProvider.GetService<HtmlEncoder>();
@@ -68,7 +68,7 @@ public class HtmlFieldQueryObjectType : ObjectGraphType<HtmlField>
             new Context
             {
                 ["ContentItem"] = ctx.Source.ContentItem,
-                ["PartFieldDefinition"] = contentPartFieldDefinition,
+                ["FieldDefinition"] = contentFieldDefinition,
             });
     }
 }

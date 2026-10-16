@@ -55,12 +55,7 @@ public class MenuShapes : ShapeTableProvider
 
                 menu.Properties["MenuName"] = menuContentItem.DisplayText;
 
-                if (!menuContentItem.TryGet<MenuItemsListPart>(out var menuItemsListPart))
-                {
-                    return;
-                }
-
-                var menuItems = menuItemsListPart.MenuItems;
+                var menuItems = MenuItemsEmbedding.Items(menuContentItem);
 
                 var differentiator = FormatName(menu.GetProperty<string>("MenuName"));
 
@@ -112,13 +107,12 @@ public class MenuShapes : ShapeTableProvider
 
                 var shapeFactory = context.ServiceProvider.GetRequiredService<IShapeFactory>();
 
-                if (menuContentItem.TryGet<MenuItemsListPart>(out var menuItemsListPart))
+                if (MenuItemsEmbedding.Items(menuContentItem) is { Count: > 0 } menuItems)
                 {
                     var permissionService = context.ServiceProvider.GetRequiredService<IPermissionService>();
                     var httpContextAccessor = context.ServiceProvider.GetRequiredService<IHttpContextAccessor>();
                     var authorizationService = context.ServiceProvider.GetRequiredService<IAuthorizationService>();
                     var contentManager = context.ServiceProvider.GetRequiredService<IContentManager>();
-                    var menuItems = menuItemsListPart.MenuItems;
 
                     foreach (var contentItem in menuItems)
                     {
@@ -180,7 +174,7 @@ public class MenuShapes : ShapeTableProvider
     {
         menuItem.Properties["Text"] = menuContentItem.DisplayText;
 
-        if (menuContentItem.TryGet<LinkMenuItemPart>(out var link))
+        if (menuContentItem.TryGet<LinkMenuItemFieldSet>(out var link))
         {
             // "~/about" is tenant-relative: relative to the document base, which is the tenant's.
             menuItem.Properties["Url"] = link.Url is { } url && url.StartsWith("~/", StringComparison.Ordinal) ? url[2..] : link.Url;
@@ -188,7 +182,7 @@ public class MenuShapes : ShapeTableProvider
             return;
         }
 
-        if (menuContentItem.TryGet<HtmlMenuItemPart>(out var html))
+        if (menuContentItem.TryGet<HtmlMenuItemFieldSet>(out var html))
         {
             // The link's text is markup; it reaches the tree sanitized, whatever the part's
             // settings, since the tree's markup is rendered as is.
@@ -198,7 +192,7 @@ public class MenuShapes : ShapeTableProvider
             return;
         }
 
-        if (menuContentItem.Content["ContentMenuItemPart"]?["SelectedContentItem"]?["SelectedIds"] is System.Text.Json.Nodes.JsonArray { Count: > 0 } ids
+        if (menuContentItem.Content["ContentMenuItem"]?["SelectedContentItem"]?["SelectedIds"] is System.Text.Json.Nodes.JsonArray { Count: > 0 } ids
             && ids[0]?.GetValue<string>() is { Length: > 0 } targetId
             && services.GetService<IHttpContextAccessor>()?.HttpContext is { } httpContext)
         {
@@ -219,7 +213,7 @@ public class MenuShapes : ShapeTableProvider
         IAuthorizationService authorizationService,
         ClaimsPrincipal user)
     {
-        if (contentItem.TryGet<MenuItemPermissionPart>(out var permissionPart) &&
+        if (contentItem.TryGet<MenuItemPermissionFieldSet>(out var permissionPart) &&
             permissionPart.PermissionNames is not null &&
             permissionPart.PermissionNames.Length > 0)
         {
@@ -236,9 +230,9 @@ public class MenuShapes : ShapeTableProvider
             }
         }
 
-        if (contentItem.TryGet<ContentMenuItemPart>(out var menuItemPart))
+        if (contentItem.TryGet<ContentMenuItemFieldSet>(out var menuItemPart))
         {
-            string contentItemId = (menuItemPart.ContentItem.Content["ContentMenuItemPart"]?["SelectedContentItem"]?["SelectedIds"] as System.Text.Json.Nodes.JsonArray)?.FirstOrDefault()?.GetValue<string>();
+            string contentItemId = (menuItemPart.ContentItem.Content["ContentMenuItem"]?["SelectedContentItem"]?["SelectedIds"] as System.Text.Json.Nodes.JsonArray)?.FirstOrDefault()?.GetValue<string>();
 
             if (string.IsNullOrEmpty(contentItemId))
             {

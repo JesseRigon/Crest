@@ -7,6 +7,7 @@ using Grove.Workflows.Security;
 using Grove.Workflows.Units;
 using Grove.Data.Documents;
 using Grove.Documents;
+using Grove.Environment.Cache;
 
 namespace Grove.Workflows.Hooks;
 
@@ -41,26 +42,98 @@ public sealed class WorkflowHookService(
     IDocumentManager<WorkflowHookAttachmentsDocument> documents,
     IWorkflowDefinitionStore definitions,
     WorkflowAtomicityAnalyzer analyzer,
-    WorkflowDefinitionAccessService access)
+    WorkflowDefinitionAccessService access,
+    IEnumerable<IWorkflowHookSlotSource> slotSources,
+    WorkflowHookAttachmentCache cache,
+    Grove.Environment.Cache.ISignal signal,
+    ShippedFlowsInstaller installer,
+    IServiceProvider services)
 {
+    /// <summary>A slot by key: a module's (the registry's) or a slot source's (a content type's lifecycle point).</summary>
+    public async Task<WorkflowHookSlotDescriptor?> FindSlotAsync(string slotKey, CancellationToken cancellationToken = default)
+    {
+        if (catalog.FindHookSlot(slotKey) is { } slot)
+        {
+            return slot;
+        }
+
+        foreach (var source in slotSources)
+        {
+            if (await source.FindHookSlotAsync(slotKey, cancellationToken) is { } found)
+            {
+                return found;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// A slot's attachments, system first. A system attachment whose flow is not installed is
+    /// listed with no definition (<see cref="IsMissing"/>): the runner refuses on it rather than
+    /// skipping it. Resolved once per slot and cached until a slot source's stamp changes or
+    /// <see cref="WorkflowHookAttachmentCache.SignalKey"/> is raised.
+    /// </summary>
     public async Task<IReadOnlyList<WorkflowHookAttachmentModel>> ListAsync(string slotKey, CancellationToken cancellationToken = default)
     {
-        var slot = catalog.FindHookSlot(slotKey);
+        var stamp = await StampAsync(cancellationToken);
+        if (cache.TryGet(slotKey, stamp, out var cached))
+        {
+            return cached;
+        }
+
+        var token = cache.Token();
+        var attachments = await ResolveAsync(slotKey, cancellationToken);
+
+        // A system flow is missing while the shell has not installed its shipped flows yet (an item
+        // saved by a feature's own seeding, before the activation's task ran): install them, then
+        // read the slot again. What is still missing then is refused by the runner.
+        if (!installer.Installed && attachments.Any(IsMissing))
+        {
+            await installer.EnsureAsync(services, cancellationToken);
+            return await ResolveAsync(slotKey, cancellationToken);
+        }
+
+        cache.Set(slotKey, stamp, token, attachments);
+        return attachments;
+    }
+
+    /// <summary>A system attachment whose shipped flow is not installed in the tenant.</summary>
+    public static bool IsMissing(WorkflowHookAttachmentModel attachment) => string.IsNullOrEmpty(attachment.DefinitionId);
+
+    /// <summary>Raised when what a slot's attachments resolve to changes, once the unit ends.</summary>
+    public void Invalidate() => signal.DeferredSignalToken(WorkflowHookAttachmentCache.SignalKey);
+
+    private async Task<string> StampAsync(CancellationToken cancellationToken)
+    {
+        var stamps = new List<string>();
+        foreach (var source in slotSources)
+        {
+            stamps.Add(await source.StampAsync(cancellationToken));
+        }
+
+        return string.Join('|', stamps);
+    }
+
+    private async Task<IReadOnlyList<WorkflowHookAttachmentModel>> ResolveAsync(string slotKey, CancellationToken cancellationToken)
+    {
+        var slot = await FindSlotAsync(slotKey, cancellationToken);
         if (slot is null)
         {
             return [];
         }
 
+        var systemAttachments = catalog.HookAttachments.Where(a => string.Equals(a.Slot, slot.Key, StringComparison.OrdinalIgnoreCase)).ToList();
+        foreach (var source in slotSources)
+        {
+            systemAttachments.AddRange(await source.ListHookAttachmentsAsync(slot, cancellationToken));
+        }
+
         var result = new List<WorkflowHookAttachmentModel>();
-        foreach (var system in catalog.HookAttachments.Where(a => string.Equals(a.Slot, slot.Key, StringComparison.OrdinalIgnoreCase)).OrderBy(a => a.Position))
+        foreach (var system in systemAttachments.DistinctBy(a => a.FlowKey, StringComparer.OrdinalIgnoreCase).OrderBy(a => a.Position))
         {
             var installed = await flows.FindAsync(system.FlowKey, cancellationToken);
-            if (installed is null)
-            {
-                continue;
-            }
-
-            result.Add(new(null, slot.Key, installed.DefinitionId, catalog.FindFlow(system.FlowKey)?.DisplayName, system.FlowKey, system.Position, system.Required, WorkflowOwnership.System));
+            result.Add(new(null, slot.Key, installed?.DefinitionId ?? string.Empty, catalog.FindFlow(system.FlowKey)?.DisplayName, system.FlowKey, system.Position, system.Required, WorkflowOwnership.System));
         }
 
         var document = await documents.GetOrCreateImmutableAsync();
@@ -75,8 +148,14 @@ public sealed class WorkflowHookService(
 
     public async Task<IReadOnlyList<WorkflowHookSlotModel>> ListSlotsAsync(CancellationToken cancellationToken = default)
     {
+        var slots = catalog.HookSlots.ToList();
+        foreach (var source in slotSources)
+        {
+            slots.AddRange(await source.ListHookSlotsAsync(cancellationToken));
+        }
+
         var result = new List<WorkflowHookSlotModel>();
-        foreach (var slot in catalog.HookSlots)
+        foreach (var slot in slots.DistinctBy(s => s.Key, StringComparer.OrdinalIgnoreCase))
         {
             result.Add(new(slot, await ListAsync(slot.Key, cancellationToken)));
         }
@@ -92,7 +171,7 @@ public sealed class WorkflowHookService(
     /// </summary>
     public async Task<WorkflowHookAttachmentModel> AttachAsync(WorkflowHookAttachRequest request, CancellationToken cancellationToken = default)
     {
-        var slot = catalog.FindHookSlot(request.Slot) ?? throw new WorkflowHookAttachException($"'{request.Slot}' is not a registered hook slot.");
+        var slot = await FindSlotAsync(request.Slot, cancellationToken) ?? throw new WorkflowHookAttachException($"'{request.Slot}' is not a registered hook slot.");
         if (!slot.AllowTenantAttachments)
         {
             throw new WorkflowHookAttachException($"Hook slot '{slot.Key}' is system-only: the owning module decides what runs there.");
@@ -125,6 +204,7 @@ public sealed class WorkflowHookService(
         attachment.Position = request.Position ?? attachment.Position;
         attachment.Required = required;
         await documents.UpdateAsync(document);
+        Invalidate();
         return new(attachment.Id, slot.Key, attachment.DefinitionId, definition.Name, null, attachment.Position, attachment.Required, WorkflowOwnership.Tenant);
     }
 
@@ -145,6 +225,7 @@ public sealed class WorkflowHookService(
 
         document.Attachments.Remove(attachment);
         await documents.UpdateAsync(document);
+        Invalidate();
         return true;
     }
 

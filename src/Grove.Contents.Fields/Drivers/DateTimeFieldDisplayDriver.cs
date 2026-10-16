@@ -30,8 +30,8 @@ public sealed class DateTimeFieldDisplayDriver : ContentFieldDisplayDriver<DateT
         {
             model.LocalDateTime = field.Value == null ? null : (await localClock.ConvertToLocalAsync(field.Value.Value)).DateTime;
             model.Field = field;
-            model.Part = context.ContentPart;
-            model.PartFieldDefinition = context.PartFieldDefinition;
+            model.FieldSet = context.ContentFieldSet;
+            model.FieldDefinition = context.FieldDefinition;
         }, field, context, _localClock)
         .Location(PlatformConstants.DisplayType.Detail, "Content")
         .Location(PlatformConstants.DisplayType.Summary, "Content");

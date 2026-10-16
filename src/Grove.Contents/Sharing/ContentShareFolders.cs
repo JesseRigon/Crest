@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+using Grove.Contents.Fields.Fields;
 using Grove.Access;
 using Grove.Contents.Management;
 using Grove.Data;
@@ -15,14 +17,26 @@ namespace Grove.Contents.Sharing;
 /// Where a content item is filed for sharing (docs/sharing.md, requirement 74): a folder of any
 /// shareable kind (a client folder in a drive). Filed, the item follows the folder's chain
 /// instead of its content type's, and keeps its content type as its type for rules. Stored on the
-/// item, so it moves with its versions; empty when the item is not filed.
+/// item, so it moves with its versions; empty when the item is not filed. Its data is text fields
+/// (<c>FolderKind</c>, <c>FolderId</c>); this class is the typed accessor over them.
 /// </summary>
-public sealed class ContentShareFolderPart : ContentPart
+public sealed class ContentShareFolderFieldSet : ContentFieldSet
 {
-    public string? FolderKind { get; set; }
+    [JsonIgnore]
+    public string? FolderKind
+    {
+        get => this.Get<TextField>(nameof(FolderKind))?.Text;
+        set => this.Alter<TextField>(nameof(FolderKind), fieldValue => fieldValue.Text = value);
+    }
 
-    public string? FolderId { get; set; }
+    [JsonIgnore]
+    public string? FolderId
+    {
+        get => this.Get<TextField>(nameof(FolderId))?.Text;
+        set => this.Alter<TextField>(nameof(FolderId), fieldValue => fieldValue.Text = value);
+    }
 
+    [JsonIgnore]
     public ShareableRef? Folder => string.IsNullOrEmpty(FolderKind) || FolderId is null ? null : new ShareableRef(FolderKind, FolderId);
 }
 
@@ -40,8 +54,8 @@ public sealed class ContentShareFolderIndexProvider : IndexProvider<ContentItem>
 {
     public override void Describe(DescribeContext<ContentItem> context) => context
         .For<ContentShareFolderIndex>()
-        .When(item => item.Latest && item.Has<ContentShareFolderPart>())
-        .Map(item => item.As<ContentShareFolderPart>().Folder is { } folder
+        .When(item => item.Latest && item.Has<ContentShareFolderFieldSet>())
+        .Map(item => item.As<ContentShareFolderFieldSet>().Folder is { } folder
             ? new ContentShareFolderIndex { ContentItemId = item.ContentItemId, FolderKind = folder.Kind, FolderId = folder.Id }
             : null);
 }
@@ -100,7 +114,7 @@ public sealed class ContentShareFolders(
     IShareAccessIndex index) : IContentShareFolders
 {
     public async Task<ShareableRef?> GetFolderAsync(string contentItemId, CancellationToken cancellationToken = default) =>
-        (await contentManager.GetAsync(contentItemId, VersionOptions.Latest))?.As<ContentShareFolderPart>()?.Folder;
+        (await contentManager.GetAsync(contentItemId, VersionOptions.Latest))?.As<ContentShareFolderFieldSet>()?.Folder;
 
     public async Task MoveAsync(string contentItemId, ShareableRef? folder, CancellationToken cancellationToken = default)
     {
@@ -113,7 +127,7 @@ public sealed class ContentShareFolders(
         var self = new ShareableRef(ContentShareableKind.KindName, contentItemId);
         await checks.RequireMoveAsync(self, folder ?? new ShareableRef(ContentTypeShareableKind.KindName, item.ContentType), cancellationToken);
 
-        item.Alter<ContentShareFolderPart>(part =>
+        item.Alter<ContentShareFolderFieldSet>(part =>
         {
             part.FolderKind = folder?.Kind;
             part.FolderId = folder?.Id;

@@ -181,14 +181,14 @@ public class OptionFilterResolverTests
     public void Required_is_a_declared_setting_rather_than_an_assumed_json_key()
     {
         // Regression guard. The first cut of the controller read
-        // Settings["OptionPickerFieldSettings"]["Required"] by hand - a key that did
+        // Settings["OptionListFieldSettings"]["Required"] by hand - a key that did
         // not exist on the settings type at all, so it read false forever and the
         // derived-required rule silently never fired. Stock field settings carry no
         // shared Required flag, so ours declares its own.
-        var settings = new OptionPickerFieldSettings { Required = true };
+        var settings = new OptionListFieldSettings { Required = true };
 
         Assert.True(settings.Required);
-        Assert.False(new OptionPickerFieldSettings().Required);
+        Assert.False(new OptionListFieldSettings().Required);
     }
 
     public class SelectionValidity

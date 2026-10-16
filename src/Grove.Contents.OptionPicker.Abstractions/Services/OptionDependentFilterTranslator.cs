@@ -6,7 +6,7 @@ namespace Grove.Services;
 /// <summary>
 /// Rewrites an attachment's dependent filters so their comparison values are the
 /// PARENT'S COMPARISON VALUES rather than its raw editor values. This is what closes
-/// the cascade gap: an OptionPickerField parent contributes stored ids, while the
+/// the cascade gap: an OptionListField parent contributes stored ids, while the
 /// child filter compares machine data (a Category holding a country code, a Value,
 /// a Key) - so each dependent filter's values are resolved through
 /// <see cref="OptionParentValueResolver"/> and re-keyed under a composite state key,

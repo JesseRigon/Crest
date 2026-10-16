@@ -76,7 +76,7 @@ methods and JSON shapes are the controllers' ones; the clients did not change.
 | Grove.AuditTrail | `AuditTrailApi` | `api/grove/audit`, `audit/settings` | access, site-settings |
 | Grove.Workflows.BackgroundTasks | `BackgroundTasksApi` | `api/grove/background-tasks` | services |
 | Grove.Contents.Fields | `UserPickerApi` | `api/grove/content-fields/users` | definitions |
-| Grove.Contents (`Grove.Contents.PartLists`) | `ContentPartListsApi`, `GlobalListsApi` | `api/grove/content-part-lists`, `api/grove/global/lists` | services, yessql |
+| Grove.Contents (`Grove.Contents.OptionLists`) | `OptionListsApi`, `GlobalListsApi` | `api/grove/option-lists`, `api/grove/global/lists` | services, yessql |
 | Grove.Contents | `AuditTrailContentApi` | `api/grove/audit/content/{eventId}` | content-manager, yessql |
 | Grove.Contents.Localization | `CultureRedirectApi` | the culture switch redirect (site links) | services |
 | Grove.Communications.Email | `EmailTestApi` | `api/grove/email/providers`, `api/grove/email/channel`, `api/grove/email/test` (the channel's settings are the `email` settings group) | services |
@@ -166,7 +166,7 @@ Hubs need no MVC. The caller lifetime on hubs is already Grove.Access's
 | `robots.txt` | Grove.Seo | `RobotsMiddleware` |
 | media files, image processing, secure media | Grove.Media | middleware; `FileServingEndpoint` for placements |
 | scanner verdict callback | Grove.Media.Scanning | `ScanVerdictApi` (its own signature, no antiforgery) |
-| RSS feeds | Grove.Data.Feeds | `FeedsApi`; the routes are declared through `FeedRoutesOptions.MapFeed` (Grove.Contents.Lists: `Contents/Lists/{contentItemId}/rss`) |
+| RSS feeds | Grove.Data.Feeds | `FeedsApi`; the routes are declared through `FeedRoutesOptions.MapFeed` (Grove.Contents.Hierarchy: `Contents/Lists/{contentItemId}/rss`) |
 | sitemaps (`sitemap.xml`, index) | Grove.Seo.Sitemaps | `SitemapDocumentsApi` (`{**sitemap:sitemapPath}`, a route constraint that matches only an enabled sitemap's path) |
 | remote deployment import | Grove.Deployment.Remote | `RemoteImportApi` (the gate's remote deployment key scheme; answers problem details on failure) |
 | culture switch redirect | Grove.Contents.Localization | `CultureRedirectApi` |
@@ -239,7 +239,7 @@ Owner is where the code ends up. Wave numbers are § Waves.
 | ☑ | P1. Grove.Infrastructure.Server.Abstractions project | — | `Api/`: `IApiContributor` / `ApiContributor`, `ApiRoutes`, `IRequestAccess`, `IApiExceptionMapper`, `ApiProblems` / `ApiResults`, `ApiHandlers`, `IDefinedApiSource`, `IDefinedApiInvalidator`, `IApiEndpointRegistry` | Grove.Infrastructure.Server.Abstractions | — | M | 1 |
 | ☑ | P2. The 47 Grove.Infrastructure.Server controllers | Grove.Infrastructure.Server, MVC-hosted | moved to their declaring modules as route groups ([server.md](../server.md) § 1); the display actions are the host's display endpoints (`Api/DisplayApi.cs`); the option picker is Grove.Contents.OptionPicker's (server.md S2). The host keeps `AppApi` and `RoutingApi` (the bootstrap), the admin menu and navigation over the page registry (`AdminMenusApi`, `AdminMenuLayoutApi`, `NavigationApi`) and the icons (`IconsApi`, `IconProvidersApi`, `IconifyApi`, `TenantIconsApi`) until a server-side icons module exists, all route groups | each declaring module | P1, P5 | L | 2-3 |
 | ☑ | P3. Platform-module APIs | Email, Email.Smtp, AuditTrail (2), BackgroundTasks, Layers, Placements, Notifications portal, Media.Scanning settings, Users settings, ContentFields user picker, Contents audit, Tenants `api/tenants`, ReCaptcha, Sharing, OpenId admin + consent | route groups in their modules (§ The route groups that replaced the controllers); `api/tenants` (`TenantApi`, remote callers) keeps its path beside `api/grove/tenants` | each module | P1, P5 | M | 2 |
-| ☑ | P4. App-layer module APIs | Parties (6), Members (2), Regions (2), Content Part Lists (2, the `Grove.Contents.PartLists` feature), Workflows (10), Fruitful's (11) | route groups in their modules; the modules reference Grove.Infrastructure.Server.Abstractions, and Grove.Infrastructure.Server only for the admin menu and routing types | each module | P1, P5 | M | 3 |
+| ☑ | P4. App-layer module APIs | Parties (6), Members (2), Regions (2), Option lists (2, the `Grove.Contents.OptionLists` feature), Workflows (10), Fruitful's (11) | route groups in their modules; the modules reference Grove.Infrastructure.Server.Abstractions, and Grove.Infrastructure.Server only for the admin menu and routing types | each module | P1, P5 | M | 3 |
 | ☑ | P5. The seam | — | § The seam: `ApiEndpointMapper` maps the tenant's contributors into route groups; `ApiEndpointRegistry` lists them and the defined entries | Grove.Infrastructure.Server, Grove.Infrastructure.Server.Abstractions | P1 | M | 1 |
 | ☑ | P6. Access APIs | `api/grove/account` (Users) | `AuthApi` (the sign-in form and its extensions, the password and two-factor sign-in, the external sign-in start, the code sending), `RegistrationApi`, `PasswordResetApi`, `TwoFactorApi`, `LoginSettingsApi`, `UsersApi` (with `LoginService`; a user's two-factor authentication turned off), `AccountApi`, `UserSettingsApi`, the external sign-in (`ExternalAuthenticationApi`: start and callback; `ExternalLoginApi`: the pending model, register, link) in Grove.Access.Users; `AntiforgeryApi` and `AccessModelApi` in Grove.Access; `MembersApi` and `MemberPortalApi` in Grove.Access.Members; `SharingApi` in Grove.Access.Sharing; the OpenId admin, consent and protocol APIs in Grove.Access.OpenId | Grove.Access.Users, Grove.Access, Grove.Access.Members, Grove.Access.Sharing, Grove.Access.OpenId | P5 | M | 3 |
 | ☑ | P7. The workflow engine's management API | engine-hosted under `grove-workflows/api` | `WorkflowsManagementApi`, a declared contributor keeping the engine's path; minimal APIs like every contributor ([workflows.md](../workflows.md)) | Grove.Workflows | P5 | S | 3 |
@@ -327,7 +327,7 @@ settings APIs agree:
   `errors` map `{ key: [messages] }` for validation: the key is the member's wire name (the JSON
   name the client sent, `items[2].name` for nested members, `""` for the object), the same for a
   request DTO's rules (§ Validation), a handler's own checks (`ApiProblems.Validation`) and the
-  sink's errors (keyed by field path `Part.Field` or by setting name).
+  sink's errors (keyed by field path `FieldSet.Field` or by setting name).
 - Mapped exceptions, registered by the module that owns the exception
   (`services.AddApiExceptionMapper<T>()`, `IApiExceptionMapper` in Grove.Infrastructure.Server.Abstractions):
   `DefinitionLockedException` → 409 (`DefinitionLockedExceptionMapper`, Grove.Contents.Types),
@@ -342,7 +342,7 @@ settings APIs agree:
   and the part and field handlers raise during a request. A handler answers them with
   `ApiProblems.Validation(sink)`; an endpoint marked `.AnswersValidationSink()`
   (`ValidationSinkMetadata`) has them answered by the group's `ApiValidationSinkEndpointFilter`:
-  a successful result becomes the error contract's 400 with the sink's map (keys `Part.Field`,
+  a successful result becomes the error contract's 400 with the sink's map (keys `FieldSet.Field`,
   setting names, `""`) when the sink holds errors; an error result is left as it is.
 - `ApiProblemDetailsMiddleware` (Grove.Infrastructure.Server, `Api/`), in the tenant pipeline
   ahead of the access gate's authentication and authorization, writes the body of a bare 4xx

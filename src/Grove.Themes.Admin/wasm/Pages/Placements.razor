@@ -19,7 +19,7 @@
 
     <GroveCard>
         <GroveStack Gap="0.5rem">
-            <GroveTextBox @bind-Value="_shapeType" Placeholder="@T["Shape type (TitlePart, HtmlBodyPart, ...)"]" data-testid="placements-shape" />
+            <GroveTextBox @bind-Value="_shapeType" Placeholder="@T["Shape type (TitleFieldSet, HtmlBodyFieldSet, ...)"]" data-testid="placements-shape" />
             <GroveTextArea @bind-Value="_rules" Rows="8" Placeholder='[ { "place": "Header:5", "displayType": "Detail" } ]' Style="font-family: var(--grove-font-mono, monospace);" data-testid="placements-rules" />
             <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
                 <GroveButton Text="@T["Save"]" Icon="save" Click="SaveAsync" data-testid="placements-save" />

@@ -14,7 +14,7 @@ public sealed record RegionalProfileModel(
     bool Enabled);
 
 /// <summary>
-/// Party → context. Reads <see cref="GroveRegionalProfileReferencePart"/> off the given
+/// Party → context. Reads <see cref="RegionalProfileReferenceFieldSet"/> off the given
 /// item; absent or dangling means "no context", never an exception, so an item whose
 /// owning module never attached the reference keeps working with tenant defaults.
 /// </summary>

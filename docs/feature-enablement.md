@@ -31,12 +31,12 @@ T" when the providing feature is off.
 ## Features of one module
 
 A module may ship several features ([architecture.md](architecture.md) › Modules, features and
-how a module reaches the host): Content Part Lists is `Grove.Contents.PartLists`, a feature of
+how a module reaches the host): Option lists is `Grove.Contents.OptionLists`, a feature of
 Grove.Contents, opt-in per tenant. Its startups, controllers and permissions are gated on the
 feature (`[Feature]` on the startup and controller classes), and its client library is named for
-the feature (`Grove.Contents.PartLists.BlazorWasm`), so its page is served only while the feature
+the feature (`Grove.Contents.OptionLists.BlazorWasm`), so its page is served only while the feature
 is enabled. A consumer declares the feature id, not the module's (`Grove.Parties`,
-`Grove.Access.Members` and the Fruitful modules declare `Grove.Contents.PartLists`).
+`Grove.Access.Members` and the Fruitful modules declare `Grove.Contents.OptionLists`).
 
 ## What is deliberately NOT a Grove dependency
 

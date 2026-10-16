@@ -10,12 +10,12 @@ public class ContentElementTests
     public void Get_CastingBaseTypeThenConcreteTypeReturnNewInstance_Succeeds()
     {
         var contentItem = new ContentItem();
-        var titlePart = new TitlePart
+        var titleFieldSet = new TitleFieldSet
         {
             Title = "test",
         };
 
-        contentItem.Weld(titlePart);
+        contentItem.Weld(titleFieldSet);
 
         var json = JConvert.SerializeObject(contentItem);
 
@@ -23,30 +23,30 @@ public class ContentElementTests
 
         // act
         // The order arrangement of the next two calls are important.
-        // First cast to ContentPart.
-        var contentPart = contentItem2.Get<ContentPart>(nameof(TitlePart));
+        // First cast to ContentFieldSet.
+        var contentFieldSet = contentItem2.Get<ContentFieldSet>(ContentFieldSetName.Of<TitleFieldSet>());
 
-        // Second, cast to TitlePart.
-        var actualPart = contentItem2.Get<TitlePart>(nameof(TitlePart));
+        // Second, cast to TitleFieldSet.
+        var actualPart = contentItem2.Get<TitleFieldSet>(ContentFieldSetName.Of<TitleFieldSet>());
 
         // assert
-        Assert.NotNull(contentPart);
+        Assert.NotNull(contentFieldSet);
         Assert.NotNull(actualPart);
 
-        // actualPart should deserialized again, so it must not be same as contentPart.
-        Assert.NotSame(contentPart, actualPart);
+        // actualPart should deserialized again, so it must not be same as contentFieldSet.
+        Assert.NotSame(contentFieldSet, actualPart);
     }
 
     [Fact]
     public void Get_CastingConcreteTypeThenBaseTypeReturnNewInstance_Succeeds()
     {
         var contentItem = new ContentItem();
-        var titlePart = new TitlePart
+        var titleFieldSet = new TitleFieldSet
         {
             Title = "test",
         };
 
-        contentItem.Weld(titlePart);
+        contentItem.Weld(titleFieldSet);
 
         var json = JConvert.SerializeObject(contentItem);
 
@@ -54,18 +54,18 @@ public class ContentElementTests
 
         // act
         // The order arrangement of the next two calls are important.
-        // First cast to TitlePart.
-        var actualPart = contentItem2.Get<TitlePart>(nameof(TitlePart));
+        // First cast to TitleFieldSet.
+        var actualPart = contentItem2.Get<TitleFieldSet>(ContentFieldSetName.Of<TitleFieldSet>());
 
-        // Second, cast to ContentPart.
-        var contentPart = contentItem2.Get<ContentPart>(nameof(TitlePart));
+        // Second, cast to ContentFieldSet.
+        var contentFieldSet = contentItem2.Get<ContentFieldSet>(ContentFieldSetName.Of<TitleFieldSet>());
 
         // assert
-        Assert.NotNull(contentPart);
+        Assert.NotNull(contentFieldSet);
         Assert.NotNull(actualPart);
 
-        // contentPart should be returned from cache, so it must be same as actualPart.
-        Assert.Same(contentPart, actualPart);
+        // contentFieldSet should be returned from cache, so it must be same as actualPart.
+        Assert.Same(contentFieldSet, actualPart);
     }
 
     [Fact]
@@ -73,29 +73,29 @@ public class ContentElementTests
     {
         var contentItem = new ContentItem();
 
-        contentItem.Apply(new TestContentPart()
+        contentItem.Apply(new TestContentFieldSet()
         {
             Minutes = -15,
         });
 
-        var instance = contentItem.GetOrCreate<TestContentPart>();
+        var instance = contentItem.GetOrCreate<TestContentFieldSet>();
 
         Assert.NotNull(instance);
         Assert.Equal(-15, instance.Minutes);
 
-        contentItem.Apply(new TestContentPart()
+        contentItem.Apply(new TestContentFieldSet()
         {
             Minutes = null,
         });
 
         // Using 'dynamic' to bypass object retrieval from the cache when using '.Get()' or '.As()' extension methods.
-        var minutes = (int?)contentItem.Content.TestContentPart.Minutes;
+        var minutes = (int?)contentItem.Content.TestContent.Minutes;
 
         Assert.Null(minutes);
     }
 }
 
-public class TestContentPart : ContentPart
+public class TestContentFieldSet : ContentFieldSet
 {
     public int? Minutes { get; set; }
 }

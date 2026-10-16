@@ -15,8 +15,11 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddContentLocalization(this IServiceCollection services)
     {
-        services.AddContentPart<LocalizationPart>()
-            .AddHandler<LocalizationPartHandler>();
+        // The Localization field set: its data is its fields; its behaviour, the module's system
+        // flows; its culture, a read projection.
+        services.AddContentFieldSet<LocalizationFieldSet>();
+        services.AddScoped<Services.LocalizationBehaviour>();
+        services.AddContentFieldSetProjection<Projections.LocalizationCultureProjection>();
 
         services.TryAddScoped<IContentLocalizationManager, DefaultContentLocalizationManager>();
 
@@ -25,7 +28,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IContentHandler>(sp => sp.GetRequiredService<LocalizedContentItemIndexProvider>());
 
         services.AddDataMigration<Migrations>();
-        services.AddScoped<IContentLocalizationHandler, ContentLocalizationPartHandlerCoordinator>();
+        services.AddScoped<IContentLocalizationHandler, ContentLocalizationFieldSetHandlerCoordinator>();
 
         return services;
     }

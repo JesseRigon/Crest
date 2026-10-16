@@ -43,13 +43,13 @@ public class ContentItemExtensions
     }
 
     [Fact]
-    public void WeldPreservesFields_PartWeldedAfterFields_Succeeds()
+    public void WeldPreservesFields_FieldSetWeldedAfterFields_Succeeds()
     {
         // arrange
         var firstValue = "Hello";
         var secondValue = "World";
         var contentItem = new ContentItem { ContentType = "Product" };
-        var productPart = new ContentPart();
+        var productPart = new ContentFieldSet();
 
         // Weld fields to the part first
         productPart.Weld("First", new TextField { Text = firstValue });
@@ -59,7 +59,7 @@ public class ContentItemExtensions
         contentItem.Weld("ProductPart", productPart);
 
         // assert - fields should be preserved
-        var retrievedPart = contentItem.Get<ContentPart>("ProductPart");
+        var retrievedPart = contentItem.Get<ContentFieldSet>("ProductPart");
         Assert.NotNull(retrievedPart);
 
         var firstField = retrievedPart.Get<TextField>("First");
@@ -72,24 +72,24 @@ public class ContentItemExtensions
     }
 
     [Fact]
-    public void WeldPreservesFields_PartWeldedBeforeFields_Succeeds()
+    public void WeldPreservesFields_FieldSetWeldedBeforeFields_Succeeds()
     {
         // arrange
         var firstValue = "Hello";
         var secondValue = "World";
         var contentItem = new ContentItem { ContentType = "Product" };
-        var productPart = new ContentPart();
+        var productPart = new ContentFieldSet();
 
         // Weld the part to the content item first
         contentItem.Weld("ProductPart", productPart);
 
         // act - weld fields to the part after
-        var retrievedPart = contentItem.Get<ContentPart>("ProductPart");
+        var retrievedPart = contentItem.Get<ContentFieldSet>("ProductPart");
         retrievedPart.Weld("First", new TextField { Text = firstValue });
         retrievedPart.Weld("Second", new TextField { Text = secondValue });
 
         // assert - fields should be preserved
-        var finalPart = contentItem.Get<ContentPart>("ProductPart");
+        var finalPart = contentItem.Get<ContentFieldSet>("ProductPart");
         Assert.NotNull(finalPart);
 
         var firstField = finalPart.Get<TextField>("First");
@@ -183,7 +183,7 @@ public class ContentItemExtensions
         Assert.Equal(value, mergedPart?.Value);
     }
 
-    public class CustomPart : ContentPart
+    public class CustomPart : ContentFieldSet
     {
         public string Value { get; set; }
         public TextField Field { get; set; }

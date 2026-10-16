@@ -116,5 +116,5 @@ public sealed class TestMenu : ComponentBase
 public sealed class TestEditor : ComponentBase
 {
     [Parameter]
-    public string? PartName { get; set; }
+    public string? FieldSetName { get; set; }
 }

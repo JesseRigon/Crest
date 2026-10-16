@@ -36,16 +36,20 @@ public sealed class WorkflowUnitOfWork(IDocumentStore? documentStore = null)
     public string? Reason => _root.Reason;
     public string? ActivityId => _root.ActivityId;
 
-    /// <summary>Fails the innermost frame: the unit itself, or the hook attachment currently running inside it.</summary>
-    public void Fail(string reason, string? activityId = null)
+    /// <summary>
+    /// Fails the innermost frame: the unit itself, or the hook attachment currently running inside
+    /// it. <paramref name="path"/> names the field the failure is about (<c>FieldSet.Field</c>,
+    /// <c>FieldSet</c>), for a content hook's error map.
+    /// </summary>
+    public void Fail(string reason, string? activityId = null, string? path = null)
     {
         if (_frames.Count > 0)
         {
-            _frames.Peek().Fail(reason, activityId);
+            _frames.Peek().Fail(reason, activityId, path);
             return;
         }
 
-        _root.Fail(reason, activityId);
+        _root.Fail(reason, activityId, path);
         if (_cancelRegistered || documentStore is null || ShellScope.Current is null)
         {
             return;
@@ -78,13 +82,15 @@ public sealed class WorkflowUnitOfWork(IDocumentStore? documentStore = null)
         public bool IsFailed { get; private set; }
         public string? Reason { get; private set; }
         public string? ActivityId { get; private set; }
+        public string? Path { get; private set; }
 
-        internal void Fail(string reason, string? activityId)
+        internal void Fail(string reason, string? activityId, string? path)
         {
             if (IsFailed) return;
             IsFailed = true;
             Reason = reason;
             ActivityId = activityId;
+            Path = path;
         }
 
         public void Dispose()

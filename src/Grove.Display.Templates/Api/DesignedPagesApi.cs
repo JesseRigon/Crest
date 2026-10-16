@@ -138,7 +138,7 @@ public sealed partial class DesignedPagesApi : ApiContributor
         return TypedResults.Ok(ToModel(saved, await store.GetAsync(saved.ContentItemId, VersionOptions.Published) is not null));
     }
 
-    private static async Task<List<DisplayDiagnostic>> ValidateAsync(HttpContext context, DesignedPagePart part, string? id, CancellationToken cancellationToken)
+    private static async Task<List<DisplayDiagnostic>> ValidateAsync(HttpContext context, DesignedPageFieldSet part, string? id, CancellationToken cancellationToken)
     {
         var store = context.RequestServices.GetRequiredService<DesignedPageStore>();
         var validator = context.RequestServices.GetRequiredService<TemplateValidator>();
@@ -190,7 +190,7 @@ public sealed partial class DesignedPagesApi : ApiContributor
     private static DesignedPageModel ToModel(DesignedPageRecord page, bool published) =>
         new(page.ContentItemId, page.Name, page.Route, page.Bucket, page.Title, page.Description, page.AllowAnonymous, page.Source, published, !page.Published, page.ModifiedUtc);
 
-    private static DesignedPagePart ToPart(DesignedPageRecord page) => new()
+    private static DesignedPageFieldSet ToPart(DesignedPageRecord page) => new()
     {
         Name = page.Name,
         Route = page.Route,
@@ -220,7 +220,7 @@ public sealed record DesignedPageModel(
 
 public sealed record DesignedPageWrite(string? Name, string? Route, string? Bucket, string? Title, string? Description, bool AllowAnonymous, string? Source)
 {
-    public DesignedPagePart ToPart() => new()
+    public DesignedPageFieldSet ToPart() => new()
     {
         Name = Name?.Trim() ?? string.Empty,
         Route = Route ?? string.Empty,

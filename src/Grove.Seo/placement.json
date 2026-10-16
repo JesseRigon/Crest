@@ -2,29 +2,29 @@
   "MediaField": [
     {
       "place": "-",
-      "differentiator": "SeoMetaPart-DefaultSocialImage"
+      "differentiator": "SeoMeta-DefaultSocialImage"
     },
     {
       "place": "-",
-      "differentiator": "SeoMetaPart-OpenGraphImage"
+      "differentiator": "SeoMeta-OpenGraphImage"
     },
     {
       "place": "-",
-      "differentiator": "SeoMetaPart-TwitterImage"
+      "differentiator": "SeoMeta-TwitterImage"
     }
   ],
   "MediaField_Edit": [
     {
       "place": "Parts:20#SEO%Social;1",
-      "differentiator": "SeoMetaPart-DefaultSocialImage"
+      "differentiator": "SeoMeta-DefaultSocialImage"
     },
     {
       "place": "Parts:25#SEO%Social;2",
-      "differentiator": "SeoMetaPart-OpenGraphImage"
+      "differentiator": "SeoMeta-OpenGraphImage"
     },
     {
       "place": "Parts:30#SEO%Social;3",
-      "differentiator": "SeoMetaPart-TwitterImage"
+      "differentiator": "SeoMeta-TwitterImage"
     },
     {
       "place": "Parts:20%Social;1",

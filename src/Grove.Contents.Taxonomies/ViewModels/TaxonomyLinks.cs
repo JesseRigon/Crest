@@ -14,7 +14,7 @@ public static class TaxonomyLinks
     public static string TermPath(ContentItem term)
     {
         JsonObject content = term.Content;
-        return content["AutoroutePart"]?["Path"] is JsonValue value && value.TryGetValue<string>(out var path) && path.Length > 0
+        return content["Autoroute"]?["Path"]?["Text"] is JsonValue value && value.TryGetValue<string>(out var path) && path.Length > 0
             ? path.TrimStart('/')
             : "Contents/ContentItems/" + Uri.EscapeDataString(term.ContentItemId);
     }
@@ -23,8 +23,6 @@ public static class TaxonomyLinks
     public static IReadOnlyList<TaxonomyTermNode> Tree(IEnumerable<ContentItem> terms) =>
         [.. (terms ?? []).Select(term =>
         {
-            JsonObject content = term.Content;
-            var children = content["Terms"] is JsonArray nested ? nested.Deserialize<List<ContentItem>>() ?? [] : [];
-            return new TaxonomyTermNode(term.DisplayText ?? term.ContentItemId, TermPath(term), Tree(children));
+            return new TaxonomyTermNode(term.DisplayText ?? term.ContentItemId, TermPath(term), Tree(Models.TaxonomyFieldSet.Terms(term)));
         })];
 }

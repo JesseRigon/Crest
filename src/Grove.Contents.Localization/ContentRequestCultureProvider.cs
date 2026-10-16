@@ -8,7 +8,7 @@ using Grove.Infrastructure.Settings;
 namespace Grove.Contents.Localization;
 
 /// <summary>
-/// RequestCultureProvider that automatically sets the Culture of a request from the LocalizationPart.Culture property.
+/// RequestCultureProvider that automatically sets the Culture of a request from the LocalizationFieldSet.Culture property.
 /// </summary>
 public class ContentRequestCultureProvider : RequestCultureProvider
 {

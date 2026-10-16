@@ -7,7 +7,7 @@
   <Project Path="src/Grove.Themes.Admin/wasm/Grove.Themes.Admin.Client.csproj" />
   <Project Path="src/Grove.Themes.Admin/client-services/Grove.Themes.Admin.Client.Services.csproj" />
   <Project Path="src/Grove.Display.Components/Grove.Display.Components.csproj" />
-  <Project Path="src/Grove.Contents/blazor-wasm/Grove.Contents.PartLists.BlazorWasm.csproj" />
+  <Project Path="src/Grove.Contents/blazor-wasm/Grove.Contents.OptionLists.BlazorWasm.csproj" />
   <Project Path="src/Grove.Data.Global/Grove.Data.Global.csproj" />
   <Project Path="src/Grove.Display.Icons.Iconify/Grove.Display.Icons.Iconify.csproj" />
   <Project Path="src/Grove.Display.Icons/Grove.Display.Icons.csproj" />

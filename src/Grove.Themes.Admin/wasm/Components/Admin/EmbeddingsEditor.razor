@@ -1,0 +1,198 @@
+@namespace Grove.Themes.Admin.Components.Admin
+@using System.Net.Http.Json
+@using Grove.Themes.Admin.Api
+@inject HttpClient Http
+@inject NotificationService Notifications
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
+
+@* A type's embeddings (docs/content-engine.md › Embedded content items): named slots holding
+   embedded content items of the types they allow, each its own group in the editor at its
+   position among the field groups. A locked embedding keeps its contract: only its display name,
+   description and position change. *@
+<GroveFieldset Text="@T["Embedded content"]" AllowCollapse="true" Collapsed="@(Embeddings.Length == 0)" data-testid="embeddings-editor">
+    <GroveStack Gap="0.75rem">
+        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <GroveAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</GroveAlert>
+        }
+
+        @foreach (var draft in Drafts)
+        {
+            var current = draft;
+            var locked = current.Lock != "None";
+            <GroveCard data-testid="embedding">
+                <GroveStack Gap="0.5rem">
+                    <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
+                        <GroveText TextStyle="TextStyle.Subtitle2" Text="@current.Name" />
+                        @if (locked)
+                        {
+                            <GroveBadge Text="@(current.Lock == "Module" ? T["Locked by module"] : T["Locked"])" BadgeStyle="BadgeStyle.Warning" data-testid="embedding-lock" />
+                        }
+                    </GroveStack>
+                    <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
+                        <GroveFormField Text="@T["Display name"]"><GroveTextBox @bind-Value="current.DisplayName" Disabled="@IsBusy" /></GroveFormField>
+                        <GroveFormField Text="@T["Position"]"><GroveTextBox @bind-Value="current.Position" Disabled="@IsBusy" Style="width: 5rem;" /></GroveFormField>
+                        <GroveFormField Text="@T["Allowed types (names, @Stereotype, * for any)"]"><GroveTextBox @bind-Value="current.Allowed" Disabled="@(IsBusy || locked)" Style="min-width: 16rem;" data-testid="embedding-allowed" /></GroveFormField>
+                        <GroveFormField Text="@T["Min"]"><GroveNumeric TValue="int?" @bind-Value="current.MinCount" Disabled="@(IsBusy || locked)" Style="width: 5rem;" /></GroveFormField>
+                        <GroveFormField Text="@T["Max"]"><GroveNumeric TValue="int?" @bind-Value="current.MaxCount" Disabled="@(IsBusy || locked)" Style="width: 5rem;" /></GroveFormField>
+                    </GroveStack>
+                    <GroveStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
+                        <GroveFormField Text="@T["Mode"]">
+                            <GroveDropDown TValue="string" @bind-Value="current.Mode" Data="@ModeChoices" TextProperty="Label" ValueProperty="Value" Disabled="@(IsBusy || locked)" Style="width: 10rem;" data-testid="embedding-mode" />
+                        </GroveFormField>
+                        @if (current.Mode == "snapshot")
+                        {
+                            <GroveFormField Text="@T["Copied reference values (columns)"]"><GroveTextBox @bind-Value="current.Copied" Disabled="@(IsBusy || locked)" Style="min-width: 12rem;" /></GroveFormField>
+                        }
+                        <GroveFormField Text="@T["Display type"]"><GroveTextBox @bind-Value="current.DisplayType" Placeholder="Summary" Disabled="@(IsBusy || locked)" Style="width: 8rem;" /></GroveFormField>
+                        <GroveFormField Text="@T["Ordered"]"><GroveSwitch @bind-Value="current.Ordered" Disabled="@(IsBusy || locked)" /></GroveFormField>
+                        <GroveFormField Text="@T["Nested (a tree)"]"><GroveSwitch @bind-Value="current.Nested" Disabled="@(IsBusy || locked)" /></GroveFormField>
+                        <GroveFormField Text="@T["Collapsed"]"><GroveSwitch @bind-Value="current.Collapsed" Disabled="@(IsBusy || locked)" /></GroveFormField>
+                        <GroveFormField Text="@T["Referenceable"]"><GroveSwitch @bind-Value="current.Referenceable" Disabled="@(IsBusy || locked)" /></GroveFormField>
+                    </GroveStack>
+                    <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End">
+                        @if (!current.IsNew)
+                        {
+                            <GroveButton Text="@T["Remove"]" Icon="delete" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => RemoveAsync(current))" Disabled="@(IsBusy || locked)" data-testid="embedding-remove" />
+                        }
+                        <GroveButton Text="@T["Save"]" Icon="save" Size="ButtonSize.Small" Click="@(() => SaveAsync(current))" Disabled="@IsBusy" data-testid="embedding-save" />
+                    </GroveStack>
+                </GroveStack>
+            </GroveCard>
+        }
+
+        <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End">
+            <GroveFormField Text="@T["New embedding"]"><GroveTextBox @bind-Value="NewName" Placeholder="@T["e.g. Variants"]" Disabled="@IsBusy" data-testid="embedding-new-name" /></GroveFormField>
+            <GroveButton Text="@T["Add"]" Icon="add" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="Add" Disabled="@(IsBusy || string.IsNullOrWhiteSpace(NewName))" data-testid="embedding-add" />
+        </GroveStack>
+    </GroveStack>
+</GroveFieldset>
+
+@code {
+    [Parameter, EditorRequired] public string TypeName { get; set; } = string.Empty;
+
+    [Parameter] public ContentTypeEmbedding[] Embeddings { get; set; } = [];
+
+    /// <summary>Raised after a change, so the page reloads its types.</summary>
+    [Parameter] public EventCallback Changed { get; set; }
+
+    private List<Draft> Drafts = [];
+    private ContentTypeEmbedding[]? _read;
+    private string NewName = string.Empty;
+    private bool IsBusy;
+    private string? ErrorMessage;
+
+    private sealed record Choice(string Label, string Value);
+
+    private Choice[] ModeChoices =>
+    [
+        new(T["Live"], "live"),
+        new(T["Snapshot"], "snapshot"),
+    ];
+
+    private sealed class Draft
+    {
+        public string Name { get; set; } = string.Empty;
+        public string? DisplayName { get; set; }
+        public string? Description { get; set; }
+        public string? Position { get; set; }
+        public string Allowed { get; set; } = string.Empty;
+        public int? MinCount { get; set; }
+        public int? MaxCount { get; set; }
+        public bool Ordered { get; set; } = true;
+        public string? DisplayType { get; set; }
+        public bool Nested { get; set; }
+        public bool Collapsed { get; set; }
+        public bool Referenceable { get; set; }
+        public string Mode { get; set; } = "live";
+        public string Copied { get; set; } = string.Empty;
+        public string Lock { get; set; } = "None";
+        public bool IsNew { get; set; }
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (ReferenceEquals(_read, Embeddings))
+        {
+            return;
+        }
+
+        _read = Embeddings;
+        Drafts = [.. Embeddings.Select(embedding => new Draft
+        {
+            Name = embedding.Name,
+            DisplayName = embedding.DisplayName,
+            Description = embedding.Description,
+            Position = embedding.Position,
+            Allowed = string.Join(", ", embedding.AllowedTypes),
+            MinCount = embedding.MinCount,
+            MaxCount = embedding.MaxCount,
+            Ordered = embedding.Ordered,
+            DisplayType = embedding.DisplayType,
+            Nested = embedding.Nested,
+            Collapsed = embedding.Collapsed,
+            Referenceable = embedding.Referenceable,
+            Mode = embedding.Mode,
+            Copied = string.Join(", ", embedding.CopiedValues),
+            Lock = embedding.Lock,
+        })];
+    }
+
+    private void Add()
+    {
+        Drafts.Add(new Draft { Name = NewName.Trim(), IsNew = true });
+        NewName = string.Empty;
+    }
+
+    private static string[] List(string text) =>
+        [.. text.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)];
+
+    private string Url => $"api/grove/content-types/{Uri.EscapeDataString(TypeName)}/embeddings";
+
+    private Task SaveAsync(Draft draft) => RunAsync(() => Http.PutAsJsonAsync(Url, new
+    {
+        draft.Name,
+        draft.DisplayName,
+        draft.Description,
+        draft.Position,
+        AllowedTypes = List(draft.Allowed),
+        draft.MinCount,
+        draft.MaxCount,
+        draft.Ordered,
+        draft.DisplayType,
+        draft.Nested,
+        draft.Collapsed,
+        draft.Referenceable,
+        draft.Mode,
+        CopiedValues = List(draft.Copied),
+    }), T["Embedding saved."]);
+
+    private Task RemoveAsync(Draft draft) =>
+        RunAsync(() => Http.DeleteAsync($"{Url}/{Uri.EscapeDataString(draft.Name)}"), T["Embedding removed."]);
+
+    private async Task RunAsync(Func<Task<HttpResponseMessage>> call, string success)
+    {
+        IsBusy = true;
+        ErrorMessage = null;
+        try
+        {
+            using var response = await call();
+            if (!response.IsSuccessStatusCode)
+            {
+                ErrorMessage = await response.Content.ReadAsStringAsync();
+                return;
+            }
+
+            Notifications.Notify(NotificationSeverity.Success, T["Embedded content"], success);
+            await Changed.InvokeAsync();
+        }
+        catch (Exception exception)
+        {
+            ErrorMessage = exception.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+}

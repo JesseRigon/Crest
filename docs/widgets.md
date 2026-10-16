@@ -4,7 +4,7 @@ Widgets are not part of the display system ([blazor-display.md](blazor-display.m
 widget was a content item placed into a zone, and components placed into zone keys do that now.
 This is the list of what the deleted widgets did and what replaces each one: a registered Blazor
 component (`[BlazorComponent]`) that templates place with `{% component %}`, a composite template
-built from components, an item's own tree (`DisplayTreePart`), or a layer placement. Keep it
+built from components, an item's own tree (`DisplayTreeFieldSet`), or a layer placement. Keep it
 current: when a replacement exists, set its status and name the component. The content and form
 components live in `Grove.Display.Components` (`Components/Content`, `Components/Forms`), styled in
 `GroveComponents.css`.
@@ -18,7 +18,7 @@ something the widget did), **missing** (nothing yet), **dropped** (not recreated
 | --- | --- | --- |
 | Layer widgets (a widget content item in a layer's zone) | `LayerPlacement` (layer, zone, component, properties, position) via `/Layers` and the `Layers` recipe step | done |
 | `WidgetsListPart` (zones of widgets on one content item) | A `{Type}` template (`Content__{Type}`) places components per type. Per-item placement has no equivalent | partial |
-| `FlowPart` / `Container` (a page body composed of widgets) | `Container`/`Stack` in a template, `BagPart` for item-held children, and `DisplayTreePart` for a body authored per item ([blazor-display.md](blazor-display.md) § 7) | done |
+| `FlowPart` / `Container` (a page body composed of widgets) | `Container`/`Stack` in a template, an embedding for item-held children, and `DisplayTreeFieldSet` for a body authored per item ([blazor-display.md](blazor-display.md) § 7) | done |
 | `BlazorComponent` content type (place one component with a properties JSON) | The `component` tag in a template, or a layer placement | done |
 | `LiquidWidget` (a Liquid template as a widget) | A `Template` content item, as a composite when it takes inputs | done |
 | `Widget.Wrapper` and zone/type alternates | Component variants and overrides (§ 5a) | done |
@@ -65,7 +65,7 @@ template is saved and when the form is submitted.
 ## Not recreated
 
 Test-only widget types (`TestWidgetA`, `TestWidgetB`, `EsModuleTestFieldsWidget`,
-`EsModuleTestLiquidWidget`, `SeoMetaPartTestWidget`, `FormsFieldEditorTestWidget`) went with
+`EsModuleTestLiquidWidget`, `SeoMetaFieldSetTestWidget`, `FormsFieldEditorTestWidget`) went with
 their tests. The es-module and SEO fixtures keep their non-widget types.
 
 ## Left
@@ -76,4 +76,4 @@ their tests. The es-module and SEO fixtures keep their non-widget types.
 - ☐ The SiteTheme blog recipe's Contact page has a body (rich text and a contact form) but no
   UI-action workflow to send to, so its submit only checks the required inputs.
 - ☐ Per-item placement of components into zones (what `WidgetsListPart` did) has no equivalent;
-  an item composes its own body with `DisplayTreePart` instead.
+  an item composes its own body with `DisplayTreeFieldSet` instead.

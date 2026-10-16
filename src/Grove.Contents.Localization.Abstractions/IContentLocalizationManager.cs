@@ -19,7 +19,7 @@ public interface IContentLocalizationManager
     /// <summary>
     /// Localizes the content item to the target culture.
     /// This method will clone the ContentItem of the default locale
-    /// and set the culture of the LocalizationPart to the targetCulture.
+    /// and set the culture of the LocalizationFieldSet to the targetCulture.
     /// </summary>
     /// <returns>The localized content item.</returns>
     Task<ContentItem> LocalizeAsync(ContentItem content, string targetCulture);

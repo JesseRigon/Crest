@@ -91,11 +91,11 @@ public static class SafeUrl
 }
 
 /// <summary>
-/// The display of an HTML body (the <c>HtmlBodyPart</c> shape its driver builds): the body's
+/// The display of an HTML body (the <c>HtmlBodyFieldSet</c> shape its driver builds): the body's
 /// rendered HTML as a markup parameter, so the server sanitizes it and the page no longer falls
 /// back to the Razor view for it (rework step 7).
 /// </summary>
-[BlazorComponent("HtmlBodyPart", DisplayName = "HTML body", Category = "Content", Icon = "article")]
+[BlazorComponent("HtmlBody", DisplayName = "HTML body", Category = "Content", Icon = "article")]
 public sealed class HtmlBodyDisplay : ComponentBase
 {
     [Parameter]
@@ -111,8 +111,8 @@ public sealed class HtmlBodyDisplay : ComponentBase
     }
 }
 
-/// <summary>The display of a Markdown body (the <c>MarkdownBodyPart</c> shape): its HTML, rendered on the server and sanitized there.</summary>
-[BlazorComponent("MarkdownBodyPart", DisplayName = "Markdown body", Category = "Content", Icon = "notes")]
+/// <summary>The display of a Markdown body (the <c>MarkdownBodyFieldSet</c> shape): its HTML, rendered on the server and sanitized there.</summary>
+[BlazorComponent("MarkdownBody", DisplayName = "Markdown body", Category = "Content", Icon = "notes")]
 public sealed class MarkdownBodyDisplay : ComponentBase
 {
     [Parameter]

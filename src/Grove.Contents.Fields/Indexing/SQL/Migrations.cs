@@ -23,7 +23,7 @@ public sealed class Migrations : DataMigration
             .Column<string>("ContentItemId", column => column.WithLength(26))
             .Column<string>("ContentItemVersionId", column => column.WithLength(26))
             .Column<string>("ContentType", column => column.WithLength(ContentItemIndex.MaxContentTypeSize))
-            .Column<string>("ContentPart", column => column.WithLength(ContentItemIndex.MaxContentPartSize))
+            .Column<string>("ContentFieldSet", column => column.WithLength(ContentItemIndex.MaxContentFieldSetSize))
             .Column<string>("ContentField", column => column.WithLength(ContentItemIndex.MaxContentFieldSize))
             .Column<bool>("Published", column => column.Nullable())
             .Column<bool>("Latest", column => column.Nullable())
@@ -41,12 +41,12 @@ public sealed class Migrations : DataMigration
         );
 
         // The index in MySQL can accommodate up to 768 characters or 3072 bytes.
-        // DocumentId (2) + ContentType (254) + ContentPart (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
+        // DocumentId (2) + ContentType (254) + ContentFieldSet (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
         await SchemaBuilder.AlterIndexTableAsync<TextFieldIndex>(table => table
             .CreateIndex("IDX_TextFieldIndex_DocumentId_ContentType",
                 "DocumentId",
                 "ContentType(254)",
-                "ContentPart(254)",
+                "ContentFieldSet(254)",
                 "ContentField(254)",
                 "Published",
                 "Latest")
@@ -66,7 +66,7 @@ public sealed class Migrations : DataMigration
             .Column<string>("ContentItemId", column => column.WithLength(26))
             .Column<string>("ContentItemVersionId", column => column.WithLength(26))
             .Column<string>("ContentType", column => column.WithLength(ContentItemIndex.MaxContentTypeSize))
-            .Column<string>("ContentPart", column => column.WithLength(ContentItemIndex.MaxContentPartSize))
+            .Column<string>("ContentFieldSet", column => column.WithLength(ContentItemIndex.MaxContentFieldSetSize))
             .Column<string>("ContentField", column => column.WithLength(ContentItemIndex.MaxContentFieldSize))
             .Column<bool>("Published", column => column.Nullable())
             .Column<bool>("Latest", column => column.Nullable())
@@ -83,12 +83,12 @@ public sealed class Migrations : DataMigration
         );
 
         // The index in MySQL can accommodate up to 768 characters or 3072 bytes.
-        // DocumentId (2) + ContentType (254) + ContentPart (254) + ContentField (254) + Boolean, Published and Latest (1) = 765 (< 768).
+        // DocumentId (2) + ContentType (254) + ContentFieldSet (254) + ContentField (254) + Boolean, Published and Latest (1) = 765 (< 768).
         await SchemaBuilder.AlterIndexTableAsync<BooleanFieldIndex>(table => table
             .CreateIndex("IDX_BooleanFieldIndex_DocumentId_ContentType",
                 "DocumentId",
                 "ContentType(254)",
-                "ContentPart(254)",
+                "ContentFieldSet(254)",
                 "ContentField(254)",
                 "Boolean",
                 "Published",
@@ -99,7 +99,7 @@ public sealed class Migrations : DataMigration
             .Column<string>("ContentItemId", column => column.WithLength(26))
             .Column<string>("ContentItemVersionId", column => column.WithLength(26))
             .Column<string>("ContentType", column => column.WithLength(ContentItemIndex.MaxContentTypeSize))
-            .Column<string>("ContentPart", column => column.WithLength(ContentItemIndex.MaxContentPartSize))
+            .Column<string>("ContentFieldSet", column => column.WithLength(ContentItemIndex.MaxContentFieldSetSize))
             .Column<string>("ContentField", column => column.WithLength(ContentItemIndex.MaxContentFieldSize))
             .Column<bool>("Published", column => column.Nullable())
             .Column<bool>("Latest", column => column.Nullable())
@@ -116,12 +116,12 @@ public sealed class Migrations : DataMigration
         );
 
         // The index in MySQL can accommodate up to 768 characters or 3072 bytes.
-        // DocumentId (2) + ContentType (254) + ContentPart (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
+        // DocumentId (2) + ContentType (254) + ContentFieldSet (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
         await SchemaBuilder.AlterIndexTableAsync<NumericFieldIndex>(table => table
             .CreateIndex("IDX_NumericFieldIndex_DocumentId_ContentType",
                 "DocumentId",
                 "ContentType(254)",
-                "ContentPart(254)",
+                "ContentFieldSet(254)",
                 "ContentField(254)",
                 "Published",
                 "Latest")
@@ -139,7 +139,7 @@ public sealed class Migrations : DataMigration
             .Column<string>("ContentItemId", column => column.WithLength(26))
             .Column<string>("ContentItemVersionId", column => column.WithLength(26))
             .Column<string>("ContentType", column => column.WithLength(ContentItemIndex.MaxContentTypeSize))
-            .Column<string>("ContentPart", column => column.WithLength(ContentItemIndex.MaxContentPartSize))
+            .Column<string>("ContentFieldSet", column => column.WithLength(ContentItemIndex.MaxContentFieldSetSize))
             .Column<string>("ContentField", column => column.WithLength(ContentItemIndex.MaxContentFieldSize))
             .Column<bool>("Published", column => column.Nullable())
             .Column<bool>("Latest", column => column.Nullable())
@@ -156,12 +156,12 @@ public sealed class Migrations : DataMigration
         );
 
         // The index in MySQL can accommodate up to 768 characters or 3072 bytes.
-        // DocumentId (2) + ContentType (254) + ContentPart (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
+        // DocumentId (2) + ContentType (254) + ContentFieldSet (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
         await SchemaBuilder.AlterIndexTableAsync<DateTimeFieldIndex>(table => table
             .CreateIndex("IDX_DateTimeFieldIndex_DocumentId_ContentType",
                 "DocumentId",
                 "ContentType(254)",
-                "ContentPart(254)",
+                "ContentFieldSet(254)",
                 "ContentField(254)",
                 "Published",
                 "Latest")
@@ -179,7 +179,7 @@ public sealed class Migrations : DataMigration
             .Column<string>("ContentItemId", column => column.WithLength(26))
             .Column<string>("ContentItemVersionId", column => column.WithLength(26))
             .Column<string>("ContentType", column => column.WithLength(ContentItemIndex.MaxContentTypeSize))
-            .Column<string>("ContentPart", column => column.WithLength(ContentItemIndex.MaxContentPartSize))
+            .Column<string>("ContentFieldSet", column => column.WithLength(ContentItemIndex.MaxContentFieldSetSize))
             .Column<string>("ContentField", column => column.WithLength(ContentItemIndex.MaxContentFieldSize))
             .Column<bool>("Published", column => column.Nullable())
             .Column<bool>("Latest", column => column.Nullable())
@@ -196,12 +196,12 @@ public sealed class Migrations : DataMigration
         );
 
         // The index in MySQL can accommodate up to 768 characters or 3072 bytes.
-        // DocumentId (2) + ContentType (254) + ContentPart (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
+        // DocumentId (2) + ContentType (254) + ContentFieldSet (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
         await SchemaBuilder.AlterIndexTableAsync<DateFieldIndex>(table => table
             .CreateIndex("IDX_DateFieldIndex_DocumentId_ContentType",
                 "DocumentId",
                 "ContentType(254)",
-                "ContentPart(254)",
+                "ContentFieldSet(254)",
                 "ContentField(254)",
                 "Published",
                 "Latest")
@@ -220,7 +220,7 @@ public sealed class Migrations : DataMigration
             .Column<string>("ContentItemId", column => column.WithLength(26))
             .Column<string>("ContentItemVersionId", column => column.WithLength(26))
             .Column<string>("ContentType", column => column.WithLength(ContentItemIndex.MaxContentTypeSize))
-            .Column<string>("ContentPart", column => column.WithLength(ContentItemIndex.MaxContentPartSize))
+            .Column<string>("ContentFieldSet", column => column.WithLength(ContentItemIndex.MaxContentFieldSetSize))
             .Column<string>("ContentField", column => column.WithLength(ContentItemIndex.MaxContentFieldSize))
             .Column<bool>("Published", column => column.Nullable())
             .Column<bool>("Latest", column => column.Nullable())
@@ -237,12 +237,12 @@ public sealed class Migrations : DataMigration
         );
 
         // The index in MySQL can accommodate up to 768 characters or 3072 bytes.
-        // DocumentId (2) + ContentType (254) + ContentPart (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
+        // DocumentId (2) + ContentType (254) + ContentFieldSet (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
         await SchemaBuilder.AlterIndexTableAsync<TimeFieldIndex>(table => table
             .CreateIndex("IDX_TimeFieldIndex_DocumentId_ContentType",
                 "DocumentId",
                 "ContentType(254)",
-                "ContentPart(254)",
+                "ContentFieldSet(254)",
                 "ContentField(254)",
                 "Published",
                 "Latest")
@@ -264,7 +264,7 @@ public sealed class Migrations : DataMigration
             .Column<string>("ContentItemId", column => column.WithLength(26))
             .Column<string>("ContentItemVersionId", column => column.WithLength(26))
             .Column<string>("ContentType", column => column.WithLength(ContentItemIndex.MaxContentTypeSize))
-            .Column<string>("ContentPart", column => column.WithLength(ContentItemIndex.MaxContentPartSize))
+            .Column<string>("ContentFieldSet", column => column.WithLength(ContentItemIndex.MaxContentFieldSetSize))
             .Column<string>("ContentField", column => column.WithLength(ContentItemIndex.MaxContentFieldSize))
             .Column<bool>("Published", column => column.Nullable())
             .Column<bool>("Latest", column => column.Nullable())
@@ -285,12 +285,12 @@ public sealed class Migrations : DataMigration
 
 
         // The index in MySQL can accommodate up to 768 characters or 3072 bytes.
-        // DocumentId (2) + ContentType (254) + ContentPart (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
+        // DocumentId (2) + ContentType (254) + ContentFieldSet (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
         await SchemaBuilder.AlterIndexTableAsync<LinkFieldIndex>(table => table
             .CreateIndex("IDX_LinkFieldIndex_DocumentId_ContentType",
                 "DocumentId",
                 "ContentType(254)",
-                "ContentPart(254)",
+                "ContentFieldSet(254)",
                 "ContentField(254)",
                 "Published",
                 "Latest")
@@ -320,7 +320,7 @@ public sealed class Migrations : DataMigration
             .Column<string>("ContentItemId", column => column.WithLength(26))
             .Column<string>("ContentItemVersionId", column => column.WithLength(26))
             .Column<string>("ContentType", column => column.WithLength(ContentItemIndex.MaxContentTypeSize))
-            .Column<string>("ContentPart", column => column.WithLength(ContentItemIndex.MaxContentPartSize))
+            .Column<string>("ContentFieldSet", column => column.WithLength(ContentItemIndex.MaxContentFieldSetSize))
             .Column<string>("ContentField", column => column.WithLength(ContentItemIndex.MaxContentFieldSize))
             .Column<bool>("Published", column => column.Nullable())
             .Column<bool>("Latest", column => column.Nullable())
@@ -337,12 +337,12 @@ public sealed class Migrations : DataMigration
         );
 
         // The index in MySQL can accommodate up to 768 characters or 3072 bytes.
-        // DocumentId (2) + ContentType (254) + ContentPart (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
+        // DocumentId (2) + ContentType (254) + ContentFieldSet (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
         await SchemaBuilder.AlterIndexTableAsync<HtmlFieldIndex>(table => table
             .CreateIndex("IDX_HtmlFieldIndex_DocumentId_ContentType",
                 "DocumentId",
                 "ContentType(254)",
-                "ContentPart(254)",
+                "ContentFieldSet(254)",
                 "ContentField(254)",
                 "Published",
                 "Latest")
@@ -352,7 +352,7 @@ public sealed class Migrations : DataMigration
             .Column<string>("ContentItemId", column => column.WithLength(26))
             .Column<string>("ContentItemVersionId", column => column.WithLength(26))
             .Column<string>("ContentType", column => column.WithLength(ContentItemIndex.MaxContentTypeSize))
-            .Column<string>("ContentPart", column => column.WithLength(ContentItemIndex.MaxContentPartSize))
+            .Column<string>("ContentFieldSet", column => column.WithLength(ContentItemIndex.MaxContentFieldSetSize))
             .Column<string>("ContentField", column => column.WithLength(ContentItemIndex.MaxContentFieldSize))
             .Column<bool>("Published", column => column.Nullable())
             .Column<bool>("Latest", column => column.Nullable())
@@ -370,12 +370,12 @@ public sealed class Migrations : DataMigration
         );
 
         // The index in MySQL can accommodate up to 768 characters or 3072 bytes.
-        // DocumentId (2) + ContentType (254) + ContentPart (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
+        // DocumentId (2) + ContentType (254) + ContentFieldSet (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
         await SchemaBuilder.AlterIndexTableAsync<MultiTextFieldIndex>(table => table
             .CreateIndex("IDX_MultiTextFieldIndex_DocumentId_ContentType",
                 "DocumentId",
                 "ContentType(254)",
-                "ContentPart(254)",
+                "ContentFieldSet(254)",
                 "ContentField(254)",
                 "Published",
                 "Latest")
@@ -414,7 +414,7 @@ public sealed class Migrations : DataMigration
             .Column<string>("ContentItemId", column => column.WithLength(26))
             .Column<string>("ContentItemVersionId", column => column.WithLength(26))
             .Column<string>("ContentType", column => column.WithLength(ContentItemIndex.MaxContentTypeSize))
-            .Column<string>("ContentPart", column => column.WithLength(ContentItemIndex.MaxContentPartSize))
+            .Column<string>("ContentFieldSet", column => column.WithLength(ContentItemIndex.MaxContentFieldSetSize))
             .Column<string>("ContentField", column => column.WithLength(ContentItemIndex.MaxContentFieldSize))
             .Column<bool>("Published", column => column.Nullable())
             .Column<bool>("Latest", column => column.Nullable())
@@ -438,12 +438,12 @@ public sealed class Migrations : DataMigration
         );
 
         // The index in MySQL can accommodate up to 768 characters or 3072 bytes.
-        // DocumentId (2) + ContentType (254) + ContentPart (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
+        // DocumentId (2) + ContentType (254) + ContentFieldSet (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
         await SchemaBuilder.AlterIndexTableAsync<TextFieldIndex>(table => table
             .CreateIndex("IDX_TextFieldIndex_DocumentId_ContentType",
                 "DocumentId",
                 "ContentType(254)",
-                "ContentPart(254)",
+                "ContentFieldSet(254)",
                 "ContentField(254)",
                 "Published",
                 "Latest")
@@ -469,12 +469,12 @@ public sealed class Migrations : DataMigration
         );
 
         // The index in MySQL can accommodate up to 768 characters or 3072 bytes.
-        // DocumentId (2) + ContentType (254) + ContentPart (254) + ContentField (254) + Boolean, Published and Latest (1) = 765 (< 768).
+        // DocumentId (2) + ContentType (254) + ContentFieldSet (254) + ContentField (254) + Boolean, Published and Latest (1) = 765 (< 768).
         await SchemaBuilder.AlterIndexTableAsync<BooleanFieldIndex>(table => table
             .CreateIndex("IDX_BooleanFieldIndex_DocumentId_ContentType",
                 "DocumentId",
                 "ContentType(254)",
-                "ContentPart(254)",
+                "ContentFieldSet(254)",
                 "ContentField(254)",
                 "Boolean",
                 "Published",
@@ -491,12 +491,12 @@ public sealed class Migrations : DataMigration
         );
 
         // The index in MySQL can accommodate up to 768 characters or 3072 bytes.
-        // DocumentId (2) + ContentType (254) + ContentPart (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
+        // DocumentId (2) + ContentType (254) + ContentFieldSet (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
         await SchemaBuilder.AlterIndexTableAsync<NumericFieldIndex>(table => table
             .CreateIndex("IDX_NumericFieldIndex_DocumentId_ContentType",
                 "DocumentId",
                 "ContentType(254)",
-                "ContentPart(254)",
+                "ContentFieldSet(254)",
                 "ContentField(254)",
                 "Published",
                 "Latest")
@@ -520,12 +520,12 @@ public sealed class Migrations : DataMigration
         );
 
         // The index in MySQL can accommodate up to 768 characters or 3072 bytes.
-        // DocumentId (2) + ContentType (254) + ContentPart (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
+        // DocumentId (2) + ContentType (254) + ContentFieldSet (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
         await SchemaBuilder.AlterIndexTableAsync<DateTimeFieldIndex>(table => table
             .CreateIndex("IDX_DateTimeFieldIndex_DocumentId_ContentType",
                 "DocumentId",
                 "ContentType(254)",
-                "ContentPart(254)",
+                "ContentFieldSet(254)",
                 "ContentField(254)",
                 "Published",
                 "Latest")
@@ -549,12 +549,12 @@ public sealed class Migrations : DataMigration
         );
 
         // The index in MySQL can accommodate up to 768 characters or 3072 bytes.
-        // DocumentId (2) + ContentType (254) + ContentPart (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
+        // DocumentId (2) + ContentType (254) + ContentFieldSet (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
         await SchemaBuilder.AlterIndexTableAsync<DateFieldIndex>(table => table
             .CreateIndex("IDX_DateFieldIndex_DocumentId_ContentType",
                 "DocumentId",
                 "ContentType(254)",
-                "ContentPart(254)",
+                "ContentFieldSet(254)",
                 "ContentField(254)",
                 "Published",
                 "Latest")
@@ -578,12 +578,12 @@ public sealed class Migrations : DataMigration
         );
 
         // The index in MySQL can accommodate up to 768 characters or 3072 bytes.
-        // DocumentId (2) + ContentType (254) + ContentPart (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
+        // DocumentId (2) + ContentType (254) + ContentFieldSet (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
         await SchemaBuilder.AlterIndexTableAsync<TimeFieldIndex>(table => table
             .CreateIndex("IDX_TimeFieldIndex_DocumentId_ContentType",
                 "DocumentId",
                 "ContentType(254)",
-                "ContentPart(254)",
+                "ContentFieldSet(254)",
                 "ContentField(254)",
                 "Published",
                 "Latest")
@@ -607,12 +607,12 @@ public sealed class Migrations : DataMigration
         );
 
         // The index in MySQL can accommodate up to 768 characters or 3072 bytes.
-        // DocumentId (2) + ContentType (254) + ContentPart (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
+        // DocumentId (2) + ContentType (254) + ContentFieldSet (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
         await SchemaBuilder.AlterIndexTableAsync<LinkFieldIndex>(table => table
             .CreateIndex("IDX_LinkFieldIndex_DocumentId_ContentType",
                 "DocumentId",
                 "ContentType(254)",
-                "ContentPart(254)",
+                "ContentFieldSet(254)",
                 "ContentField(254)",
                 "Published",
                 "Latest")
@@ -648,12 +648,12 @@ public sealed class Migrations : DataMigration
         );
 
         // The index in MySQL can accommodate up to 768 characters or 3072 bytes.
-        // DocumentId (2) + ContentType (254) + ContentPart (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
+        // DocumentId (2) + ContentType (254) + ContentFieldSet (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
         await SchemaBuilder.AlterIndexTableAsync<HtmlFieldIndex>(table => table
             .CreateIndex("IDX_HtmlFieldIndex_DocumentId_ContentType",
                 "DocumentId",
                 "ContentType(254)",
-                "ContentPart(254)",
+                "ContentFieldSet(254)",
                 "ContentField(254)",
                 "Published",
                 "Latest")
@@ -669,12 +669,12 @@ public sealed class Migrations : DataMigration
         );
 
         // The index in MySQL can accommodate up to 768 characters or 3072 bytes.
-        // DocumentId (2) + ContentType (254) + ContentPart (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
+        // DocumentId (2) + ContentType (254) + ContentFieldSet (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
         await SchemaBuilder.AlterIndexTableAsync<MultiTextFieldIndex>(table => table
             .CreateIndex("IDX_MultiTextFieldIndex_DocumentId_ContentType",
                 "DocumentId",
                 "ContentType(254)",
-                "ContentPart(254)",
+                "ContentFieldSet(254)",
                 "ContentField(254)",
                 "Published",
                 "Latest")

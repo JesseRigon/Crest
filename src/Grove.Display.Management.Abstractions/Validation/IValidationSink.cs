@@ -8,7 +8,7 @@ namespace Grove.Validation;
 /// results a save reports. Scoped to the request (one per tenant scope); the API answers a
 /// non-empty sink with <c>ApiProblems.Validation(sink.Errors)</c>, the error contract's
 /// <c>errors</c> map (docs/MVC/api.md › The error contract). Keys are field paths
-/// (<c>Part.Field</c>), setting names, or <c>""</c> for the object. No model binding.
+/// (<c>FieldSet.Field</c>), setting names, or <c>""</c> for the object. No model binding.
 /// </summary>
 public interface IValidationSink
 {

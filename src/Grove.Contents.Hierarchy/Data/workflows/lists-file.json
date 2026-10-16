@@ -1,0 +1,131 @@
+{
+  "name": "Lists: file",
+  "description": "System flow of the ParentContentItem field set, on creating: the item takes its list's type and place, and the list in its culture.",
+  "customProperties": {
+    "Grove.RunsAsSystem": "true"
+  },
+  "root": {
+    "type": "Grove.Workflows.Flowchart",
+    "id": "flow",
+    "version": 1,
+    "activities": [
+      {
+        "type": "Grove.Contents.Hierarchy.FileInList",
+        "id": "step1",
+        "version": 1,
+        "metadata": {
+          "designer": {
+            "position": {
+              "x": 0,
+              "y": 0
+            }
+          }
+        }
+      },
+      {
+        "type": "Grove.Workflows.FailUnit",
+        "id": "refuse1",
+        "version": 1,
+        "reason": {
+          "typeName": "String",
+          "expression": {
+            "type": "JavaScript",
+            "value": "getOutputFrom(\"step1\", \"Error\")"
+          }
+        },
+        "field": {
+          "typeName": "String",
+          "expression": {
+            "type": "JavaScript",
+            "value": "getOutputFrom(\"step1\", \"Field\")"
+          }
+        },
+        "metadata": {
+          "designer": {
+            "position": {
+              "x": 0,
+              "y": 160
+            }
+          }
+        }
+      },
+      {
+        "type": "Grove.Contents.Hierarchy.JoinCultureList",
+        "id": "step2",
+        "version": 1,
+        "metadata": {
+          "designer": {
+            "position": {
+              "x": 300,
+              "y": 0
+            }
+          }
+        }
+      },
+      {
+        "type": "Grove.Workflows.FailUnit",
+        "id": "refuse2",
+        "version": 1,
+        "reason": {
+          "typeName": "String",
+          "expression": {
+            "type": "JavaScript",
+            "value": "getOutputFrom(\"step2\", \"Error\")"
+          }
+        },
+        "field": {
+          "typeName": "String",
+          "expression": {
+            "type": "JavaScript",
+            "value": "getOutputFrom(\"step2\", \"Field\")"
+          }
+        },
+        "metadata": {
+          "designer": {
+            "position": {
+              "x": 300,
+              "y": 160
+            }
+          }
+        }
+      }
+    ],
+    "connections": [
+      {
+        "source": {
+          "activity": "step1",
+          "port": "Refused"
+        },
+        "target": {
+          "activity": "refuse1",
+          "port": "In"
+        }
+      },
+      {
+        "source": {
+          "activity": "step2",
+          "port": "Refused"
+        },
+        "target": {
+          "activity": "refuse2",
+          "port": "In"
+        }
+      },
+      {
+        "source": {
+          "activity": "step1",
+          "port": "Done"
+        },
+        "target": {
+          "activity": "step2",
+          "port": "In"
+        }
+      }
+    ]
+  },
+  "variables": [],
+  "inputs": [],
+  "outputs": [],
+  "outcomes": [],
+  "options": {}
+}

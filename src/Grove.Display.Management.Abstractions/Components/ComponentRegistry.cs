@@ -140,7 +140,7 @@ public sealed class ComponentRegistry : IComponentRegistry
         }
 
         // A field's display mode ("TextField_Display__Header") or a part's display type shape
-        // ("TitlePart_Summary") falls back to the shape's own component when the variant has none,
+        // ("Title_Summary") falls back to the shape's own component when the variant has none,
         // as the Razor views fell back to the shape's own view. Editor shapes never do.
         foreach (var marker in DisplayVariants)
         {

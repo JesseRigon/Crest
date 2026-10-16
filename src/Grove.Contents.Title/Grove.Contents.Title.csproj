@@ -24,6 +24,11 @@
     <ProjectReference Include="..\Grove.Display.Liquid.Abstractions\Grove.Display.Liquid.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
     <ProjectReference Include="..\Grove.Display.Resources.Management\Grove.Display.Resources.Management.csproj" />
+    <ProjectReference Include="..\Grove.Contents.Fields.Abstractions\Grove.Contents.Fields.Abstractions.csproj" />
+    <!-- The title's behaviour is system flows: its activities on the engine. -->
+    <ProjectReference Include="..\Grove.Workflows\Abstractions\Grove.Workflows.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Workflows\engine\src\modules\Grove.Workflows.Core\Grove.Workflows.Core.csproj" />
+    <ProjectReference Include="..\Grove.Workflows\engine\src\modules\Grove.Workflows.Engine\Grove.Workflows.Engine.csproj" />
   </ItemGroup>
 
 </Project>

@@ -16,7 +16,7 @@ public static class ContentPickerConversion
     /// <summary>The retired field type's name, as stored definitions and old recipes name it.</summary>
     public const string RetiredFieldType = "ContentPickerField";
 
-    public const string FieldType = "OptionPickerField";
+    public const string FieldType = "OptionListField";
 
     private const string RetiredSettings = "ContentPickerFieldSettings";
 
@@ -43,7 +43,7 @@ public static class ContentPickerConversion
             converted.Remove(section);
         }
 
-        if (converted["ContentPartFieldSettings"] is JsonObject partField
+        if (converted["ContentFieldSettings"] is JsonObject partField
             && partField["Editor"]?.GetValue<string>() is "Lucene" or "Elasticsearch")
         {
             partField.Remove("Editor");
@@ -56,23 +56,23 @@ public static class ContentPickerConversion
 
         var option = new JsonObject
         {
-            [nameof(OptionPickerFieldSettings.SourceKey)] = OptionSourceKeys.ForContentItems(types, stereotypes, all),
-            [nameof(OptionPickerFieldSettings.Multiple)] = Bool(picker?["Multiple"]),
-            [nameof(OptionPickerFieldSettings.Required)] = Bool(picker?["Required"]),
-            [nameof(OptionPickerFieldSettings.Placeholder)] = picker?["Placeholder"]?.GetValue<string>() ?? string.Empty,
+            [nameof(OptionListFieldSettings.SourceKey)] = OptionSourceKeys.ForContentItems(types, stereotypes, all),
+            [nameof(OptionListFieldSettings.Multiple)] = Bool(picker?["Multiple"]),
+            [nameof(OptionListFieldSettings.Required)] = Bool(picker?["Required"]),
+            [nameof(OptionListFieldSettings.Placeholder)] = picker?["Placeholder"]?.GetValue<string>() ?? string.Empty,
         };
 
         if (picker?["Hint"]?.GetValue<string>() is { Length: > 0 } hint)
         {
-            option[nameof(OptionPickerFieldSettings.Hint)] = hint;
+            option[nameof(OptionListFieldSettings.Hint)] = hint;
         }
 
         if (!string.IsNullOrWhiteSpace(titlePattern) && !string.Equals(titlePattern.Trim(), DefaultTitlePattern, StringComparison.Ordinal))
         {
-            option[nameof(OptionPickerFieldSettings.TitlePattern)] = titlePattern;
+            option[nameof(OptionListFieldSettings.TitlePattern)] = titlePattern;
         }
 
-        converted[nameof(OptionPickerFieldSettings)] = option;
+        converted[nameof(OptionListFieldSettings)] = option;
         return converted;
     }
 
@@ -143,9 +143,9 @@ public static class ContentPickerConversion
     public static bool ConvertDefinitionStep(JsonObject step)
     {
         var changed = false;
-        foreach (var part in (step["ContentParts"] as JsonArray ?? []).OfType<JsonObject>())
+        foreach (var part in (step["ContentFieldSets"] as JsonArray ?? []).OfType<JsonObject>())
         {
-            foreach (var field in (part["ContentPartFieldDefinitionRecords"] as JsonArray ?? []).OfType<JsonObject>())
+            foreach (var field in (part["ContentFieldDefinitionRecords"] as JsonArray ?? []).OfType<JsonObject>())
             {
                 if (field["FieldName"]?.GetValue<string>() != RetiredFieldType)
                 {
@@ -176,16 +176,16 @@ public static class ContentPickerConversion
         var changed = false;
         if (types(contentType) is { } type)
         {
-            foreach (var part in type.Parts)
+            foreach (var part in type.FieldSets)
             {
                 if (content[part.Name] is not JsonObject partContent)
                 {
                     continue;
                 }
 
-                foreach (var field in part.PartDefinition.Fields.Where(field => field.FieldDefinition.Name == FieldType))
+                foreach (var field in part.FieldSetDefinition.Fields.Where(field => field.FieldTypeDefinition.Name == FieldType))
                 {
-                    var sourceKey = field.GetSettings<OptionPickerFieldSettings>().SourceKey;
+                    var sourceKey = field.GetSettings<OptionListFieldSettings>().SourceKey;
                     changed |= ConvertValue(partContent[field.Name] as JsonObject, sourceKey);
                 }
             }

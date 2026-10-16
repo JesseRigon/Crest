@@ -65,7 +65,7 @@ public static class PartiesConstants
         public const string LocationPoint = "LocationPoint";
     }
 
-    /// <summary>Named BagParts every party type carries.</summary>
+    /// <summary>The embeddings every party type carries.</summary>
     public static class Bags
     {
         public const string ContactPoints = "ContactPoints";

@@ -32,18 +32,18 @@ public class SitemapUrlHrefLangExtendedMetadataProvider : ISitemapContentItemExt
         ContentItem contentItem,
         XElement url)
     {
-        if (!contentItem.TryGet<LocalizationPart>(out var part) ||
+        if (!contentItem.TryGet<LocalizationFieldSet>(out var part) ||
             queryContext.ReferenceContentItems == null ||
             !queryContext.ReferenceContentItems.Any())
         {
             return true;
         }
 
-        var localizedContentParts = queryContext.ReferenceContentItems
-            .Select(ci => ci.TryGet<LocalizationPart>(out var localizationPart) ? localizationPart : null)
+        var localizedContentFieldSets = queryContext.ReferenceContentItems
+            .Select(ci => ci.TryGet<LocalizationFieldSet>(out var localizationFieldSet) ? localizationFieldSet : null)
             .Where(cp => cp?.LocalizationSet == part.LocalizationSet);
 
-        foreach (var localizedPart in localizedContentParts)
+        foreach (var localizedPart in localizedContentFieldSets)
         {
             var sitemapMetadataAspect = await _contentManager.PopulateAspectAsync<SitemapMetadataAspect>(localizedPart.ContentItem);
             if (sitemapMetadataAspect.Exclude)

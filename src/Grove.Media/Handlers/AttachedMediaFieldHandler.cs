@@ -18,7 +18,7 @@ public class AttachedMediaFieldHandler : ContentFieldHandler<MediaField>
 
     public async override Task ClonedAsync(CloneContentFieldContext context, MediaField field)
     {
-        if (context.ContentPartFieldDefinition.Editor() == "Attached")
+        if (context.ContentFieldDefinition.Editor() == "Attached")
         {
             var mediaFieldNodePath = (field.Content.Node as JsonNode).GetPath();
 

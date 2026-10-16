@@ -13,43 +13,46 @@
               "Versionable": true
             }
           },
-          "ContentTypePartDefinitionRecords": [
+          "ContentTypeFieldSetDefinitionRecords": [
             {
-              "PartName": "TitlePart",
-              "Name": "TitlePart",
+              "FieldSetName": "Title",
+              "Name": "Title",
               "Settings": {
-                "ContentTypePartSettings": {
+                "ContentTypeFieldSetSettings": {
                   "Position": "0"
                 }
               }
             },
             {
-              "PartName": "AliasPart",
-              "Name": "AliasPart",
+              "FieldSetName": "Alias",
+              "Name": "Alias",
               "Settings": {
-                "AliasPartSettings": {
+                "AliasFieldSetSettings": {
                   "Pattern": "{{ ContentItem | display_text | slugify }}"
                 },
-                "ContentTypePartSettings": {
+                "ContentTypeFieldSetSettings": {
                   "Position": "1"
                 }
               }
             },
             {
-              "PartName": "MenuPart",
-              "Name": "MenuPart",
+              "FieldSetName": "Menu",
+              "Name": "Menu",
               "Settings": {
-                "ContentTypePartSettings": {
+                "ContentTypeFieldSetSettings": {
                   "Position": "2"
                 }
               }
-            },
+            }
+          ],
+          "EmbeddedContentDefinitionRecords": [
             {
-              "PartName": "MenuItemsListPart",
-              "Name": "MenuItemsListPart",
-              "ContentTypePartSettings": {
-                "Position": "3"
-              }
+              "Name": "MenuItems",
+              "DisplayName": "Menu items",
+              "Position": "3",
+              "AllowedTypes": [ "@MenuItem" ],
+              "Nested": true,
+              "Referenceable": true
             }
           ]
         },
@@ -61,30 +64,21 @@
               "Stereotype": "MenuItem"
             }
           },
-          "ContentTypePartDefinitionRecords": [
+          "ContentTypeFieldSetDefinitionRecords": [
             {
-              "PartName": "LinkMenuItemPart",
-              "Name": "LinkMenuItemPart",
+              "FieldSetName": "LinkMenuItem",
+              "Name": "LinkMenuItem",
               "Settings": {
-                "ContentTypePartSettings": {
+                "ContentTypeFieldSetSettings": {
                   "Position": "0"
                 }
               }
             },
             {
-              "PartName": "LinkMenuItem",
-              "Name": "LinkMenuItem",
+              "FieldSetName": "MenuItemPermission",
+              "Name": "MenuItemPermission",
               "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "1"
-                }
-              }
-            },
-            {
-              "PartName": "MenuItemPermissionPart",
-              "Name": "MenuItemPermissionPart",
-              "Settings": {
-                "ContentTypePartSettings": {
+                "ContentTypeFieldSetSettings": {
                   "Position": "2"
                 }
               }
@@ -100,22 +94,13 @@
             },
             "FullTextAspectSettings": {}
           },
-          "ContentTypePartDefinitionRecords": [
+          "ContentTypeFieldSetDefinitionRecords": [
             {
-              "PartName": "ContentMenuItemPart",
-              "Name": "ContentMenuItemPart",
-              "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "0"
-                }
-              }
-            },
-            {
-              "PartName": "ContentMenuItem",
+              "FieldSetName": "ContentMenuItem",
               "Name": "ContentMenuItem",
               "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "1"
+                "ContentTypeFieldSetSettings": {
+                  "Position": "0"
                 }
               }
             }
@@ -130,30 +115,21 @@
             },
             "FullTextAspectSettings": {}
           },
-          "ContentTypePartDefinitionRecords": [
+          "ContentTypeFieldSetDefinitionRecords": [
             {
-              "PartName": "HtmlMenuItemPart",
-              "Name": "HtmlMenuItemPart",
+              "FieldSetName": "HtmlMenuItem",
+              "Name": "HtmlMenuItem",
               "Settings": {
-                "ContentTypePartSettings": {
+                "ContentTypeFieldSetSettings": {
                   "Position": "0"
                 }
               }
             },
             {
-              "PartName": "HtmlMenuItem",
-              "Name": "HtmlMenuItem",
+              "FieldSetName": "MenuItemPermission",
+              "Name": "MenuItemPermission",
               "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "1"
-                }
-              }
-            },
-            {
-              "PartName": "MenuItemPermissionPart",
-              "Name": "MenuItemPermissionPart",
-              "Settings": {
-                "ContentTypePartSettings": {
+                "ContentTypeFieldSetSettings": {
                   "Position": "2"
                 }
               }
@@ -161,41 +137,41 @@
           ]
         }
       ],
-      "ContentParts": [
+      "ContentFieldSets": [
         {
-          "Name": "MenuPart"
+          "Name": "Menu"
         },
         {
-          "Name": "MenuItemPart"
+          "Name": "MenuItem"
         },
         {
-          "Name": "LinkMenuItemPart",
+          "Name": "LinkMenuItem",
           "Settings": {
-            "ContentPartSettings": {
+            "ContentFieldSetSettings": {
               "Attachable": true,
               "Description": "Provides a menu link behavior for your content item."
             }
           }
         },
         {
-          "Name": "ContentMenuItemPart",
+          "Name": "ContentMenuItem",
           "Settings": {
-            "ContentPartSettings": {
+            "ContentFieldSetSettings": {
               "Attachable": true,
               "DisplayName": "Content Menu Item",
               "Description": "Provides a menu link behavior with the Content Picker for your content item."
             }
           },
-          "ContentPartFieldDefinitionRecords": [
+          "ContentFieldDefinitionRecords": [
             {
-              "FieldName": "OptionPickerField",
+              "FieldName": "OptionListField",
               "Name": "SelectedContentItem",
               "Settings": {
-                "ContentPartFieldSettings": {
+                "ContentFieldSettings": {
                   "DisplayName": "Selected Content Item",
                   "Position": "0"
                 },
-                "OptionPickerFieldSettings": {
+                "OptionListFieldSettings": {
                   "SourceKey": "contentitem:*",
                   "Required": true,
                   "Multiple": false
@@ -205,9 +181,9 @@
           ]
         },
         {
-          "Name": "HtmlMenuItemPart",
+          "Name": "HtmlMenuItem",
           "Settings": {
-            "ContentPartSettings": {
+            "ContentFieldSetSettings": {
               "Attachable": true,
               "DisplayName": "Html Menu Item",
               "Description": "Provides a menu link behavior with a field to display html for the link text."
@@ -215,9 +191,9 @@
           }
         },
         {
-          "Name": "MenuItemPermissionPart",
+          "Name": "MenuItemPermission",
           "Settings": {
-            "ContentPartSettings": {
+            "ContentFieldSetSettings": {
               "Attachable": true,
               "Description": "Provides a permission for the menu item."
             }

@@ -21,11 +21,11 @@ public sealed class ContentPickerRelationshipContext
 {
     private readonly List<string> _errors;
 
-    public ContentPickerRelationshipContext(ContentItem root, ContentItem item, string partName, string fieldName, IReadOnlyList<string> selectedIds, List<string> errors)
+    public ContentPickerRelationshipContext(ContentItem root, ContentItem item, string fieldSetName, string fieldName, IReadOnlyList<string> selectedIds, List<string> errors)
     {
         Root = root;
         Item = item;
-        PartName = partName;
+        FieldSetName = fieldSetName;
         FieldName = fieldName;
         SelectedIds = selectedIds;
         _errors = errors;
@@ -37,7 +37,7 @@ public sealed class ContentPickerRelationshipContext
     /// <summary>The item holding the field: <see cref="Root"/>, or an item contained in it (a bag element).</summary>
     public ContentItem Item { get; }
 
-    public string PartName { get; }
+    public string FieldSetName { get; }
 
     public string FieldName { get; }
 
@@ -51,11 +51,11 @@ public sealed class ContentPickerRelationshipOptions
 {
     private readonly Dictionary<(string Part, string Field), List<Type>> _handlers = [];
 
-    public void Add(string partName, string fieldName, Type handlerType)
+    public void Add(string fieldSetName, string fieldName, Type handlerType)
     {
-        if (!_handlers.TryGetValue((partName, fieldName), out var list))
+        if (!_handlers.TryGetValue((fieldSetName, fieldName), out var list))
         {
-            _handlers[(partName, fieldName)] = list = [];
+            _handlers[(fieldSetName, fieldName)] = list = [];
         }
 
         if (!list.Contains(handlerType))
@@ -64,19 +64,19 @@ public sealed class ContentPickerRelationshipOptions
         }
     }
 
-    public IReadOnlyList<Type> For(string partName, string fieldName) =>
-        _handlers.TryGetValue((partName, fieldName), out var list) ? list : [];
+    public IReadOnlyList<Type> For(string fieldSetName, string fieldName) =>
+        _handlers.TryGetValue((fieldSetName, fieldName), out var list) ? list : [];
 }
 
 public static class ContentPickerRelationshipServiceCollectionExtensions
 {
     /// <summary>Registers <typeparamref name="THandler"/> as the relationship rule of the
     /// picker field <paramref name="fieldName"/> on the part <paramref name="partName"/>.</summary>
-    public static IServiceCollection AddContentPickerRelationshipHandler<THandler>(this IServiceCollection services, string partName, string fieldName)
+    public static IServiceCollection AddContentPickerRelationshipHandler<THandler>(this IServiceCollection services, string fieldSetName, string fieldName)
         where THandler : class, IContentPickerRelationshipHandler
     {
         services.AddScoped<THandler>();
-        services.Configure<ContentPickerRelationshipOptions>(options => options.Add(partName, fieldName, typeof(THandler)));
+        services.Configure<ContentPickerRelationshipOptions>(options => options.Add(fieldSetName, fieldName, typeof(THandler)));
         return services;
     }
 }

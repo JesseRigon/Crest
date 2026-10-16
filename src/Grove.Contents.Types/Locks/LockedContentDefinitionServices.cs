@@ -52,41 +52,41 @@ public sealed class LockedContentDefinitionService(IContentDefinitionService inn
         await inner.RemoveTypeAsync(name, deleteContent);
     }
 
-    public Task AddPartToTypeAsync(string partName, string typeName) => inner.AddPartToTypeAsync(partName, typeName);
+    public Task AddFieldSetToTypeAsync(string fieldSetName, string typeName) => inner.AddFieldSetToTypeAsync(fieldSetName, typeName);
 
-    public Task AddReusablePartToTypeAsync(string name, string displayName, string description, string partName, string typeName) =>
-        inner.AddReusablePartToTypeAsync(name, displayName, description, partName, typeName);
+    public Task AddReusableFieldSetToTypeAsync(string name, string displayName, string description, string fieldSetName, string typeName) =>
+        inner.AddReusableFieldSetToTypeAsync(name, displayName, description, fieldSetName, typeName);
 
-    public async Task RemovePartFromTypeAsync(string partName, string typeName)
+    public async Task RemoveFieldSetFromTypeAsync(string fieldSetName, string typeName)
     {
-        await guard.EnsureTypePartChangeAsync(typeName, partName, DefinitionChanges.Detached);
-        await inner.RemovePartFromTypeAsync(partName, typeName);
+        await guard.EnsureTypeFieldSetChangeAsync(typeName, fieldSetName, DefinitionChanges.Detached);
+        await inner.RemoveFieldSetFromTypeAsync(fieldSetName, typeName);
     }
 
-    public Task<ContentPartDefinition> AddPartAsync(string name) => inner.AddPartAsync(name);
+    public Task<ContentFieldSetDefinition> AddFieldSetAsync(string name) => inner.AddFieldSetAsync(name);
 
-    public async Task RemovePartAsync(string name)
+    public async Task RemoveFieldSetAsync(string name)
     {
-        await guard.EnsurePartChangeAsync(name, DefinitionChanges.Deleted);
-        await inner.RemovePartAsync(name);
+        await guard.EnsureFieldSetChangeAsync(name, DefinitionChanges.Deleted);
+        await inner.RemoveFieldSetAsync(name);
     }
 
-    public Task AddFieldToPartAsync(string fieldName, string fieldTypeName, string partName) => inner.AddFieldToPartAsync(fieldName, fieldTypeName, partName);
+    public Task AddFieldToFieldSetAsync(string fieldName, string fieldTypeName, string fieldSetName) => inner.AddFieldToFieldSetAsync(fieldName, fieldTypeName, fieldSetName);
 
-    public Task AddFieldToPartAsync(string fieldName, string displayName, string fieldTypeName, string partName) =>
-        inner.AddFieldToPartAsync(fieldName, displayName, fieldTypeName, partName);
+    public Task AddFieldToFieldSetAsync(string fieldName, string displayName, string fieldTypeName, string fieldSetName) =>
+        inner.AddFieldToFieldSetAsync(fieldName, displayName, fieldTypeName, fieldSetName);
 
-    public async Task RemoveFieldFromPartAsync(string fieldName, string partName)
+    public async Task RemoveFieldFromFieldSetAsync(string fieldName, string fieldSetName)
     {
-        await guard.EnsureFieldChangeAsync(partName, fieldName, DefinitionChanges.Removed);
-        await inner.RemoveFieldFromPartAsync(fieldName, partName);
+        await guard.EnsureFieldChangeAsync(fieldSetName, fieldName, DefinitionChanges.Removed);
+        await inner.RemoveFieldFromFieldSetAsync(fieldName, fieldSetName);
     }
 
     // Display surface only (display name, editor, display mode): a lock leaves it editable.
     public Task AlterFieldAsync(AlterFieldContext context) => inner.AlterFieldAsync(context);
-    public Task AlterTypePartAsync(AlterTypePartContext context) => inner.AlterTypePartAsync(context);
-    public Task AlterTypePartsOrderAsync(ContentTypeDefinition typeDefinition, string[] partNames) => inner.AlterTypePartsOrderAsync(typeDefinition, partNames);
-    public Task AlterPartFieldsOrderAsync(ContentPartDefinition partDefinition, string[] fieldNames) => inner.AlterPartFieldsOrderAsync(partDefinition, fieldNames);
+    public Task AlterTypeFieldSetAsync(AlterTypeFieldSetContext context) => inner.AlterTypeFieldSetAsync(context);
+    public Task AlterTypeFieldSetsOrderAsync(ContentTypeDefinition typeDefinition, string[] fieldSetNames) => inner.AlterTypeFieldSetsOrderAsync(typeDefinition, fieldSetNames);
+    public Task AlterFieldSetFieldsOrderAsync(ContentFieldSetDefinition fieldSetDefinition, string[] fieldNames) => inner.AlterFieldSetFieldsOrderAsync(fieldSetDefinition, fieldNames);
     public Task<string> GenerateContentTypeNameFromDisplayNameAsync(string displayName) => inner.GenerateContentTypeNameFromDisplayNameAsync(displayName);
-    public Task<string> GenerateFieldNameFromDisplayNameAsync(string partName, string displayName) => inner.GenerateFieldNameFromDisplayNameAsync(partName, displayName);
+    public Task<string> GenerateFieldNameFromDisplayNameAsync(string fieldSetName, string displayName) => inner.GenerateFieldNameFromDisplayNameAsync(fieldSetName, displayName);
 }

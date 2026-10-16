@@ -46,7 +46,7 @@ public sealed record OptionPickerAttachmentModel(
     bool IsOptionPicker,
     OptionPickerSettingsModel Settings);
 
-/// <summary>Mutable mirror of the server's OptionPickerFieldSettings, shaped for
+/// <summary>Mutable mirror of the server's OptionListFieldSettings, shaped for
 /// direct binding in the settings editor.</summary>
 public sealed class OptionPickerSettingsModel
 {
@@ -91,10 +91,10 @@ public sealed class OptionPickerFilterModel
 /// <summary>A column an option source can offer (api/grove/option-sources/{key}/columns).</summary>
 public sealed record OptionSourceColumnModel(string Path, string Label, bool IsDefaultDisplay = false);
 
-/// <summary>An content part list as the management screens see it. Fields describes
+/// <summary>An option list as the management screens see it. Fields describes
 /// the custom data fields on the list's option content type (empty for lists whose
 /// option type carries none).</summary>
-public sealed record ContentPartListModel(
+public sealed record OptionListModel(
     string ContentItemId,
     string Key,
     string DisplayText,
@@ -111,11 +111,11 @@ public sealed record ContentPartListModel(
 public sealed record OptionFieldModel(
     string Name,
     string DisplayName,
-    string PartName,
+    string FieldSetName,
     string Type,
     bool DataLocked);
 
-/// <summary>A member of an content part list. Category is never null - options without an
+/// <summary>A member of an option list. Category is never null - options without an
 /// assigned category carry "Uncategorized". DisplayTextPlural is null when the option
 /// has no distinct plural (readers fall back to DisplayText). Fields holds the
 /// option's custom data field values by field name, null when the option type

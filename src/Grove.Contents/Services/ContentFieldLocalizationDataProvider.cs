@@ -18,15 +18,14 @@ public class ContentFieldDataLocalizationProvider : ILocalizationDataProvider
     {
         var typeDefinitions = await _contentDefinitionManager.ListTypeDefinitionsAsync();
 
-        // Use "Content Fields" as primary context and part name as sub-context for grouping.
-        // Format: "Content Fields:PartName" where PartName is the content part name.
+        // "Content Fields" is the primary context and the field set's attachment name on the
+        // type the sub-context: "Content Fields:{FieldSetAttachment}". A field's label and its
+        // description are both sources.
         return typeDefinitions
-            .SelectMany(t => t.Parts)
-            .SelectMany(p => p.PartDefinition.Fields.Select(f =>
-                new DataLocalizedString(
-                    DataLocalizationContext.ContentField(p.PartDefinition.Name),
-                    f.DisplayName(),
-                    string.Empty)))
+            .SelectMany(t => t.FieldSets)
+            .SelectMany(p => p.FieldSetDefinition.Fields.SelectMany(f => new[] { f.DisplayName(), f.Description() }
+                .Where(text => !string.IsNullOrWhiteSpace(text))
+                .Select(text => new DataLocalizedString(DataLocalizationContext.ContentField(p.Name), text, string.Empty))))
             .DistinctBy(d => $"{d.Context}|{d.Name}");
     }
 }

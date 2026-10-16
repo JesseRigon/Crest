@@ -1,11 +1,8 @@
 using Grove.Contents.Management.Metadata;
 using Grove.Contents.Management.Metadata.Settings;
-using Grove.Contents.Management.Records;
 using Grove.Data.Migration;
-using Grove.Contents.Taxonomies.Fields;
-using Grove.Contents.Taxonomies.Indexing;
-using Grove.Contents.Taxonomies.Settings;
-using YesSql.Sql;
+using Grove.Contents.Taxonomies.Models;
+using Grove.Contents.Types;
 
 namespace Grove.Contents.Taxonomies;
 
@@ -21,159 +18,107 @@ public sealed class Migrations : DataMigration
     public async Task<int> CreateAsync()
     {
         await _contentDefinitionManager.AlterTypeDefinitionAsync("Taxonomy", taxonomy => taxonomy
+            .WithDisplayName("Categories")
             .Draftable()
             .Versionable()
             .Creatable()
             .Listable()
-            .WithPart("TitlePart", part => part.WithPosition("1"))
-            .WithPart("AliasPart", part => part
+            .WithFieldSet("Title", part => part.WithPosition("1"))
+            .WithFieldSet("Alias", part => part
                 .WithPosition("2")
-                .WithSettings(new AliasPartSettings
+                .WithSettings(new AliasFieldSetSettings
                 {
                     Pattern = "{{ Model.ContentItem | display_text | slugify }}",
                 }))
-            .WithPart("AutoroutePart", part => part
+            .WithFieldSet("Autoroute", part => part
                 .WithPosition("3")
-                .WithSettings(new AutoroutePartSettings
+                .WithSettings(new AutorouteFieldSetSettings
                 {
                     Pattern = "{{ Model.ContentItem | display_text | slugify }}",
                     AllowRouteContainedItems = true,
                 }))
-            .WithPart("TaxonomyPart", part => part.WithPosition("4"))
+            .WithFieldSet("Taxonomy", part => part.WithPosition("4"))
         );
 
-        await SchemaBuilder.CreateMapIndexTableAsync<TaxonomyIndex>(table => table
-            .Column<string>("TaxonomyContentItemId", c => c.WithLength(26))
-            .Column<string>("ContentItemId", c => c.WithLength(26))
-            .Column<string>("ContentType", column => column.WithLength(ContentItemIndex.MaxContentTypeSize))
-            .Column<string>("ContentPart", column => column.WithLength(ContentItemIndex.MaxContentPartSize))
-            .Column<string>("ContentField", column => column.WithLength(ContentItemIndex.MaxContentFieldSize))
-            .Column<string>("TermContentItemId", column => column.WithLength(26))
-            .Column<bool>("Published", c => c.WithDefault(true))
-            .Column<bool>("Latest", c => c.WithDefault(false))
-        );
+        await DeclareTermsAsync();
 
-        await SchemaBuilder.AlterIndexTableAsync<TaxonomyIndex>(table => table
-            .CreateIndex("IDX_TaxonomyIndex_DocumentId",
-                "DocumentId",
-                "TaxonomyContentItemId",
-                "ContentItemId",
-                "TermContentItemId",
-                "Published",
-                "Latest")
-        );
-
-        // The index in MySQL can accommodate up to 768 characters or 3072 bytes.
-        // DocumentId (2) + ContentType (254) + ContentPart (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
-        await SchemaBuilder.AlterIndexTableAsync<TaxonomyIndex>(table => table
-            .CreateIndex("IDX_TaxonomyIndex_DocumentId_ContentType",
-                "DocumentId",
-                "ContentType(254)",
-                "ContentPart(254)",
-                "ContentField(254)",
-                "Published",
-                "Latest")
-        );
+        await DefineTaxonomyTermFieldsAsync();
+        await LabelAsCategoriesAsync();
 
         // Shortcut other migration steps on new content definition schemas.
-        return 5;
+        return 8;
     }
 
-    // Migrate FieldSettings. This only needs to run on old content definition schemas.
-    // This code can be removed in a later version.
-    public async Task<int> UpdateFrom1Async()
+    // The terms are the taxonomy's embedding (docs/content-engine.md › Embedded content items):
+    // nested (each term holds its children), referenceable (option list fields on
+    // embedded:Taxonomy.Terms and routes point at them), of the type the taxonomy names.
+    public async Task<int> UpdateFrom5Async()
     {
-        await _contentDefinitionManager.MigrateFieldSettingsAsync<TaxonomyField, TaxonomyFieldSettings>();
-        return 2;
+        await DeclareTermsAsync();
+        return 6;
     }
 
-    // This code can be removed in a later version.
-    public async Task<int> UpdateFrom2Async()
-    {
-        await _contentDefinitionManager.AlterTypeDefinitionAsync("Taxonomy", taxonomy => taxonomy
-            .WithPart("AutoroutePart", part => part
-                .WithPosition("3")
-                .WithSettings(new AutoroutePartSettings
-                {
-                    Pattern = "{{ Model.ContentItem | display_text | slugify }}",
-                    AllowRouteContainedItems = true,
-                }))
-            .WithPart("TaxonomyPart", part => part.WithPosition("4"))
-        );
+    private Task DeclareTermsAsync() =>
+        _contentDefinitionManager.AlterTypeDefinitionAsync("Taxonomy", taxonomy => taxonomy
+            .WithEmbedding(TaxonomyFieldSet.TermsEmbedding, terms => terms
+                .WithDisplayName("Terms")
+                .WithPosition("5")
+                .Allow(Grove.Contents.Management.Metadata.Models.EmbeddedContentDefinition.AnyType)
+                .Nested()
+                .Referenceable()));
 
-        return 3;
+    // The field set's values are fields (docs/content-engine.md › Behaviour is workflows); the ones its
+    // system flows require are locked by the module.
+    public async Task<int> UpdateFrom6Async()
+    {
+        await DefineTaxonomyTermFieldsAsync();
+        return 7;
     }
 
-    // This code can be removed in a later version.
-    public async Task<int> UpdateFrom3Async()
+    // Taxonomies are "Categories" on every screen; the code keeps its names.
+    public async Task<int> UpdateFrom7Async()
     {
-        // This step has been updated to also add these new columns.
-        await SchemaBuilder.AlterIndexTableAsync<TaxonomyIndex>(table => table
-            .AddColumn<bool>("Published", c => c.WithDefault(true))
-        );
-
-        await SchemaBuilder.AlterIndexTableAsync<TaxonomyIndex>(table => table
-            .AddColumn<bool>("Latest", c => c.WithDefault(false))
-        );
-
-        // So that the new indexes can be fully created.
-        await SchemaBuilder.AlterIndexTableAsync<TaxonomyIndex>(table => table
-            .CreateIndex("IDX_TaxonomyIndex_DocumentId",
-                "DocumentId",
-                "TaxonomyContentItemId",
-                "ContentItemId",
-                "TermContentItemId",
-                "Published",
-                "Latest")
-        );
-
-        // The index in MySQL can accommodate up to 768 characters or 3072 bytes.
-        // DocumentId (2) + ContentType (254) + ContentPart (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
-        await SchemaBuilder.AlterIndexTableAsync<TaxonomyIndex>(table => table
-            .CreateIndex("IDX_TaxonomyIndex_DocumentId_ContentType",
-                "DocumentId",
-                "ContentType(254)",
-                "ContentPart(254)",
-                "ContentField(254)",
-                "Published",
-                "Latest")
-        );
-
-        // We then shortcut the next migration step.
-        return 5;
+        await DefineTaxonomyTermFieldsAsync();
+        await LabelAsCategoriesAsync();
+        return 8;
     }
 
-    // This code can be removed in a later version.
-    public async Task<int> UpdateFrom4Async()
+    private async Task LabelAsCategoriesAsync()
     {
-        // This step run only if the previous one was executed before
-        // it was updated, so here we also add the following columns.
-        await SchemaBuilder.AlterIndexTableAsync<TaxonomyIndex>(table => table
-            .AddColumn<bool>("Published", c => c.WithDefault(true))
-        );
+        await _contentDefinitionManager.AlterTypeDefinitionAsync("Taxonomy", taxonomy => taxonomy.WithDisplayName("Categories"));
+        await _contentDefinitionManager.AlterFieldSetDefinitionAsync("Taxonomy", builder => builder
+            .WithDisplayName("Categories")
+            .WithDescription("Makes the item a list of categories (a taxonomy): its terms are what content is filed under."));
+    }
 
-        await SchemaBuilder.AlterIndexTableAsync<TaxonomyIndex>(table => table
-            .AddColumn<bool>("Latest", c => c.WithDefault(false))
-        );
+    private async Task DefineTaxonomyTermFieldsAsync()
+    {
+        await _contentDefinitionManager.AlterFieldSetDefinitionAsync("Taxonomy", builder => builder
+            .WithField(TaxonomyFieldSet.TermContentTypeField, field => field
+                .OfType("TextField")
+                .WithDisplayMode(ContentFieldDisplayModes.None)
+                .WithDisplayName("Term type")
+                .WithPosition("0")
+                .WithEditor(ContentFieldEditors.None)
+                .Locked()));
 
-        // But we create a separate index for these new columns.
-        await SchemaBuilder.AlterIndexTableAsync<TaxonomyIndex>(table => table
-            .CreateIndex("IDX_TaxonomyIndex_DocumentId_Published",
-                "DocumentId",
-                "Published",
-                "Latest")
-        );
-
-        return 5;
+        await _contentDefinitionManager.AlterFieldSetDefinitionAsync("Term", builder => builder
+            .WithField(TermFieldSet.TaxonomyContentItemIdField, field => field
+                .OfType("TextField")
+                .WithDisplayMode(ContentFieldDisplayModes.None)
+                .WithDisplayName("Categories")
+                .WithPosition("0")
+                .WithEditor(ContentFieldEditors.None)
+                .Locked()));
     }
 }
 
-internal sealed class AliasPartSettings
+internal sealed class AliasFieldSetSettings
 {
     public string Pattern { get; set; }
 }
 
-internal sealed class AutoroutePartSettings
+internal sealed class AutorouteFieldSetSettings
 {
     public string Pattern { get; set; }
     public bool AllowRouteContainedItems { get; set; }

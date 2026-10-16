@@ -8,7 +8,7 @@ public class NumericFieldIndexHandler : ContentFieldIndexHandler<NumericField>
 {
     public override Task BuildIndexAsync(NumericField field, BuildFieldIndexContext context)
     {
-        var settings = context.ContentPartFieldDefinition.GetSettings<NumericFieldSettings>();
+        var settings = context.ContentFieldDefinition.GetSettings<NumericFieldSettings>();
         var options = context.Settings.ToOptions();
 
         var isInteger = settings.Scale == 0;

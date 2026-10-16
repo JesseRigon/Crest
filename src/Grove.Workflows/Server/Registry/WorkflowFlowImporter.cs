@@ -29,6 +29,7 @@ public sealed class WorkflowFlowImporter(
     IWorkflowDefinitionImporter importer,
     IApiSerializer serializer,
     WorkflowFlowLookup lookup,
+    Grove.Environment.Cache.ISignal signal,
     ILogger<WorkflowFlowImporter> logger)
 {
     public async Task<IReadOnlyList<(string FlowKey, WorkflowFlowSyncAction Action)>> SyncAsync(CancellationToken cancellationToken = default)
@@ -140,6 +141,9 @@ public sealed class WorkflowFlowImporter(
             logger.LogError("Shipped flow {Flow} did not import: {Errors}", flow.Key, string.Join("; ", result.ValidationErrors.Select(e => e.Message)));
             return false;
         }
+
+        // Hook slots resolve system flows to installed definitions: re-resolve them.
+        Grove.Environment.Cache.SignalExtensions.DeferredSignalToken(signal, Hooks.WorkflowHookAttachmentCache.SignalKey);
 
         logger.LogInformation("Shipped flow {Flow} v{Version} imported as definition {DefinitionId} ({Ownership}).", flow.Key, flow.Version, result.WorkflowDefinition.DefinitionId, ownership.Ownership);
         return true;

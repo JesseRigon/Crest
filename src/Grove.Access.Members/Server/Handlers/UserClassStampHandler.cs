@@ -86,7 +86,7 @@ public class UserClassStampHandler(
     {
         var person = await contentManager.NewAsync(PartiesConstants.ContentTypes.Person);
         person.DisplayText = string.IsNullOrWhiteSpace(user.UserName) ? user.Email ?? string.Empty : user.UserName;
-        ((System.Text.Json.Nodes.JsonObject)person.Content)["TitlePart"] = new System.Text.Json.Nodes.JsonObject { ["Title"] = person.DisplayText };
+        ((System.Text.Json.Nodes.JsonObject)person.Content)["Title"] = new System.Text.Json.Nodes.JsonObject { ["Title"] = new System.Text.Json.Nodes.JsonObject { ["Text"] = person.DisplayText } };
         await contentManager.CreateAsync(person, VersionOptions.Published);
         await partyUserLink.LinkPortalUserAsync(person.ContentItemId, user.UserId);
         return person.ContentItemId;

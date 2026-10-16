@@ -11,9 +11,8 @@ public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddObjectGraphType<MenuItemsListPart, MenuItemsListQueryObjectType>();
-        services.AddObjectGraphType<LinkMenuItemPart, LinkMenuItemQueryObjectType>();
-        services.AddObjectGraphType<HtmlMenuItemPart, HtmlMenuItemQueryObjectType>();
+        services.AddObjectGraphType<LinkMenuItemFieldSet, LinkMenuItemQueryObjectType>();
+        services.AddObjectGraphType<HtmlMenuItemFieldSet, HtmlMenuItemQueryObjectType>();
         services.AddScoped<IContentTypeBuilder, MenuItemContentTypeBuilder>();
     }
 }

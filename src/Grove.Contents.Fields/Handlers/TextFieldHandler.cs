@@ -12,39 +12,39 @@ namespace Grove.Contents.Fields.Handlers;
 
 public class TextFieldHandler : ContentFieldHandler<TextField>
 {
-    private readonly ITypeActivatorFactory<ContentPart> _contentPartFactory;
+    private readonly ITypeActivatorFactory<ContentFieldSet> _contentFieldSetFactory;
     private readonly ILiquidTemplateManager _liquidTemplateManager;
 
     protected readonly IStringLocalizer S;
 
     public TextFieldHandler(
-        ITypeActivatorFactory<ContentPart> contentPartFactory,
+        ITypeActivatorFactory<ContentFieldSet> contentFieldSetFactory,
         ILiquidTemplateManager liquidTemplateManager,
         IStringLocalizer<TextFieldHandler> stringLocalizer)
     {
-        _contentPartFactory = contentPartFactory;
+        _contentFieldSetFactory = contentFieldSetFactory;
         _liquidTemplateManager = liquidTemplateManager;
         S = stringLocalizer;
     }
 
     public override Task ValidatingAsync(ValidateContentFieldContext context, TextField field)
     {
-        var settings = context.ContentPartFieldDefinition.GetSettings<TextFieldSettings>();
+        var settings = context.ContentFieldDefinition.GetSettings<TextFieldSettings>();
 
         if (settings.Required && string.IsNullOrWhiteSpace(field.Text))
         {
-            context.Fail(S["A value is required for {0}.", context.ContentPartFieldDefinition.DisplayName()], nameof(field.Text));
+            context.Fail(S["A value is required for {0}.", context.ContentFieldDefinition.DisplayName()], nameof(field.Text));
         }
 
         var length = field.Text?.Length ?? 0;
         if (settings.MinLength is { } minimum && length > 0 && length < minimum)
         {
-            context.Fail(S["{0} must be at least {1} characters long.", context.ContentPartFieldDefinition.DisplayName(), minimum], nameof(field.Text));
+            context.Fail(S["{0} must be at least {1} characters long.", context.ContentFieldDefinition.DisplayName(), minimum], nameof(field.Text));
         }
 
         if (settings.MaxLength is { } maximum && length > maximum)
         {
-            context.Fail(S["{0} can't be longer than {1} characters.", context.ContentPartFieldDefinition.DisplayName(), maximum], nameof(field.Text));
+            context.Fail(S["{0} can't be longer than {1} characters.", context.ContentFieldDefinition.DisplayName(), maximum], nameof(field.Text));
         }
 
         return Task.CompletedTask;
@@ -67,7 +67,7 @@ public class TextFieldHandler : ContentFieldHandler<TextField>
 
     private async Task SetValueAsync(ContentFieldContextBase context, TextField field)
     {
-        var settings = context.ContentPartFieldDefinition?.GetSettings<TextFieldSettings>();
+        var settings = context.ContentFieldDefinition?.GetSettings<TextFieldSettings>();
 
         // Do not compute the title if the user can modify it.
         if (settings is null || settings.Type == FieldBehaviorType.Editable)
@@ -85,11 +85,11 @@ public class TextFieldHandler : ContentFieldHandler<TextField>
 
             field.Text = value?.Trim();
 
-            var partActivator = _contentPartFactory.GetTypeActivator(context.PartName);
-            var part = (field.ContentItem.Get(partActivator.Type, context.ContentPartFieldDefinition.ContentTypePartDefinition.Name) as ContentPart)
-                ?? throw new InvalidOperationException($"The content part '{context.ContentPartFieldDefinition.ContentTypePartDefinition.Name}' could not be found.");
+            var partActivator = _contentFieldSetFactory.GetTypeActivator(context.FieldSetName);
+            var part = (field.ContentItem.Get(partActivator.Type, context.ContentFieldDefinition.ContentTypeFieldSetDefinition.Name) as ContentFieldSet)
+                ?? throw new InvalidOperationException($"The field set '{context.ContentFieldDefinition.ContentTypeFieldSetDefinition.Name}' could not be found.");
 
-            part.Apply(context.ContentPartFieldDefinition.Name, field);
+            part.Apply(context.ContentFieldDefinition.Name, field);
         }
     }
 }

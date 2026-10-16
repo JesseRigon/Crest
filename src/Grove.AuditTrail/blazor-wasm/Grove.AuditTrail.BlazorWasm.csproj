@@ -4,7 +4,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <!-- The *.BlazorWasm suffix is the routing convention the server and the admin client load
-         module pages by (see Grove.Contents.PartLists.BlazorWasm). The audit pages live here,
+         module pages by (see Grove.Contents.OptionLists.BlazorWasm). The audit pages live here,
          isolated with the module they depend on (docs/architecture.md › Rules that hold). -->
     <AssemblyName>Grove.AuditTrail.BlazorWasm</AssemblyName>
     <RootNamespace>Grove.AuditTrail.BlazorWasm</RootNamespace>

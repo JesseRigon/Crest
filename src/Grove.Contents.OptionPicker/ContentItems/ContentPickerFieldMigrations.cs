@@ -28,14 +28,14 @@ public sealed class ContentPickerFieldMigrations(IContentDefinitionManager defin
     private async Task ConvertAsync()
     {
         var converted = false;
-        foreach (var part in await definitions.ListPartDefinitionsAsync())
+        foreach (var part in await definitions.ListFieldSetDefinitionsAsync())
         {
-            var fields = part.Fields.Where(field => field.FieldDefinition.Name == ContentPickerConversion.RetiredFieldType).ToArray();
+            var fields = part.Fields.Where(field => field.FieldTypeDefinition.Name == ContentPickerConversion.RetiredFieldType).ToArray();
             foreach (var field in fields)
             {
                 var settings = ContentPickerConversion.ConvertSettings(field.Settings);
-                await definitions.AlterPartDefinitionAsync(part.Name, builder => builder.RemoveField(field.Name));
-                await definitions.AlterPartDefinitionAsync(part.Name, builder => builder
+                await definitions.AlterFieldSetDefinitionAsync(part.Name, builder => builder.RemoveField(field.Name));
+                await definitions.AlterFieldSetDefinitionAsync(part.Name, builder => builder
                     .WithField(field.Name, replacement => replacement
                         .OfType(ContentPickerConversion.FieldType)
                         .MergeSettings(settings)));

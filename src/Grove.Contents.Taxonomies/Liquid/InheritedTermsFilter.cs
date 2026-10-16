@@ -34,7 +34,7 @@ public class InheritedTermsFilter : ILiquidFilter
 
         var terms = new List<ContentItem>();
 
-        TaxonomyTerms.FindTermHierarchy((JsonArray)taxonomy.Content.TaxonomyPart.Terms, termContentItemId, terms);
+        TaxonomyTerms.FindTermHierarchy(TaxonomyTerms.Roots(taxonomy), termContentItemId, terms);
 
         return FluidValue.Create(terms, ctx.Options);
     }

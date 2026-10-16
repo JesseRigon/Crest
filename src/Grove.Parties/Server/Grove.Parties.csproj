@@ -11,7 +11,6 @@
     <ProjectReference Include="$(PlatformSrcDir)Grove.Contents.Management\Grove.Contents.Management.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Grove.Contents\Grove.Contents.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Grove.Data\Grove.Data.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)Grove.Contents.BagParts\Grove.Contents.BagParts.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Grove.Module.Targets\Grove.Module.Targets.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Grove.Access.Sharing.Abstractions\Grove.Access.Sharing.Abstractions.csproj" />
     <PackageReference Include="YesSql.Abstractions" />

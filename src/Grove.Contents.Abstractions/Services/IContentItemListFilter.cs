@@ -24,10 +24,10 @@ public interface IContentItemListFilter
 
 /// <summary>
 /// One filter of the content items list: the query parameter it reads, its label, its choices
-/// (an empty value is "all"), and the content part whose items it concerns, if any (a
+/// (an empty value is "all"), and the field set whose items it concerns, if any (a
 /// list shows that part's values in a column of its own).
 /// </summary>
-public sealed record ContentItemListFilterDescriptor(string Name, string Label, IReadOnlyList<ContentItemListFilterOption> Options, string? Part = null);
+public sealed record ContentItemListFilterDescriptor(string Name, string Label, IReadOnlyList<ContentItemListFilterOption> Options, string? FieldSet = null);
 
 /// <summary>A filter choice: the parameter value and its text, with its nesting level in a tree (terms).</summary>
 public sealed record ContentItemListFilterOption(string Value, string Text, int Level = 0);

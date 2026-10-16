@@ -30,7 +30,7 @@ public sealed class OrganizationIndexProvider : IndexProvider<ContentItem>
                     return null;
                 }
 
-                var part = contentItem.Get<GroveOrganizationPart>(nameof(GroveOrganizationPart));
+                var part = contentItem.Get<OwningOrganizationFieldSet>(ContentFieldSetName.Of<OwningOrganizationFieldSet>());
                 if (string.IsNullOrWhiteSpace(part?.OrganizationId))
                 {
                     return null;

@@ -13,7 +13,7 @@ public class ObjectGraphTypeFieldProvider : IContentFieldProvider
     {
     }
 
-    public FieldType GetField(ISchema schema, ContentPartFieldDefinition field, string namedPartTechnicalName, string customFieldName)
+    public FieldType GetField(ISchema schema, ContentFieldDefinition field, string namedFieldSetTechnicalName, string customFieldName)
     {
         var queryGraphType = GetObjectGraphType(schema, field);
 
@@ -22,7 +22,7 @@ public class ObjectGraphTypeFieldProvider : IContentFieldProvider
             return new FieldType
             {
                 Name = customFieldName ?? field.Name,
-                Description = field.FieldDefinition.Name,
+                Description = field.FieldTypeDefinition.Name,
                 ResolvedType = queryGraphType,
                 Resolver = new FuncFieldResolver<ContentElement, ContentElement>(context =>
                 {
@@ -30,12 +30,12 @@ public class ObjectGraphTypeFieldProvider : IContentFieldProvider
                         .GetGenericArguments().First();
 
                     // Check if part has been collapsed by trying to get the parent part.
-                    ContentElement contentPart = context.Source.Get<ContentPart>(field.PartDefinition.Name);
+                    ContentElement contentFieldSet = context.Source.Get<ContentFieldSet>(field.FieldSetDefinition.Name);
 
                     // Part is not collapsed, access field directly.
-                    contentPart ??= context.Source;
+                    contentFieldSet ??= context.Source;
 
-                    var contentField = contentPart?.Get(typeToResolve, field.Name);
+                    var contentField = contentFieldSet?.Get(typeToResolve, field.Name);
                     return contentField;
                 }),
             };
@@ -44,16 +44,16 @@ public class ObjectGraphTypeFieldProvider : IContentFieldProvider
         return null;
     }
 
-    public FieldTypeIndexDescriptor GetFieldIndex(ContentPartFieldDefinition field)
+    public FieldTypeIndexDescriptor GetFieldIndex(ContentFieldDefinition field)
     {
         return null;
     }
 
-    public bool HasField(ISchema schema, ContentPartFieldDefinition field) => GetObjectGraphType(schema, field) != null;
+    public bool HasField(ISchema schema, ContentFieldDefinition field) => GetObjectGraphType(schema, field) != null;
 
-    public bool HasFieldIndex(ContentPartFieldDefinition field) => false;
+    public bool HasFieldIndex(ContentFieldDefinition field) => false;
 
-    private static IObjectGraphType GetObjectGraphType(ISchema schema, ContentPartFieldDefinition field) =>
+    private static IObjectGraphType GetObjectGraphType(ISchema schema, ContentFieldDefinition field) =>
         schema.AdditionalTypeInstances
-            .FirstOrDefault(x => x is IObjectGraphType && x.GetType().BaseType.GetGenericArguments().First().Name == field.FieldDefinition.Name) as IObjectGraphType;
+            .FirstOrDefault(x => x is IObjectGraphType && x.GetType().BaseType.GetGenericArguments().First().Name == field.FieldTypeDefinition.Name) as IObjectGraphType;
 }

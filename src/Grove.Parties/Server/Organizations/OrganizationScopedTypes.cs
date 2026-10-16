@@ -1,6 +1,6 @@
 namespace Grove.Parties.Organizations;
 
-/// <summary>Which content types carry <see cref="GroveOrganizationPart"/> and are scoped by
+/// <summary>Which content types carry <see cref="OwningOrganizationFieldSet"/> and are scoped by
 /// organization; a deployment decision declared once (a singleton), like assignment scoping.</summary>
 public sealed class OrganizationScopedTypes
 {

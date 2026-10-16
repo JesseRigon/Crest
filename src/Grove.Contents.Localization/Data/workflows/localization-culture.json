@@ -1,0 +1,71 @@
+{
+  "name": "Localization: culture",
+  "description": "System flow of the Localization field set, on creating: a new item gets a localization set and the default culture.",
+  "customProperties": {
+    "Grove.RunsAsSystem": "true"
+  },
+  "root": {
+    "type": "Grove.Workflows.Flowchart",
+    "id": "flow",
+    "version": 1,
+    "activities": [
+      {
+        "type": "Grove.Contents.Localization.SetCultureAndLocalizationSet",
+        "id": "step1",
+        "version": 1,
+        "metadata": {
+          "designer": {
+            "position": {
+              "x": 0,
+              "y": 0
+            }
+          }
+        }
+      },
+      {
+        "type": "Grove.Workflows.FailUnit",
+        "id": "refuse1",
+        "version": 1,
+        "reason": {
+          "typeName": "String",
+          "expression": {
+            "type": "JavaScript",
+            "value": "getOutputFrom(\"step1\", \"Error\")"
+          }
+        },
+        "field": {
+          "typeName": "String",
+          "expression": {
+            "type": "JavaScript",
+            "value": "getOutputFrom(\"step1\", \"Field\")"
+          }
+        },
+        "metadata": {
+          "designer": {
+            "position": {
+              "x": 0,
+              "y": 160
+            }
+          }
+        }
+      }
+    ],
+    "connections": [
+      {
+        "source": {
+          "activity": "step1",
+          "port": "Refused"
+        },
+        "target": {
+          "activity": "refuse1",
+          "port": "In"
+        }
+      }
+    ]
+  },
+  "variables": [],
+  "inputs": [],
+  "outputs": [],
+  "outcomes": [],
+  "options": {}
+}

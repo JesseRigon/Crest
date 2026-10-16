@@ -25,7 +25,7 @@ Design systems are content, not JSON files of their own. A first-party content t
 
 Grove.Themes.Admin provides the Blazor editor, preview, selector, and token application layer, with no parallel storage or permission model.
 
-- [ ] **Content part model.** The token taxonomy is fixed ([Token taxonomy](#token-taxonomy)); the part shape is open (see Open questions). Suggested `DesignSystemPart` fields/properties:
+- [ ] **Field set model.** The token taxonomy is fixed ([Token taxonomy](#token-taxonomy)); the field set's shape is open (see Open questions). Suggested `DesignSystemFieldSet` fields/properties:
 
   ```json
   {
@@ -66,11 +66,11 @@ Grove.Themes.Admin provides the Blazor editor, preview, selector, and token appl
 
   Suggested parts:
 
-  - `TitlePart`
-  - `AliasPart`
-  - `AutoroutePart` optional, mostly useful if design systems get public previews later
+  - `TitleFieldSet`
+  - `AliasFieldSet`
+  - `AutorouteFieldSet` optional, mostly useful if design systems get public previews later
   - `OwnerEditor` / content ownership
-  - `DesignSystemPart`
+  - `DesignSystemFieldSet`
 
   Permissions are the platform's; there are no local role checks.
 

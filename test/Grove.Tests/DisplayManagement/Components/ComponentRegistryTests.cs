@@ -253,14 +253,14 @@ public class ComponentRegistryTests
     [Fact]
     public void ADisplayVariantFallsBackToTheShapesOwnComponentButAnEditorNever()
     {
-        var registry = Registry(null, Component("TextField"), Component("TitlePart"), Component("TitlePart_Summary"));
+        var registry = Registry(null, Component("TextField"), Component("Title"), Component("Title_Summary"));
 
         Assert.True(registry.TryResolve("TextField_Display__Header", [], out var header));
         Assert.Equal("TextField", header.Name);
-        Assert.True(registry.TryResolve("TitlePart_Summary", [], out var summary));
-        Assert.Equal("TitlePart_Summary", summary.Name);
-        Assert.True(registry.TryResolve("TitlePart_SummaryAdmin", [], out var admin));
-        Assert.Equal("TitlePart", admin.Name);
+        Assert.True(registry.TryResolve("Title_Summary", [], out var summary));
+        Assert.Equal("Title_Summary", summary.Name);
+        Assert.True(registry.TryResolve("Title_SummaryAdmin", [], out var admin));
+        Assert.Equal("Title", admin.Name);
         Assert.False(registry.TryResolve("TextField_Edit", [], out _));
     }
 

@@ -1,3 +1,4 @@
+using Grove.Workflows.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Grove.Contents.Management;
 using Grove.Contents.Management.Display.ContentDisplay;
@@ -19,6 +20,10 @@ public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
+        // A menu's items render as the Menu shape, not as embedded content items.
+        services.Configure<Grove.Contents.Management.EmbeddedContentDisplayOptions>(options =>
+            options.DisplayedElsewhere.Add($"Menu.{MenuItemsEmbedding.Name}"));
+
         services.AddDataMigration<Migrations>();
         services.AddShapeTableProvider<MenuShapes>();
         services.AddPermissionProvider<Permissions>();
@@ -26,24 +31,34 @@ public sealed class Startup : StartupBase
 
         services.AddScoped<IStereotypesProvider, MenuItemStereotypesProvider>();
 
-        // MenuPart
+        // MenuFieldSet
         services.AddScoped<IContentHandler, MenuContentHandler>();
-        services.AddContentPart<MenuPart>();
+        services.AddContentFieldSet<MenuFieldSet>();
+        services.AddScoped<MenuBehaviour>();
 
-        services.AddContentPart<MenuItemsListPart>();
+        // LinkMenuItemFieldSet
+        services.AddContentFieldSet<LinkMenuItemFieldSet>();
 
-        // LinkMenuItemPart
-        services.AddContentPart<LinkMenuItemPart>()
-            .AddHandler<LinkMenuItemPartHandler>();
+        // ContentMenuItemFieldSet
+        services.AddContentFieldSet<ContentMenuItemFieldSet>();
 
-        // ContentMenuItemPart
-        services.AddContentPart<ContentMenuItemPart>();
+        // HtmlMenuItemFieldSet
+        services.AddContentFieldSet<HtmlMenuItemFieldSet>();
 
-        // HtmlMenuItemPart
-        services.AddContentPart<HtmlMenuItemPart>()
-            .AddHandler<HtmlMenuItemPartHandler>();
+        services.AddContentFieldSet<MenuItemPermissionFieldSet>();
 
-        services.AddContentPart<MenuItemPermissionPart>();
+    }
+}
 
+/// <summary>The field set's system flows and their activities (docs/content-engine.md › Behaviour is workflows).</summary>
+[RequireFeatures(Grove.Workflows.WorkflowsConstants.ContentsFeatureId)]
+public sealed class WorkflowsStartup : StartupBase
+{
+    public override void ConfigureServices(IServiceCollection services)
+    {
+        services.AddScoped<Grove.Workflows.IWorkflowActivityProvider, Workflows.MenuWorkflowProvider>();
+        services.AddScoped<Grove.Workflows.IWorkflowFlowProvider, Workflows.MenuWorkflowProvider>();
+        services.AddScoped<Grove.Workflows.IWorkflowFieldSetHookAttachmentProvider, Workflows.MenuWorkflowProvider>();
+        services.ConfigureGroveWorkflows(workflows => workflows.AddActivitiesFrom<WorkflowsStartup>());
     }
 }

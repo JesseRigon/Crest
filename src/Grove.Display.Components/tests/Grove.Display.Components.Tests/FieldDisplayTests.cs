@@ -12,7 +12,7 @@ using Xunit;
 namespace Grove.Display.Components.Tests;
 
 // Rework step 7 (docs/blazor-display.md): field, title, list and bag displays as components, so
-// the site path no longer falls back to their Razor views; the BagPart editor edits each
+// the site path no longer falls back to their Razor views; the embedded content items editor edits each
 // contained item through its type's editor tree.
 public sealed class FieldDisplayTests
 {
@@ -31,14 +31,15 @@ public sealed class FieldDisplayTests
     [Fact]
     public async Task ReferenceFieldsShowTheirLabelAndTheirResolvedItems()
     {
-        var picker = await RenderAsync<OptionPickerFieldDisplay>(new() { ["Label"] = "Related", ["Items"] = new List<DisplayLinkItem> { new("About", "about") } });
-        var users = await RenderAsync<UserPickerFieldDisplay>(new() { ["Label"] = "Owners", ["UserNames"] = new[] { "ada", "linus" } });
+        var picker = await RenderAsync<OptionListFieldDisplay>(new() { ["Label"] = "Related", ["Items"] = new List<DisplayLinkItem> { new("About", "about") } });
+        var users = await RenderAsync<OptionListFieldDisplay>(new() { ["Label"] = "Owners", ["Items"] = new List<DisplayLinkItem> { new("ada", "tags/ada"), new("linus", null!) } });
         var empty = await RenderAsync<DateFieldDisplay>(new() { ["Value"] = null });
 
         Assert.Contains("<span class=\"name\">Related</span>", picker, StringComparison.Ordinal);
         Assert.Contains("href=\"about\"", picker, StringComparison.Ordinal);
-        Assert.Contains("ada", users, StringComparison.Ordinal);
+        Assert.Contains("href=\"tags/ada\"", users, StringComparison.Ordinal);
         Assert.Contains("linus", users, StringComparison.Ordinal);
+        Assert.DoesNotContain("href=\"#\"", users, StringComparison.Ordinal);
         Assert.Equal(string.Empty, empty.Trim());
     }
 
@@ -59,7 +60,7 @@ public sealed class FieldDisplayTests
             Properties = new(StringComparer.OrdinalIgnoreCase) { ["ContentType"] = "Line", ["Content"] = new JsonObject { ["ContentItemId"] = "new" } },
         };
 
-        var copy = BagPartEditor.WithContent(template, new JsonObject { ["ContentItemId"] = "line-1", ["ContentType"] = "Line" });
+        var copy = EmbeddedContentItemsEditor.WithContent(template, new JsonObject { ["ContentItemId"] = "line-1", ["ContentType"] = "Line" });
 
         Assert.Equal("line-1", copy.Properties["Content"]!["ContentItemId"]!.GetValue<string>());
         Assert.Equal("new", template.Properties["Content"]!["ContentItemId"]!.GetValue<string>());
@@ -88,7 +89,7 @@ public sealed class FieldDisplayTests
     [Fact]
     public async Task ATaxonomyRendersItsTermTreeAndAGeoPointLinksToAMap()
     {
-        var taxonomy = await RenderAsync<TaxonomyPartDisplay>(new()
+        var taxonomy = await RenderAsync<TaxonomyFieldSetDisplay>(new()
         {
             ["Terms"] = new List<TaxonomyTermNode> { new("Space", "tags/space", [new("Mars", "tags/mars", [])]) },
         });

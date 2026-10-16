@@ -3,9 +3,12 @@ using Grove.Contents.Management;
 
 namespace Grove.Contents.Taxonomies;
 
-/// <summary>Finds terms in a taxonomy's term tree (<c>TaxonomyPart.Terms</c>), for the index, GraphQL and Liquid.</summary>
+/// <summary>Finds terms in a taxonomy's term tree (its <c>Terms</c> embedding, each term's children under its own), for the index, GraphQL and Liquid.</summary>
 internal static class TaxonomyTerms
 {
+    /// <summary>The terms directly under a taxonomy (its content item).</summary>
+    internal static JsonArray Roots(ContentItem taxonomy) => Models.TaxonomyFieldSet.TermsArray((JsonObject)taxonomy.Content) ?? [];
+
     /// <summary>The term <paramref name="termContentItemId"/>, at any depth, or null.</summary>
     internal static ContentItem FindTerm(JsonArray termsArray, string termContentItemId)
     {
@@ -18,7 +21,7 @@ internal static class TaxonomyTerms
                 return term.ToObject<ContentItem>();
             }
 
-            if (term["Terms"] is JsonArray children)
+            if (Models.TaxonomyFieldSet.TermsArray(term) is { } children)
             {
                 var found = FindTerm(children, termContentItemId);
 
@@ -46,7 +49,7 @@ internal static class TaxonomyTerms
                 return true;
             }
 
-            if (term["Terms"] is JsonArray children)
+            if (Models.TaxonomyFieldSet.TermsArray(term) is { } children)
             {
                 var found = FindTermHierarchy(children, termContentItemId, terms);
 

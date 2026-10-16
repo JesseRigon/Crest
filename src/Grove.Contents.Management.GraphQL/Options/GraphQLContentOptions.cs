@@ -9,7 +9,7 @@ public class GraphQLContentOptions
 {
     public IEnumerable<GraphQLContentTypeOption> ContentTypeOptions { get; set; } = [];
 
-    public IEnumerable<GraphQLContentPartOption> PartOptions { get; set; } = [];
+    public IEnumerable<GraphQLContentFieldSetOption> FieldSetOptions { get; set; } = [];
 
     public IEnumerable<GraphQLField> HiddenFields { get; set; } = [];
 
@@ -30,25 +30,25 @@ public class GraphQLContentOptions
         return this;
     }
 
-    public GraphQLContentOptions ConfigurePart<TContentPart>(Action<GraphQLContentPartOption> action)
-        where TContentPart : ContentPart
+    public GraphQLContentOptions ConfigureFieldSet<TContentFieldSet>(Action<GraphQLContentFieldSetOption> action)
+        where TContentFieldSet : ContentFieldSet
     {
-        var option = new GraphQLContentPartOption<TContentPart>();
+        var option = new GraphQLContentFieldSetOption<TContentFieldSet>();
 
         action(option);
 
-        PartOptions = PartOptions.Union([option]);
+        FieldSetOptions = FieldSetOptions.Union([option]);
 
         return this;
     }
 
-    public GraphQLContentOptions ConfigurePart(string partName, Action<GraphQLContentPartOption> action)
+    public GraphQLContentOptions ConfigureFieldSet(string fieldSetName, Action<GraphQLContentFieldSetOption> action)
     {
-        var option = new GraphQLContentPartOption(partName);
+        var option = new GraphQLContentFieldSetOption(fieldSetName);
 
         action(option);
 
-        PartOptions = PartOptions.Union([option]);
+        FieldSetOptions = FieldSetOptions.Union([option]);
 
         return this;
     }
@@ -72,18 +72,18 @@ public class GraphQLContentOptions
     ///
     /// If the Content Type is marked at collapsed, then all parts are collapsed.
     /// If the Content Type is not marked collapsed, then it falls down to the content type under it.
-    /// If the Content Part at a top level is marked collapsed, then it will trump above.
+    /// If the Field set at a top level is marked collapsed, then it will trump above.
     /// </summary>
     /// <param name="definition"></param>
     /// <returns></returns>
-    internal bool ShouldCollapse(ContentTypePartDefinition definition)
+    internal bool ShouldCollapse(ContentTypeFieldSetDefinition definition)
     {
         if (IsCollapsedByDefault(definition))
         {
             return true;
         }
 
-        var settings = definition.GetSettings<GraphQLContentTypePartSettings>();
+        var settings = definition.GetSettings<GraphQLContentTypeFieldSetSettings>();
 
         if (settings.Collapse)
         {
@@ -93,10 +93,10 @@ public class GraphQLContentOptions
         return false;
     }
 
-    public bool IsCollapsedByDefault(ContentTypePartDefinition definition)
+    public bool IsCollapsedByDefault(ContentTypeFieldSetDefinition definition)
     {
         var contentType = definition.ContentTypeDefinition.Name;
-        var partName = definition.PartDefinition.Name;
+        var partName = definition.FieldSetDefinition.Name;
 
         if (contentType == partName)
         {
@@ -112,22 +112,22 @@ public class GraphQLContentOptions
                 return true;
             }
 
-            var contentTypePartOption = contentTypeOption.PartOptions.FirstOrDefault(p => p.Name == partName);
+            var contentTypeFieldSetOption = contentTypeOption.FieldSetOptions.FirstOrDefault(p => p.Name == partName);
 
-            if (contentTypePartOption != null)
+            if (contentTypeFieldSetOption != null)
             {
-                if (contentTypePartOption.Collapse)
+                if (contentTypeFieldSetOption.Collapse)
                 {
                     return true;
                 }
             }
         }
 
-        var contentPartOption = PartOptions.FirstOrDefault(p => p.Name == partName);
+        var contentFieldSetOption = FieldSetOptions.FirstOrDefault(p => p.Name == partName);
 
-        if (contentPartOption != null)
+        if (contentFieldSetOption != null)
         {
-            if (contentPartOption.Collapse)
+            if (contentFieldSetOption.Collapse)
             {
                 return true;
             }
@@ -136,14 +136,14 @@ public class GraphQLContentOptions
         return false;
     }
 
-    internal bool ShouldSkip(ContentTypePartDefinition definition)
+    internal bool ShouldSkip(ContentTypeFieldSetDefinition definition)
     {
         if (IsHiddenByDefault(definition))
         {
             return true;
         }
 
-        var settings = definition.GetSettings<GraphQLContentTypePartSettings>();
+        var settings = definition.GetSettings<GraphQLContentTypeFieldSetSettings>();
 
         if (settings.Hidden)
         {
@@ -182,10 +182,10 @@ public class GraphQLContentOptions
             .Any(x => x.FieldType == fieldType && x.FieldName.Equals(fieldName, StringComparison.OrdinalIgnoreCase));
     }
 
-    public bool IsHiddenByDefault(ContentTypePartDefinition definition)
+    public bool IsHiddenByDefault(ContentTypeFieldSetDefinition definition)
     {
         var contentType = definition.ContentTypeDefinition.Name;
-        var partName = definition.PartDefinition.Name;
+        var partName = definition.FieldSetDefinition.Name;
 
         var contentTypeOption = ContentTypeOptions.FirstOrDefault(ctp => ctp.ContentType == contentType);
 
@@ -196,22 +196,22 @@ public class GraphQLContentOptions
                 return true;
             }
 
-            var contentTypePartOption = contentTypeOption.PartOptions.FirstOrDefault(p => p.Name == partName);
+            var contentTypeFieldSetOption = contentTypeOption.FieldSetOptions.FirstOrDefault(p => p.Name == partName);
 
-            if (contentTypePartOption != null)
+            if (contentTypeFieldSetOption != null)
             {
-                if (contentTypePartOption.Hidden)
+                if (contentTypeFieldSetOption.Hidden)
                 {
                     return true;
                 }
             }
         }
 
-        var contentPartOption = PartOptions.FirstOrDefault(p => p.Name == partName);
+        var contentFieldSetOption = FieldSetOptions.FirstOrDefault(p => p.Name == partName);
 
-        if (contentPartOption != null)
+        if (contentFieldSetOption != null)
         {
-            if (contentPartOption.Hidden)
+            if (contentFieldSetOption.Hidden)
             {
                 return true;
             }
@@ -220,13 +220,13 @@ public class GraphQLContentOptions
         return false;
     }
 
-    internal static string GetFieldName(ContentTypePartDefinition definition, string partName, string fieldName)
+    internal static string GetFieldName(ContentTypeFieldSetDefinition definition, string fieldSetName, string fieldName)
     {
-        var settings = definition.GetSettings<GraphQLContentTypePartSettings>();
+        var settings = definition.GetSettings<GraphQLContentTypeFieldSetSettings>();
 
         if (settings.PreventFieldNameCollision)
         {
-            return partName.ToFieldName() + fieldName.ToPascalCase();
+            return fieldSetName.ToFieldName() + fieldName.ToPascalCase();
         }
 
         return fieldName.ToCamelCase();

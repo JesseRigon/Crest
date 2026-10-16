@@ -13,9 +13,9 @@ namespace Grove.Infrastructure.Server.Tests;
 // rules, what the builders store, and the guard's refusals over stored definitions.
 public class DefinitionLockTests
 {
-    private static ContentPartDefinition Part(string partLock = DefinitionLockSources.None, string fieldLock = DefinitionLockSources.None)
+    private static ContentFieldSetDefinition Part(string partLock = DefinitionLockSources.None, string fieldLock = DefinitionLockSources.None)
     {
-        var builder = new ContentPartDefinitionBuilder().Named("InvoicePart")
+        var builder = new ContentFieldSetDefinitionBuilder().Named("InvoicePart")
             .WithField("Total", field => field.OfType("TextField").Locked(fieldLock))
             .WithField("Notes", field => field.OfType("TextField"));
         if (partLock != DefinitionLockSources.None) builder.Locked(partLock);
@@ -25,15 +25,15 @@ public class DefinitionLockTests
     private static ContentTypeDefinition Type(string attachmentLock)
     {
         var builder = new ContentTypeDefinitionBuilder().WithName("Invoice")
-            .WithPart("InvoicePart", part => { if (attachmentLock != DefinitionLockSources.None) part.Locked(attachmentLock); })
-            .WithPart("TitlePart", part => { });
+            .WithFieldSet("InvoicePart", part => { if (attachmentLock != DefinitionLockSources.None) part.Locked(attachmentLock); })
+            .WithFieldSet("Title", part => { });
         return builder.Build();
     }
 
-    private static DefinitionLockGuard Guard(ContentPartDefinition? part = null, ContentTypeDefinition? type = null)
+    private static DefinitionLockGuard Guard(ContentFieldSetDefinition? part = null, ContentTypeDefinition? type = null)
     {
         var manager = Substitute.For<IContentDefinitionManager>();
-        manager.LoadPartDefinitionAsync(Arg.Any<string>()).Returns(part);
+        manager.LoadFieldSetDefinitionAsync(Arg.Any<string>()).Returns(part);
         manager.LoadTypeDefinitionAsync(Arg.Any<string>()).Returns(type);
         return new DefinitionLockGuard(manager);
     }
@@ -69,7 +69,7 @@ public class DefinitionLockTests
         Assert.Equal(DefinitionLockSources.Tenant, lockedPart.GetLock());
         Assert.Equal(DefinitionLockSources.Tenant, lockedPart.Fields.Single(f => f.Name == "Notes").GetEffectiveLock(lockedPart));
 
-        Assert.Equal(DefinitionLockSources.Module, Type(DefinitionLockSources.Module).Parts.Single(p => p.Name == "InvoicePart").GetLock());
+        Assert.Equal(DefinitionLockSources.Module, Type(DefinitionLockSources.Module).FieldSets.Single(p => p.Name == "InvoicePart").GetLock());
     }
 
     [Fact]
@@ -83,7 +83,7 @@ public class DefinitionLockTests
 
         await guard.EnsureFieldChangeAsync("InvoicePart", "Notes", DefinitionChanges.Removed);
         await guard.EnsureFieldChangeAsync("InvoicePart", "Missing", DefinitionChanges.Removed);
-        await guard.EnsurePartChangeAsync("InvoicePart", DefinitionChanges.Deleted);
+        await guard.EnsureFieldSetChangeAsync("InvoicePart", DefinitionChanges.Deleted);
     }
 
     [Fact]
@@ -92,7 +92,7 @@ public class DefinitionLockTests
         var guard = Guard(Part(partLock: DefinitionLockSources.Tenant));
 
         await Assert.ThrowsAsync<DefinitionLockedException>(() => guard.EnsureFieldChangeAsync("InvoicePart", "Notes", DefinitionChanges.SettingsChanged));
-        await Assert.ThrowsAsync<DefinitionLockedException>(() => guard.EnsurePartChangeAsync("InvoicePart", DefinitionChanges.Deleted));
+        await Assert.ThrowsAsync<DefinitionLockedException>(() => guard.EnsureFieldSetChangeAsync("InvoicePart", DefinitionChanges.Deleted));
     }
 
     [Fact]
@@ -100,8 +100,8 @@ public class DefinitionLockTests
     {
         var guard = Guard(type: Type(DefinitionLockSources.Module));
 
-        await Assert.ThrowsAsync<DefinitionLockedException>(() => guard.EnsureTypePartChangeAsync("Invoice", "InvoicePart", DefinitionChanges.Detached));
-        await guard.EnsureTypePartChangeAsync("Invoice", "TitlePart", DefinitionChanges.Detached);
+        await Assert.ThrowsAsync<DefinitionLockedException>(() => guard.EnsureTypeFieldSetChangeAsync("Invoice", "InvoicePart", DefinitionChanges.Detached));
+        await guard.EnsureTypeFieldSetChangeAsync("Invoice", "Title", DefinitionChanges.Detached);
         await Assert.ThrowsAsync<DefinitionLockedException>(() => guard.EnsureTypeDeleteAsync("Invoice"));
 
         var open = Guard(type: Type(DefinitionLockSources.None));

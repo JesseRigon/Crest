@@ -34,10 +34,10 @@ public class HtmlFieldHandler : ContentFieldHandler<HtmlField>
 
     public override Task ValidatingAsync(ValidateContentFieldContext context, HtmlField field)
     {
-        var settings = context.ContentPartFieldDefinition.GetSettings<HtmlFieldSettings>();
+        var settings = context.ContentFieldDefinition.GetSettings<HtmlFieldSettings>();
         if (settings.RenderLiquid && !string.IsNullOrEmpty(field.Html) && !_liquidTemplateManager.Validate(field.Html, out var errors))
         {
-            context.Fail(S["{0} doesn't contain a valid Liquid expression. Details: {1}", context.ContentPartFieldDefinition.DisplayName(), string.Join(" ", errors)], nameof(field.Html));
+            context.Fail(S["{0} doesn't contain a valid Liquid expression. Details: {1}", context.ContentFieldDefinition.DisplayName(), string.Join(" ", errors)], nameof(field.Html));
         }
 
         return Task.CompletedTask;
@@ -53,10 +53,10 @@ public class HtmlFieldHandler : ContentFieldHandler<HtmlField>
 
     private Task SanitizeAsync(ContentFieldContextBase context, HtmlField field)
     {
-        if (context.ContentPartFieldDefinition?.GetSettings<HtmlFieldSettings>() is { SanitizeHtml: true } && !string.IsNullOrEmpty(field.Html))
+        if (context.ContentFieldDefinition?.GetSettings<HtmlFieldSettings>() is { SanitizeHtml: true } && !string.IsNullOrEmpty(field.Html))
         {
-            var partName = context.ContentPartFieldDefinition.ContentTypePartDefinition?.Name ?? context.PartName;
-            if (((JsonObject)context.ContentItem.Content)[partName]?[context.ContentPartFieldDefinition.Name] is JsonObject stored)
+            var partName = context.ContentFieldDefinition.ContentTypeFieldSetDefinition?.Name ?? context.FieldSetName;
+            if (((JsonObject)context.ContentItem.Content)[partName]?[context.ContentFieldDefinition.Name] is JsonObject stored)
             {
                 stored["Html"] = _htmlSanitizerService.Sanitize(field.Html);
             }

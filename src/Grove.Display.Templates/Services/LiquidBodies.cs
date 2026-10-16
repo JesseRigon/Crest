@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 namespace Grove.Display.Templates.Services;
 
 /// <summary>
-/// The conversion of a retired <c>LiquidPart</c> body into a <c>DisplayTreePart</c> tree (docs/MVC/shape-engine.md
+/// The conversion of a retired <c>LiquidPart</c> body into a <c>DisplayTreeFieldSet</c> tree (docs/MVC/shape-engine.md
 /// › Component coverage): one body format. A body that only renders a shape by name becomes that
 /// component's node; a body without Liquid becomes a <c>RichText</c> node (sanitized markup, as every
 /// stored markup leaf is); a body with Liquid becomes a composite template of its own, placed by name,

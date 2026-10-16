@@ -10,26 +10,26 @@ namespace Grove.Data.Indexing;
 public abstract class ContentFieldIndexHandler<TField> : IContentFieldIndexHandler where TField : ContentField
 {
     Task IContentFieldIndexHandler.BuildIndexAsync(
-        ContentPart contentPart,
-        ContentTypePartDefinition typePartDefinition,
-        ContentPartFieldDefinition partFieldDefinition,
+        ContentFieldSet contentFieldSet,
+        ContentTypeFieldSetDefinition typeFieldSetDefinition,
+        ContentFieldDefinition partFieldDefinition,
         BuildDocumentIndexContext context,
         IContentIndexSettings settings)
     {
-        if (contentPart == null)
+        if (contentFieldSet == null)
         {
             return Task.CompletedTask;
         }
 
         ArgumentNullException.ThrowIfNull(partFieldDefinition);
 
-        if (!string.Equals(typeof(TField).Name, partFieldDefinition.FieldDefinition.Name, StringComparison.Ordinal) &&
-           !string.Equals(nameof(ContentField), partFieldDefinition.FieldDefinition.Name, StringComparison.Ordinal))
+        if (!string.Equals(typeof(TField).Name, partFieldDefinition.FieldTypeDefinition.Name, StringComparison.Ordinal) &&
+           !string.Equals(nameof(ContentField), partFieldDefinition.FieldTypeDefinition.Name, StringComparison.Ordinal))
         {
             return Task.CompletedTask;
         }
 
-        var field = contentPart.Get<TField>(partFieldDefinition.Name);
+        var field = contentFieldSet.Get<TField>(partFieldDefinition.Name);
         if (field != null)
         {
             var keys = new List<string>();
@@ -38,14 +38,14 @@ public abstract class ContentFieldIndexHandler<TField> : IContentFieldIndexHandl
                 keys.Add($"{key}.{partFieldDefinition.Name}");
             }
 
-            if (!keys.Contains($"{typePartDefinition.Name}.{partFieldDefinition.Name}"))
+            if (!keys.Contains($"{typeFieldSetDefinition.Name}.{partFieldDefinition.Name}"))
             {
-                keys.Add($"{typePartDefinition.Name}.{partFieldDefinition.Name}");
+                keys.Add($"{typeFieldSetDefinition.Name}.{partFieldDefinition.Name}");
             }
 
             if (context.DocumentIndex is ContentItemDocumentIndex contentItemIndex && context.Record is ContentItem contentItem)
             {
-                var buildFieldIndexContext = new BuildFieldIndexContext(contentItemIndex, contentItem, keys, contentPart, typePartDefinition, partFieldDefinition, settings);
+                var buildFieldIndexContext = new BuildFieldIndexContext(contentItemIndex, contentItem, keys, contentFieldSet, typeFieldSetDefinition, partFieldDefinition, settings);
 
                 return BuildIndexAsync(field, buildFieldIndexContext);
             }

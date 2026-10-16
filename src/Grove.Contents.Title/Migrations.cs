@@ -5,6 +5,7 @@ using Grove.Contents.Management;
 using Grove.Contents.Management.Metadata;
 using Grove.Contents.Management.Metadata.Settings;
 using Grove.Contents.Management.Records;
+using Grove.Contents.Types;
 using Grove.Data.Migration;
 using YesSql;
 
@@ -28,15 +29,34 @@ public sealed class Migrations : DataMigration
 
     public async Task<int> CreateAsync()
     {
-        await _contentDefinitionManager.AlterPartDefinitionAsync("TitlePart", builder => builder
+        await _contentDefinitionManager.AlterFieldSetDefinitionAsync("Title", builder => builder
             .Attachable()
             .WithDescription("Provides a Title for your content item.")
             .WithDefaultPosition("0")
             );
 
+        await DefineTitleFieldAsync();
+
         // Shortcut other migration steps on new content definition schemas.
-        return 2;
+        return 3;
     }
+
+    // The title is a field (docs/content-engine.md › Behaviour is workflows), locked by the module:
+    // its system flows require it.
+    public async Task<int> UpdateFrom2Async()
+    {
+        await DefineTitleFieldAsync();
+        return 3;
+    }
+
+    private Task DefineTitleFieldAsync() =>
+        _contentDefinitionManager.AlterFieldSetDefinitionAsync("Title", builder => builder
+            .WithField(Models.TitleFieldSet.TitleField, field => field
+                .OfType("TextField")
+                .WithDisplayMode(ContentFieldDisplayModes.None)
+                .WithDisplayName("Title")
+                .WithPosition("0")
+                .Locked()));
 
     // This code can be removed in a later version.
     public async Task<int> UpdateFrom1()
@@ -81,7 +101,7 @@ public sealed class Migrations : DataMigration
 
             if (content.GetValueKind() == JsonValueKind.Object)
             {
-                var title = content["TitlePart"]?["Title"]?.Value<string>();
+                var title = content["Title"]?["Title"]?.Value<string>();
 
                 if (!string.IsNullOrWhiteSpace(title))
                 {

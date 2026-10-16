@@ -17,11 +17,11 @@ public class NumericFieldHandler : ContentFieldHandler<NumericField>
 
     public override Task ValidatingAsync(ValidateContentFieldContext context, NumericField field)
     {
-        var settings = context.ContentPartFieldDefinition.GetSettings<NumericFieldSettings>();
+        var settings = context.ContentFieldDefinition.GetSettings<NumericFieldSettings>();
 
         if (settings.Required && !field.Value.HasValue)
         {
-            context.Fail(S["A value is required for {0}.", context.ContentPartFieldDefinition.DisplayName()], nameof(field.Value));
+            context.Fail(S["A value is required for {0}.", context.ContentFieldDefinition.DisplayName()], nameof(field.Value));
         }
 
         if (field.Value.HasValue)
@@ -41,11 +41,11 @@ public class NumericFieldHandler : ContentFieldHandler<NumericField>
             {
                 if (settings.Scale == 0)
                 {
-                    context.Fail(S["The {0} field must be an integer.", context.ContentPartFieldDefinition.DisplayName()], nameof(field.Value));
+                    context.Fail(S["The {0} field must be an integer.", context.ContentFieldDefinition.DisplayName()], nameof(field.Value));
                 }
                 else
                 {
-                    context.Fail(S["Invalid number of digits for {0}, max allowed: {1}.", context.ContentPartFieldDefinition.DisplayName(), settings.Scale], nameof(field.Value));
+                    context.Fail(S["Invalid number of digits for {0}, max allowed: {1}.", context.ContentFieldDefinition.DisplayName(), settings.Scale], nameof(field.Value));
                 }
             }
         }

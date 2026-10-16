@@ -1,3 +1,4 @@
+using Grove.Workflows.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,14 +25,17 @@ public sealed class Startup : StartupBase
     {
         services.AddDataMigration<Migrations>();
 
-        services.AddContentPart<SeoMetaPart>()
-            .AddHandler<SeoMetaPartHandler>();
+        // The SeoMeta field set: its data is its fields; checking it, the system flow below; the
+        // metadata, read projections (the field set's, and the site's defaults for every item).
+        services.AddContentFieldSet<SeoMetaFieldSet>();
+        services.AddScoped<Services.SeoMetaBehaviour>();
+        services.AddContentFieldSetProjection<Projections.SeoMetaProjection>();
 
         services.AddScoped<IContentDisplayDriver, SeoContentDriver>();
 
         // This must be last, and the module dependent on Contents so this runs after the part handlers.
-        services.AddScoped<IContentHandler, SeoMetaSettingsHandler>();
-        services.AddScoped<IDocumentIndexHandler, SeoMetaPartContentIndexHandler>();
+        services.AddContentProjection<Projections.SeoMetaSettingsProjection>();
+        services.AddScoped<IDocumentIndexHandler, SeoMetaFieldSetContentIndexHandler>();
 
         services.AddPermissionProvider<SeoPermissionProvider>();
         services.AddPageSource<AdminPages>();
@@ -50,5 +54,18 @@ public sealed class Startup : StartupBase
 
         routes.Map(path, pipeline);
         routes.Map($"{path}/{{**robotsPath}}", pipeline);
+    }
+}
+
+/// <summary>The field set's system flows and their activities (docs/content-engine.md › Behaviour is workflows).</summary>
+[RequireFeatures(Grove.Workflows.WorkflowsConstants.ContentsFeatureId)]
+public sealed class WorkflowsStartup : StartupBase
+{
+    public override void ConfigureServices(IServiceCollection services)
+    {
+        services.AddScoped<Grove.Workflows.IWorkflowActivityProvider, Workflows.SeoMetaWorkflowProvider>();
+        services.AddScoped<Grove.Workflows.IWorkflowFlowProvider, Workflows.SeoMetaWorkflowProvider>();
+        services.AddScoped<Grove.Workflows.IWorkflowFieldSetHookAttachmentProvider, Workflows.SeoMetaWorkflowProvider>();
+        services.ConfigureGroveWorkflows(workflows => workflows.AddActivitiesFrom<WorkflowsStartup>());
     }
 }

@@ -76,7 +76,7 @@ public sealed class TemplateStore(
         ToRecord(await contentManager.GetAsync(contentItemId, version ?? VersionOptions.Latest));
 
     /// <summary>Saves a draft of the template (a new one when <paramref name="contentItemId"/> is null).</summary>
-    public async Task<TemplateRecord> SaveDraftAsync(string? contentItemId, TemplatePart values)
+    public async Task<TemplateRecord> SaveDraftAsync(string? contentItemId, TemplateFieldSet values)
     {
         var item = contentItemId is null ? null : await contentManager.GetAsync(contentItemId, VersionOptions.DraftRequired);
         if (item is null)
@@ -118,10 +118,10 @@ public sealed class TemplateStore(
         return true;
     }
 
-    private static void Apply(ContentItem item, TemplatePart values)
+    private static void Apply(ContentItem item, TemplateFieldSet values)
     {
         item.DisplayText = values.Name;
-        item.Alter<TemplatePart>(part =>
+        item.Alter<TemplateFieldSet>(part =>
         {
             part.Name = values.Name.Trim();
             part.Theme = string.IsNullOrWhiteSpace(values.Theme) ? null : values.Theme.Trim();
@@ -138,7 +138,7 @@ public sealed class TemplateStore(
     }
 
     private static TemplateRecord? ToRecord(ContentItem? item) =>
-        item?.As<TemplatePart>() is { } part
+        item?.As<TemplateFieldSet>() is { } part
             ? new(item.ContentItemId, item.ContentItemVersionId, part.Name, part.Theme, part.DisplayType, part.Source, part.Description, item.Published, item.Latest, item.ModifiedUtc)
             {
                 IsComposite = part.IsComposite,

@@ -58,7 +58,7 @@ public sealed class TenantOrganizationService(ISiteService siteService, IContent
 
         var organization = await contentManager.NewAsync(PartiesConstants.ContentTypes.Organization);
         organization.DisplayText = string.IsNullOrWhiteSpace(site.SiteName) ? "Our organization" : site.SiteName;
-        ((System.Text.Json.Nodes.JsonObject)organization.Content)["TitlePart"] = new System.Text.Json.Nodes.JsonObject { ["Title"] = organization.DisplayText };
+        ((System.Text.Json.Nodes.JsonObject)organization.Content)["Title"] = new System.Text.Json.Nodes.JsonObject { ["Title"] = new System.Text.Json.Nodes.JsonObject { ["Text"] = organization.DisplayText } };
         await contentManager.CreateAsync(organization, VersionOptions.Published);
 
         settings.OrganizationId = organization.ContentItemId;

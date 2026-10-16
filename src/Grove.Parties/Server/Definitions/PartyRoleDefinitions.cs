@@ -29,23 +29,23 @@ public static class PartyRoleDefinitions
         string numberFieldDisplayName,
         string termsFieldDisplayName,
         PartyRoleBase roleBase,
-        Func<ContentPartDefinitionBuilder, ContentPartDefinitionBuilder>? extraFields = null)
+        Func<ContentFieldSetDefinitionBuilder, ContentFieldSetDefinitionBuilder>? extraFields = null)
     {
         var baseType = roleBase.ContentType();
-        await contentDefinitionManager.AlterPartDefinitionAsync(contentType, part =>
+        await contentDefinitionManager.AlterFieldSetDefinitionAsync(contentType, part =>
         {
             part.Attachable()
                 .Reusable(false)
                 .WithDisplayName(displayName)
                 .WithDescription(partDescription)
                 .WithField(PartyField, field => field
-                    .OfType("OptionPickerField")
+                    .OfType("OptionListField")
                     .WithDisplayName(roleBase == PartyRoleBase.Organization ? "Organization" : "Person")
                     .WithDescription(roleBase == PartyRoleBase.Organization
                         ? "The organization this role belongs to (an individual is an Individual organization)."
                         : "The person this role belongs to.")
                     .WithPosition("0")
-                    .MergeSettings<OptionPickerFieldSettings>(settings =>
+                    .MergeSettings<OptionListFieldSettings>(settings =>
                     {
                         settings.Multiple = false;
                         settings.Required = true;
@@ -70,8 +70,8 @@ public static class PartyRoleDefinitions
             .Draftable()
             .Versionable()
             .Securable()
-            .WithPart("TitlePart", part => part.WithPosition("0"))
-            .WithPart(contentType, part => part.WithPosition("1")));
+            .WithFieldSet("Title", part => part.WithPosition("0"))
+            .WithFieldSet(contentType, part => part.WithPosition("1")));
     }
 }
 
@@ -95,10 +95,10 @@ public static class PartyRoleBases
     /// is not a party role.</summary>
     public static async Task<PartyRoleBase?> GetAsync(IContentDefinitionManager definitions, string roleContentType)
     {
-        var part = (await definitions.GetTypeDefinitionAsync(roleContentType))?.Parts
+        var part = (await definitions.GetTypeDefinitionAsync(roleContentType))?.FieldSets
             .FirstOrDefault(candidate => candidate.Name == roleContentType);
-        var field = part?.PartDefinition.Fields.FirstOrDefault(candidate => candidate.Name == PartyRoleDefinitions.PartyField);
-        var types = field?.GetSettings<OptionPickerFieldSettings>().ContentTypes() ?? [];
+        var field = part?.FieldSetDefinition.Fields.FirstOrDefault(candidate => candidate.Name == PartyRoleDefinitions.PartyField);
+        var types = field?.GetSettings<OptionListFieldSettings>().ContentTypes() ?? [];
         return types switch
         {
             [PartiesConstants.ContentTypes.Organization] => PartyRoleBase.Organization,

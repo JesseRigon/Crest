@@ -39,15 +39,15 @@ public sealed class HtmlFieldDisplayDriver : ContentFieldDisplayDriver<HtmlField
         {
             model.Html = field.Html;
             model.Field = field;
-            model.Part = context.ContentPart;
-            model.PartFieldDefinition = context.PartFieldDefinition;
+            model.FieldSet = context.ContentFieldSet;
+            model.FieldDefinition = context.FieldDefinition;
 
-            var settings = context.PartFieldDefinition.GetSettings<HtmlFieldSettings>();
+            var settings = context.FieldDefinition.GetSettings<HtmlFieldSettings>();
 
             await driver._htmlDisplayService.UpdateModelHtmlAsync(
                 model,
                 settings.RenderLiquid,
-                new Context { ["PartFieldDefinition"] = context.PartFieldDefinition },
+                new Context { ["FieldDefinition"] = context.FieldDefinition },
                 settings.SanitizeHtml);
         }, this, field, context)
         .Location(PlatformConstants.DisplayType.Detail, "Content")

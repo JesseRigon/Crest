@@ -51,9 +51,6 @@ public sealed class Migrations : DataMigration
         // Link field
         await _contentDefinitionManager.MigrateFieldSettingsAsync<LinkField, LinkFieldSettings>();
 
-        // Localization set content picker field
-        await _contentDefinitionManager.MigrateFieldSettingsAsync<LocalizationSetContentPickerField, LocalizationSetContentPickerFieldSettings>();
-
         // MultiText field
         await _contentDefinitionManager.MigrateFieldSettingsAsync<MultiTextField, MultiTextFieldSettings>();
 
@@ -79,14 +76,14 @@ public sealed class Migrations : DataMigration
     public async Task<int> UpdateFrom2Async()
     {
         // To keep the same behavior as before, RenderLiquid is initialized to the opposite of SanitizeHtml.
-        var partDefinitions = await _contentDefinitionManager.LoadPartDefinitionsAsync();
+        var partDefinitions = await _contentDefinitionManager.LoadFieldSetDefinitionsAsync();
         foreach (var partDefinition in partDefinitions)
         {
-            if (partDefinition.Fields.Any(f => f.FieldDefinition.Name == "HtmlField"))
+            if (partDefinition.Fields.Any(f => f.FieldTypeDefinition.Name == "HtmlField"))
             {
-                await _contentDefinitionManager.AlterPartDefinitionAsync(partDefinition.Name, partBuilder =>
+                await _contentDefinitionManager.AlterFieldSetDefinitionAsync(partDefinition.Name, partBuilder =>
                 {
-                    foreach (var fieldDefinition in partDefinition.Fields.Where(f => f.FieldDefinition.Name == "HtmlField"))
+                    foreach (var fieldDefinition in partDefinition.Fields.Where(f => f.FieldTypeDefinition.Name == "HtmlField"))
                     {
                         partBuilder.WithField(fieldDefinition.Name, fieldBuilder =>
                         {

@@ -3,7 +3,7 @@ using Grove.Contents.Management;
 using Grove.Contents.Management.Records;
 using Grove.Modules;
 using Grove.Display.Navigation;
-using Grove.Contents.Taxonomies.Indexing;
+using Grove.Data.Indexing;
 using Grove.Contents.Taxonomies.Models;
 using YesSql;
 
@@ -25,15 +25,17 @@ public sealed class DefaultContentsTaxonomyListQueryService : IContentsTaxonomyL
         _logger = logger;
     }
 
-    public async Task<IQuery<ContentItem>> QueryAsync(TermPart termPart, Pager pager)
+    public async Task<IQuery<ContentItem>> QueryAsync(TermFieldSet termFieldSet, Pager pager)
     {
-        ArgumentNullException.ThrowIfNull(termPart);
+        ArgumentNullException.ThrowIfNull(termFieldSet);
         ArgumentNullException.ThrowIfNull(pager);
 
+        // The items filed under the term: option list field selections of it (TaxonomyFields).
+        var termId = termFieldSet.ContentItem.ContentItemId;
         IQuery<ContentItem> query = _session.Query<ContentItem>()
-            .With<TaxonomyIndex>(x => x.TermContentItemId == termPart.ContentItem.ContentItemId);
+            .With<OptionListFieldIndex>(x => x.SelectedId == termId && x.Published);
 
-        await _contentTaxonomyListFilters.InvokeAsync((filter, q, part) => filter.FilterAsync(q, part), query, termPart, _logger);
+        await _contentTaxonomyListFilters.InvokeAsync((filter, q, part) => filter.FilterAsync(q, part), query, termFieldSet, _logger);
 
         var currentPage = 1;
 

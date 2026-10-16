@@ -1,3 +1,4 @@
+using Grove.Contents.Fields;
 using Grove.Data.Regions.Fields;
 using Grove.Data.Regions.Indexes;
 using Grove.Data.Regions.Migrations;
@@ -18,9 +19,9 @@ public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddContentPart<GroveRegionalProfilePart>();
-        services.AddContentPart<GroveRegionalProfileReferencePart>();
-        services.AddContentField<GeoStackField>();
+        services.AddContentFieldSet<RegionalProfileFieldSet>();
+        services.AddContentFieldSet<RegionalProfileReferenceFieldSet>();
+        services.AddFieldType<GeoStackField>();
         services.AddDataMigration<RegionsMigrations>();
         services.AddIndexProvider<RegionalProfileIndexProvider>();
         services.AddIndexProvider<GeoTenantNodeIndexProvider>();

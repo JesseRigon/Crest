@@ -6,7 +6,8 @@ public class ContentTypeDefinitionRecord
 {
     public ContentTypeDefinitionRecord()
     {
-        ContentTypePartDefinitionRecords = [];
+        ContentTypeFieldSetDefinitionRecords = [];
+        EmbeddedContentDefinitionRecords = [];
     }
 
     public string Name { get; set; }
@@ -15,5 +16,8 @@ public class ContentTypeDefinitionRecord
 
     public JsonObject Settings { get; set; }
 
-    public IList<ContentTypePartDefinitionRecord> ContentTypePartDefinitionRecords { get; set; }
+    public IList<ContentTypeFieldSetDefinitionRecord> ContentTypeFieldSetDefinitionRecords { get; set; }
+
+    /// <summary>The type's embeddings (docs/content-engine.md › Embedded content items).</summary>
+    public IList<EmbeddedContentDefinitionRecord> EmbeddedContentDefinitionRecords { get; set; }
 }

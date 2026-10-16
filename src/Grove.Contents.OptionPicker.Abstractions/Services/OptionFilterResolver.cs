@@ -169,7 +169,7 @@ public static class OptionFilterResolver
 
     /// <summary>
     /// Builds editor state from a content item's JSON, for callers that have the item
-    /// rather than a live editor. Paths are "PartName.FieldName"; an OptionPickerField
+    /// rather than a live editor. Paths are "FieldSetName.FieldName"; an OptionListField
     /// contributes its selected ids, and simpler fields their text value.
     /// </summary>
     public static IReadOnlyDictionary<string, IReadOnlyList<string>> StateFromContent(JsonNode? content, IEnumerable<string> paths)

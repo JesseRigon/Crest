@@ -6,7 +6,7 @@ using Grove.Infrastructure.Settings;
 namespace Grove.Display;
 
 /// <summary>
-/// Bumps the content part of every tree's composite version (decision 12) when content any tree
+/// Bumps the field set of every tree's composite version (decision 12) when content any tree
 /// may show changes: a page's item, a menu, a list's children, a template. Coarse on purpose: a
 /// change costs a rebuild, never a stale page.
 /// </summary>

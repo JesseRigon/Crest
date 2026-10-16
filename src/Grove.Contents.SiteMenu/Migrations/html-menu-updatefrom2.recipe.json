@@ -12,33 +12,24 @@
             },
             "FullTextAspectSettings": {}
           },
-          "ContentTypePartDefinitionRecords": [
+          "ContentTypeFieldSetDefinitionRecords": [
             {
-              "PartName": "HtmlMenuItemPart",
-              "Name": "HtmlMenuItemPart",
-              "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "0"
-                }
-              }
-            },
-            {
-              "PartName": "HtmlMenuItem",
+              "FieldSetName": "HtmlMenuItem",
               "Name": "HtmlMenuItem",
               "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "1"
+                "ContentTypeFieldSetSettings": {
+                  "Position": "0"
                 }
               }
             }
           ]
         }
       ],
-      "ContentParts": [
+      "ContentFieldSets": [
         {
-          "Name": "HtmlMenuItemPart",
+          "Name": "HtmlMenuItem",
           "Settings": {
-            "ContentPartSettings": {
+            "ContentFieldSetSettings": {
               "Attachable": true,
               "DisplayName": "Html Menu Item",
               "Description": "Provides a menu link behavior with a field to display html for the link text."

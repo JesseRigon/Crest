@@ -1,3 +1,4 @@
+using Grove.Contents.Fields;
 using Grove.Data.Types.Money.Abstractions;
 using Grove.Data.Types.Money.Fields;
 using Grove.Data.Types.Money.Services;
@@ -13,7 +14,7 @@ public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddContentField<PriceField>();
+        services.AddFieldType<PriceField>();
 
         // Money owns its value type and registers it with the one value type registry; no
         // editor or display primitive is registered for it yet.

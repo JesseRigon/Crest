@@ -25,14 +25,3 @@ using Grove.Access.Users;
     Dependencies = ["Grove.Contents.Fields"]
 )]
 
-[assembly: Feature(
-    Id = "Grove.Contents.Fields.Indexing.SQL.UserPicker",
-    Name = "Content Fields Indexing (SQL) - User Picker",
-    Category = "Content Management",
-    Description = "User Picker Content Fields Indexing module adds database indexing for user picker fields.",
-    Dependencies =
-    [
-        "Grove.Contents.Fields",
-        UserConstants.Features.Users,
-    ]
-)]

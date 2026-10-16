@@ -5,11 +5,11 @@ namespace Grove.Contents.Management.GraphQL.Queries.Types;
 
 public interface IContentFieldProvider
 {
-    FieldType GetField(ISchema schema, ContentPartFieldDefinition field, string namedPartTechnicalName, string customFieldName = null);
+    FieldType GetField(ISchema schema, ContentFieldDefinition field, string namedFieldSetTechnicalName, string customFieldName = null);
 
-    bool HasField(ISchema schema, ContentPartFieldDefinition field);
+    bool HasField(ISchema schema, ContentFieldDefinition field);
 
-    FieldTypeIndexDescriptor GetFieldIndex(ContentPartFieldDefinition field);
+    FieldTypeIndexDescriptor GetFieldIndex(ContentFieldDefinition field);
 
-    bool HasFieldIndex(ContentPartFieldDefinition field);
+    bool HasFieldIndex(ContentFieldDefinition field);
 }

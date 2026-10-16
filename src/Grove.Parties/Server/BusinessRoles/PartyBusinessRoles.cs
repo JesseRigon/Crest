@@ -88,7 +88,7 @@ public sealed class PartyDerivedRoleProvider(
         }
 
         var partyIds = parties.ToArray();
-        var rows = await session.QueryIndex<OptionPickerFieldIndex>(index =>
+        var rows = await session.QueryIndex<OptionListFieldIndex>(index =>
                 index.ContentField == PartyField &&
                 index.Published &&
                 index.ContentType.IsIn(roleTypes) &&

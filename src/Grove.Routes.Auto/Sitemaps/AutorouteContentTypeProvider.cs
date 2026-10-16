@@ -40,6 +40,6 @@ public class AutorouteContentTypeProvider : IRouteableContentTypeProvider
     public async Task<IEnumerable<ContentTypeDefinition>> ListRoutableTypeDefinitionsAsync()
     {
         return (await _contentDefinitionManager.ListTypeDefinitionsAsync())
-            .Where(ctd => ctd.Parts.Any(p => p.Name == nameof(AutoroutePart)));
+            .Where(ctd => ctd.FieldSets.Any(p => p.Name == ContentFieldSetName.Of<AutorouteFieldSet>()));
     }
 }

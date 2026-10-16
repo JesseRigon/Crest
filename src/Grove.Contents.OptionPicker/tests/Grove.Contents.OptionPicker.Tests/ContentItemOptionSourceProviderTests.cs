@@ -336,7 +336,7 @@ public class ContentItemOptionSourceProviderFieldResolutionTests
 {
     private static Grove.Contents.Management.Metadata.Models.ContentTypeDefinition Customer()
     {
-        var part = new Grove.Contents.Management.Metadata.Builders.ContentPartDefinitionBuilder()
+        var part = new Grove.Contents.Management.Metadata.Builders.ContentFieldSetDefinitionBuilder()
             .Named("CustomerPart")
             .WithField("Badge", field => field.OfType("TextField"))
             .WithField("CreditLimit", field => field.OfType("NumericField"))
@@ -346,7 +346,7 @@ public class ContentItemOptionSourceProviderFieldResolutionTests
 
         return new Grove.Contents.Management.Metadata.Builders.ContentTypeDefinitionBuilder()
             .WithName("Customer")
-            .WithPart("CustomerPart", part, _ => { })
+            .WithFieldSet("CustomerPart", part, _ => { })
             .Build();
     }
 
@@ -363,7 +363,7 @@ public class ContentItemOptionSourceProviderFieldResolutionTests
         var target = ContentItemOptionSourceProvider.ResolveFieldTarget(Customer(), path);
 
         Assert.NotNull(target);
-        Assert.Equal("CustomerPart", target.PartName);
+        Assert.Equal("CustomerPart", target.FieldSetName);
         Assert.Equal(Enum.Parse<FieldIndexKind>(kind), target.Kind);
     }
 

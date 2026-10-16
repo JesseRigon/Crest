@@ -4,17 +4,17 @@ namespace Grove.Data.Protocols.GraphQL;
 
 public static class GraphQLTypeExtensions
 {
-    public static FieldType WithPartCollapsedMetaData(this FieldType fieldType, bool collapsed = true)
-        => fieldType.WithMetaData("PartCollapsed", collapsed);
+    public static FieldType WithFieldSetCollapsedMetaData(this FieldType fieldType, bool collapsed = true)
+        => fieldType.WithMetaData("FieldSetCollapsed", collapsed);
 
-    public static FieldType WithPartNameMetaData(this FieldType fieldType, string partName)
-        => fieldType.WithMetaData("PartName", partName);
+    public static FieldType WithFieldSetNameMetaData(this FieldType fieldType, string fieldSetName)
+        => fieldType.WithMetaData("FieldSetName", fieldSetName);
 
     public static FieldType WithAliasNameMetaData(this FieldType fieldType, string aliasName)
         => fieldType.WithMetaData("AliasName", aliasName);
 
-    public static FieldType WithContentPartMetaData(this FieldType fieldType, string contentPart)
-        => fieldType.WithMetaData("ContentPart", contentPart);
+    public static FieldType WithContentFieldSetMetaData(this FieldType fieldType, string contentFieldSet)
+        => fieldType.WithMetaData("ContentFieldSet", contentFieldSet);
 
     public static FieldType WithContentFieldMetaData(this FieldType fieldType, string contentField)
         => fieldType.WithMetaData("ContentField", contentField);

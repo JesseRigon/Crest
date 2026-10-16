@@ -47,10 +47,10 @@ public sealed class MarkdownFieldDisplayDriver : ContentFieldDisplayDriver<Markd
         {
             model.Markdown = field.Markdown;
             model.Field = field;
-            model.Part = context.ContentPart;
-            model.PartFieldDefinition = context.PartFieldDefinition;
+            model.FieldSet = context.ContentFieldSet;
+            model.FieldDefinition = context.FieldDefinition;
 
-            var settings = context.PartFieldDefinition.GetSettings<MarkdownFieldSettings>();
+            var settings = context.FieldDefinition.GetSettings<MarkdownFieldSettings>();
 
             if (settings.RenderLiquid)
             {
@@ -66,7 +66,7 @@ public sealed class MarkdownFieldDisplayDriver : ContentFieldDisplayDriver<Markd
                 new Context
                 {
                     ["ContentItem"] = field.ContentItem,
-                    ["PartFieldDefinition"] = context.PartFieldDefinition,
+                    ["FieldDefinition"] = context.FieldDefinition,
                 });
 
             if (settings.SanitizeHtml)

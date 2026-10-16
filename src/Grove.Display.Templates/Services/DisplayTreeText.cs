@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 namespace Grove.Display.Templates.Services;
 
 /// <summary>
-/// The text an item's page body (<c>DisplayTreePart</c>) holds, for search and for its body
+/// The text an item's page body (<c>DisplayTreeFieldSet</c>) holds, for search and for its body
 /// aspect: every string a node's properties carry, through the zones; a node naming a composite
 /// template adds the composite's source with its Liquid tags taken out (a migrated Liquid body is
 /// a composite of its own).

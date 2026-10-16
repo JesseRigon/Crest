@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Server\Grove.Workflows.csproj" />
+    <ProjectReference Include="..\..\Contents\Grove.Workflows.Contents.csproj" />
   </ItemGroup>
 
 </Project>

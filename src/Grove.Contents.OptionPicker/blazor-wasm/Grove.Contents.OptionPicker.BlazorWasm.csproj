@@ -4,7 +4,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <!-- The option picker's UI (docs/server.md § 3): the picker component, registered as a
-         placeable component, and the OptionPickerField editor (the editor facet). The
+         placeable component, and the OptionListField editor (the editor facet). The
          *.BlazorWasm suffix makes it the module client library of Grove.Contents.OptionPicker; it is
          eager ([assembly: GroveEager]) because every content editor needs the field editor. -->
     <AssemblyName>Grove.Contents.OptionPicker.BlazorWasm</AssemblyName>

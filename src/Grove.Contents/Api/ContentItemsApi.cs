@@ -58,7 +58,6 @@ public sealed class ContentItemsHandlers(
     IPlatformHelper platformHelper,
     ISession session,
     IContentManager contentManager,
-    Grove.Contents.Types.IFieldVisibilityEnforcer visibilityEnforcer,
     Grove.ContentGroups.ContentGroupService contentGroups,
     IAuthorizationService authorizationService,
     ICallerContextAccessor callerAccessor,
@@ -185,7 +184,7 @@ public sealed class ContentItemsHandlers(
     //
     // The item is decided once (ViewContent); each requested field is then a part the caller's
     // scope may narrow: a scope provider registered for the type and part
-    // (Grove.Access.ContentPartScope, docs/permissions.md ruling 2026-10-10) hides it where its
+    // (Grove.Access.ContentFieldSetScope, docs/permissions.md ruling 2026-10-10) hides it where its
     // rule does not admit the item; a part with no provider follows the item.
     public async Task<IResult> ViewAsync(
         string contentItemId,
@@ -211,7 +210,7 @@ public sealed class ContentItemsHandlers(
         var result = new Dictionary<string, object?>();
         foreach (var field in requestedFields)
         {
-            if (scope is null || !ContentPartScope.Admits(scope, item.ContentType, field, column => IndexColumn(item, column)))
+            if (scope is null || !ContentFieldSetScope.Admits(scope, item.ContentType, field, column => IndexColumn(item, column)))
             {
                 continue;
             }
@@ -381,10 +380,7 @@ public sealed class ContentItemsHandlers(
 
         item.DisplayText = request.DisplayText?.Trim() ?? string.Empty;
         ReplaceContent(item, request.Content);
-        var ownerError = await ApplyCommonPartAsync(item);
-        // Clear-on-save: a field whose visibility condition is false must not keep a
-        // stale value the editor was hiding.
-        await visibilityEnforcer.ClearHiddenFieldsAsync(item, HttpContext.RequestAborted);
+        var ownerError = await ApplyCommonFieldSetAsync(item);
         if (await ValidateItemAsync(item, ownerError) is { } invalid)
         {
             return invalid;
@@ -398,11 +394,23 @@ public sealed class ContentItemsHandlers(
         catch (ContentSaveRefusedException refused)
         {
             // A save guard (a picker's allowed types, a relationship rule) refused the item.
-            return BadRequest(new { errors = refused.Errors });
+            return await RefusedAsync(refused);
+        }
+        catch (ContentLifecycleRefusedException refused)
+        {
+            return await RefusedAsync(item, refused);
         }
 
         if (!created) return Conflict();
-        if (request.Publish && !await contentManager.PublishAsync(item)) return Conflict();
+        try
+        {
+            if (request.Publish && !await contentManager.PublishAsync(item)) return Conflict();
+        }
+        catch (ContentLifecycleRefusedException refused)
+        {
+            return await RefusedAsync(item, refused);
+        }
+
         return Ok(ContentItem.From(item));
     }
 
@@ -415,8 +423,7 @@ public sealed class ContentItemsHandlers(
 
         item.DisplayText = request.DisplayText?.Trim() ?? string.Empty;
         ReplaceContent(item, request.Content);
-        var ownerError = await ApplyCommonPartAsync(item);
-        await visibilityEnforcer.ClearHiddenFieldsAsync(item, HttpContext.RequestAborted);
+        var ownerError = await ApplyCommonFieldSetAsync(item);
         if (await ValidateItemAsync(item, ownerError) is { } invalid)
         {
             return invalid;
@@ -428,10 +435,22 @@ public sealed class ContentItemsHandlers(
         }
         catch (ContentSaveRefusedException refused)
         {
-            return BadRequest(new { errors = refused.Errors });
+            return await RefusedAsync(refused);
+        }
+        catch (ContentLifecycleRefusedException refused)
+        {
+            return await RefusedAsync(item, refused);
         }
 
-        if (request.Publish && !item.Published && !await contentManager.PublishAsync(item)) return Conflict();
+        try
+        {
+            if (request.Publish && !item.Published && !await contentManager.PublishAsync(item)) return Conflict();
+        }
+        catch (ContentLifecycleRefusedException refused)
+        {
+            return await RefusedAsync(item, refused);
+        }
+
         return Ok(ContentItem.From(item));
     }
 
@@ -463,7 +482,11 @@ public sealed class ContentItemsHandlers(
         }
         catch (ContentSaveRefusedException refused)
         {
-            return BadRequest(new { errors = refused.Errors });
+            return await RefusedAsync(refused);
+        }
+        catch (ContentLifecycleRefusedException refused)
+        {
+            return await RefusedAsync(item, refused);
         }
     }
 
@@ -476,8 +499,7 @@ public sealed class ContentItemsHandlers(
 
         item.DisplayText = request.DisplayText?.Trim() ?? string.Empty;
         ReplaceContent(item, request.Content);
-        var ownerError = await ApplyCommonPartAsync(item);
-        await visibilityEnforcer.ClearHiddenFieldsAsync(item, HttpContext.RequestAborted);
+        var ownerError = await ApplyCommonFieldSetAsync(item);
         if (await ValidateItemAsync(item, ownerError) is { } invalid)
         {
             return invalid;
@@ -489,7 +511,11 @@ public sealed class ContentItemsHandlers(
         }
         catch (ContentSaveRefusedException refused)
         {
-            return BadRequest(new { errors = refused.Errors });
+            return await RefusedAsync(refused);
+        }
+        catch (ContentLifecycleRefusedException refused)
+        {
+            return await RefusedAsync(item, refused);
         }
 
         return Ok(ContentItem.From(item));
@@ -558,13 +584,13 @@ public sealed class ContentItemsHandlers(
     // (index providers, handlers) instead of the content the request wrote.
     /// <summary>
     /// The common part's editors (the creation date and the owner, when the type shows them) write
-    /// into <c>CommonPart</c>; those are the item's own values, taken out of its content. The owner
+    /// into <c>CommonFieldSet</c>; those are the item's own values, taken out of its content. The owner
     /// changes only for a caller who may change owners.
     /// </summary>
     /// <returns>The owner's error when the owner named is no user; null otherwise.</returns>
-    private async Task<string?> ApplyCommonPartAsync(Grove.Contents.Management.ContentItem item)
+    private async Task<string?> ApplyCommonFieldSetAsync(Grove.Contents.Management.ContentItem item)
     {
-        if (((JsonObject)item.Content)["CommonPart"] is not JsonObject common)
+        if (((JsonObject)item.Content)["Common"] is not JsonObject common)
         {
             return null;
         }
@@ -600,7 +626,7 @@ public sealed class ContentItemsHandlers(
     /// <summary>
     /// The item's handlers' rules (every part's and field's <c>ValidatingAsync</c>) before it is
     /// saved: refused as the error contract's map, keyed as the editor tree keys its editors
-    /// (<c>Part.Field</c> for a field, <c>Part</c> for a part's own values; an error that names no
+    /// (<c>FieldSet.Field</c> for a field, <c>Part</c> for a part's own values; an error that names no
     /// member under the empty key).
     /// </summary>
     private async Task<IResult?> ValidateItemAsync(Grove.Contents.Management.ContentItem item, string? ownerError)
@@ -615,11 +641,28 @@ public sealed class ContentItemsHandlers(
         var errors = ContentValidationErrors.ToMap(result.Errors, definition);
         if (ownerError is not null)
         {
-            errors["CommonPart"] = [.. errors.GetValueOrDefault("CommonPart") ?? [], ownerError];
+            errors["Common"] = [.. errors.GetValueOrDefault("Common") ?? [], ownerError];
         }
 
-        await session.CancelAsync();
+        await HttpContext.RequestServices.GetRequiredService<Grove.Data.Documents.IDocumentStore>().CancelAsync();
         return ApiProblems.Validation(errors);
+    }
+
+    /// <summary>
+    /// A lifecycle hook refused the change: the error contract's 400, its errors keyed as the editor
+    /// tree keys its editors. The content manager has cancelled the unit.
+    /// </summary>
+    private async Task<IResult> RefusedAsync(Grove.Contents.Management.ContentItem item, ContentLifecycleRefusedException refused)
+    {
+        var definition = await HttpContext.RequestServices.GetRequiredService<Grove.Contents.Management.Metadata.IContentDefinitionManager>().GetTypeDefinitionAsync(item.ContentType);
+        return ApiProblems.Validation(ContentLifecycleRefusedExceptionMapper.ToMap(refused.Errors, path => ContentValidationErrors.Key(path, definition)), detail: refused.Message);
+    }
+
+    /// <summary>A save guard refused the write: the error contract's 400, its errors on the item.</summary>
+    private async Task<IResult> RefusedAsync(ContentSaveRefusedException refused)
+    {
+        await HttpContext.RequestServices.GetRequiredService<Grove.Data.Documents.IDocumentStore>().CancelAsync();
+        return ContentSaveRefusedExceptionMapper.ToResult(refused);
     }
 
     private static void ReplaceContent(Grove.Contents.Management.ContentItem item, JsonObject? content)
@@ -631,7 +674,7 @@ public sealed class ContentItemsHandlers(
 
 /// <summary>
 /// The content handlers' validation results as the error contract's map, keyed by the editor
-/// tree's paths: a field's member (<c>Part.Field.Property</c>) under <c>Part.Field</c>, a part's
+/// tree's paths: a field's member (<c>FieldSet.Field.Property</c>) under <c>FieldSet.Field</c>, a part's
 /// member (<c>Part.Property</c>) under <c>Part</c>, anything else under its own name, and an error
 /// naming no member under the empty key.
 /// </summary>
@@ -663,13 +706,13 @@ public static class ContentValidationErrors
     public static string Key(string member, Grove.Contents.Management.Metadata.Models.ContentTypeDefinition? definition)
     {
         var segments = member.Split('.', StringSplitOptions.RemoveEmptyEntries);
-        var part = segments.Length == 0 ? null : definition?.Parts.FirstOrDefault(candidate => string.Equals(candidate.Name, segments[0], StringComparison.OrdinalIgnoreCase));
+        var part = segments.Length == 0 ? null : definition?.FieldSets.FirstOrDefault(candidate => string.Equals(candidate.Name, segments[0], StringComparison.OrdinalIgnoreCase));
         if (part is null)
         {
             return member;
         }
 
-        if (segments.Length >= 2 && part.PartDefinition.Fields.FirstOrDefault(field => string.Equals(field.Name, segments[1], StringComparison.OrdinalIgnoreCase)) is { } field)
+        if (segments.Length >= 2 && part.FieldSetDefinition.Fields.FirstOrDefault(field => string.Equals(field.Name, segments[1], StringComparison.OrdinalIgnoreCase)) is { } field)
         {
             return $"{part.Name}.{field.Name}";
         }

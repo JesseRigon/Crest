@@ -114,9 +114,9 @@ public class ContentFieldsProvider : IContentFieldProvider
         S = stringLocalizer;
     }
 
-    public FieldType GetField(ISchema schema, ContentPartFieldDefinition field, string namedPartTechnicalName, string customFieldName)
+    public FieldType GetField(ISchema schema, ContentFieldDefinition field, string namedFieldSetTechnicalName, string customFieldName)
     {
-        if (!s_contentFieldTypeMappings.TryGetValue(field.FieldDefinition.Name, out var fieldDescriptor))
+        if (!s_contentFieldTypeMappings.TryGetValue(field.FieldTypeDefinition.Name, out var fieldDescriptor))
         {
             return null;
         }
@@ -130,12 +130,12 @@ public class ContentFieldsProvider : IContentFieldProvider
             Resolver = new FuncFieldResolver<ContentElement, object>(context =>
             {
                 // Check if part has been collapsed by trying to get the parent part.
-                ContentElement contentPart = context.Source.Get<ContentPart>(field.PartDefinition.Name);
+                ContentElement contentFieldSet = context.Source.Get<ContentFieldSet>(field.FieldSetDefinition.Name);
 
                 // Part is not collapsed, access field directly.
-                contentPart ??= context.Source;
+                contentFieldSet ??= context.Source;
 
-                var contentField = contentPart?.Get(fieldDescriptor.UnderlyingType, field.Name);
+                var contentField = contentFieldSet?.Get(fieldDescriptor.UnderlyingType, field.Name);
 
                 contentField ??= context.Source.Get(fieldDescriptor.UnderlyingType, field.Name);
 
@@ -144,28 +144,28 @@ public class ContentFieldsProvider : IContentFieldProvider
         };
     }
 
-    public bool HasField(ISchema schema, ContentPartFieldDefinition field)
-        => s_contentFieldTypeMappings.ContainsKey(field.FieldDefinition.Name);
+    public bool HasField(ISchema schema, ContentFieldDefinition field)
+        => s_contentFieldTypeMappings.ContainsKey(field.FieldTypeDefinition.Name);
 
-    public FieldTypeIndexDescriptor GetFieldIndex(ContentPartFieldDefinition field)
+    public FieldTypeIndexDescriptor GetFieldIndex(ContentFieldDefinition field)
     {
         if (!HasFieldIndex(field))
         {
             return null;
         }
 
-        var fieldDescriptor = s_contentFieldTypeMappings[field.FieldDefinition.Name];
+        var fieldDescriptor = s_contentFieldTypeMappings[field.FieldTypeDefinition.Name];
 
         return new FieldTypeIndexDescriptor
         {
-            AliasName = $"{field.PartDefinition.Name.ToFieldName()}:{field.Name.ToCamelCase()}:{fieldDescriptor.IndexProperty}",
+            AliasName = $"{field.FieldSetDefinition.Name.ToFieldName()}:{field.Name.ToCamelCase()}:{fieldDescriptor.IndexProperty}",
             Index = fieldDescriptor.IndexType.Name,
             IndexType = fieldDescriptor.IndexType,
         };
     }
 
-    public bool HasFieldIndex(ContentPartFieldDefinition field)
-        => s_contentFieldTypeMappings.TryGetValue(field.FieldDefinition.Name, out var fieldTypeDescriptor) &&
+    public bool HasFieldIndex(ContentFieldDefinition field)
+        => s_contentFieldTypeMappings.TryGetValue(field.FieldTypeDefinition.Name, out var fieldTypeDescriptor) &&
         fieldTypeDescriptor.IndexType != null &&
         !string.IsNullOrWhiteSpace(fieldTypeDescriptor.IndexProperty);
 

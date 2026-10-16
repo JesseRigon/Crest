@@ -3,11 +3,11 @@ using Grove.Contents.SiteMenu.Models;
 
 namespace Grove.Contents.SiteMenu.GraphQL;
 
-public class HtmlMenuItemQueryObjectType : ObjectGraphType<HtmlMenuItemPart>
+public class HtmlMenuItemQueryObjectType : ObjectGraphType<HtmlMenuItemFieldSet>
 {
     public HtmlMenuItemQueryObjectType()
     {
-        Name = "HtmlMenuItemPart";
+        Name = "HtmlMenuItemFieldSet";
 
         Field(x => x.Url, nullable: true);
         Field(x => x.Target, nullable: true);

@@ -5,7 +5,7 @@ namespace Grove.Display.Management.Components;
 
 /// <summary>
 /// Where a value comes from at run time (§ 4a): another node's output, a page variable, the
-/// payload of the event being handled, or a literal. A binding with a <see cref="Path"/> reads
+/// payload of the event being handled, a content field (in a field condition), or a literal. A binding with a <see cref="Path"/> reads
 /// into the value (<c>id</c>, <c>item.id</c>, <c>items[0].name</c>). Nothing a binding reads is
 /// trusted: it is the viewer's own input, re-checked by every query and workflow it reaches.
 /// </summary>
@@ -22,6 +22,12 @@ public sealed class DisplayBinding
 
     /// <summary>The payload of the event an action handles.</summary>
     public bool Event { get; init; }
+
+    /// <summary>
+    /// A field of the content item (<c>FieldSet.Field</c>), read by a field condition (a field's
+    /// visibility, a type's field rules; see <see cref="FieldConditions"/>): its comparison values.
+    /// </summary>
+    public string? Field { get; init; }
 
     /// <summary>A literal; also the default when the bound value is not there yet.</summary>
     public JsonNode? Value { get; init; }
@@ -53,6 +59,7 @@ public sealed class DisplayBinding
         Output = source.Output,
         Variable = source.Variable,
         Event = source.Event,
+        Field = source.Field,
         Value = source.Value,
         Path = source.Path,
         Operator = @operator,
@@ -67,12 +74,14 @@ public sealed class DisplayBinding
 
     public static DisplayBinding FromEvent(string? path = null) => new() { Event = true, Path = path };
 
+    public static DisplayBinding FromField(string field) => new() { Field = field };
+
     /// <summary>A comparison or a combination: read as a boolean, re-read when a source changes.</summary>
     [JsonIgnore]
     public bool IsPredicate => Operator is not null || Combinator is not null;
 
     [JsonIgnore]
-    public bool IsLiteral => Node is null && Variable is null && !Event && !IsPredicate;
+    public bool IsLiteral => Node is null && Variable is null && !Event && Field is null && !IsPredicate;
 }
 
 /// <summary>

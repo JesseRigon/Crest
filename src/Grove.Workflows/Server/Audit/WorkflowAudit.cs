@@ -103,9 +103,12 @@ public sealed class WorkflowAuditRecorder(IServiceProvider services, ICallerCont
 
         if (isolated && ShellScope.Current is not null)
         {
-            await ShellScope.UsingChildScopeAsync(scope =>
+            // Written once the failing unit has ended (cancelled), in a scope of its own: a write
+            // beside the unit's open transaction would wait on it (a single-writer database
+            // refuses it outright).
+            ShellScope.AddDeferredTask(scope =>
             {
-                // The child scope has no gated caller; carry this one so the actor handlers see it.
+                // The deferred scope has no gated caller; carry this one so the actor handlers see it.
                 var scopedCallers = scope.ServiceProvider.GetService<ICallerContextAccessor>();
                 if (scopedCallers is not null && scopedCallers.Current is null)
                 {
@@ -113,7 +116,7 @@ public sealed class WorkflowAuditRecorder(IServiceProvider services, ICallerCont
                 }
 
                 return WriteAsync(scope.ServiceProvider, name, correlationId, userId, userName, data, subject);
-            }, activateShell: false);
+            });
             return;
         }
 

@@ -118,7 +118,7 @@ module.exports = async function run(page, ctx) {
 
     const item = await call('POST', `${ctx.baseUrl}/api/grove/content-items`, {
       contentType: 'Item', displayText: `Playwright workflow item ${stamp}`, publish: true,
-      content: { AssetPart: { Number: { Text: `PWW-${stamp}` } } },
+      content: { Asset: { Number: { Text: `PWW-${stamp}` } } },
     });
     const itemId = item.json?.contentItemId;
     if (itemId) created.items.push(itemId);

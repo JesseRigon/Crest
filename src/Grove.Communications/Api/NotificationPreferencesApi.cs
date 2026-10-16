@@ -15,7 +15,7 @@ using Microsoft.AspNetCore.Routing;
 namespace Grove.Communications.Api;
 
 /// <summary>
-/// A user's notification method preferences (<see cref="UserNotificationPreferencesPart"/>): the
+/// A user's notification method preferences (<see cref="UserNotificationPreferencesFieldSet"/>): the
 /// methods the user receives notifications by, in priority order. The signed-in user's own
 /// (<c>notifications/preferences/me</c>, the profile settings page) and any user's for a caller who
 /// may edit that user (<c>notifications/preferences/users/{id}</c>, the user editor). A user is
@@ -72,7 +72,7 @@ public sealed class NotificationPreferencesHandlers(
 
     private async Task<IResult> SaveAsync(User user, NotificationPreferencesWrite request)
     {
-        var part = user.GetOrCreate<UserNotificationPreferencesPart>();
+        var part = user.GetOrCreate<UserNotificationPreferencesFieldSet>();
         var sorted = new List<string>(request.Methods ?? []);
         var selected = new HashSet<string>(request.Enabled ?? [], StringComparer.Ordinal);
 
@@ -90,7 +90,7 @@ public sealed class NotificationPreferencesHandlers(
 
     private NotificationPreferencesModel ToModel(User user)
     {
-        user.TryGet<UserNotificationPreferencesPart>(out var part);
+        user.TryGet<UserNotificationPreferencesFieldSet>(out var part);
         var sorted = new List<string>(part?.Methods ?? []);
         var optout = part?.Optout ?? [];
 

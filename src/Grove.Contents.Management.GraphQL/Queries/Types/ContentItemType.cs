@@ -87,7 +87,10 @@ public sealed class ContentItemType : ObjectGraphType<ContentItem>
 
         // Build shape
         var displayManager = serviceProvider.GetRequiredService<IContentItemDisplayManager>();
-        var model = await displayManager.BuildDisplayAsync(context.Source);
+        // An embedded item renders through the definition it was resolved with (a frozen schema).
+        var model = EmbeddedItemDefinitions.For(context, context.Source) is { } definition
+            ? await displayManager.BuildDisplayAsync(context.Source, definition)
+            : await displayManager.BuildDisplayAsync(context.Source);
 
         // The display tree, filtered for the caller and rendered to static HTML (the display's HTML path).
         var tree = await serviceProvider.GetRequiredService<Grove.Display.Management.Components.IDisplayTreeBuilder>().BuildAsync(model, cancellationToken: context.CancellationToken);

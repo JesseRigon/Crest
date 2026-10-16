@@ -10,7 +10,7 @@ This list is generated from the current resolved Orchard admin navigation for th
 | Content > Admin Menus | `/Admin/AdminMenu/List` | native (MVC admin deleted) |
 | Content > Site Menus | `/Admin/Contents/ContentItems/Menu` | native |
 | Content > Content Definition > Content Types | `/Admin/ContentTypes/List` | native: create/delete types, attach/detach/reorder parts, type and part-on-type settings as JSON (MVC editor deleted) |
-| Content > Content Definition > Content Parts | `/Admin/ContentTypes/ListParts` | native: create/delete parts, add/retype/rename/reorder/remove fields, part and field settings as JSON (the field/part settings drivers and their views deleted) |
+| Content > Content Definition > Field groups | `/Admin/ContentTypes/FieldGroups` | native: create/delete field sets, add/retype/rename/reorder/remove fields, field set and field settings as JSON (the field/field set settings drivers and their views deleted) |
 | Content > Content Items | `/Admin/Contents/ContentItems` | native list/actions/document editor; save draft, discard draft, clone and the versions list on the tree editor |
 | Media > Profiles | `/Admin/MediaProfiles` | native list/editor (MVC admin deleted) |
 | Media > Library | `/Admin/Media` | native browse/upload (MVC library deleted; the media field editors keep the media gallery app) |

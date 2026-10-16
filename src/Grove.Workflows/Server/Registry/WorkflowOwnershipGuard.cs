@@ -1,6 +1,6 @@
 using System.Text.Json;
 using Grove.Workflows.Management.Entities;
-using Grove.Workflows.Parts;
+using Grove.Workflows.FieldSets;
 using Grove.Workflows.Security;
 using Grove.Workflows.Services;
 using Grove.Access;
@@ -98,7 +98,7 @@ public sealed class WorkflowChangeDeniedException(string message) : InvalidOpera
 /// </summary>
 public sealed class WorkflowOwnershipGuard(
     IContentManager contentManager,
-    WorkflowDefinitionPartMapper partMapper,
+    WorkflowDefinitionFieldSetMapper partMapper,
     ICallerContextAccessor callers,
     IWorkflowDefinitionAuthorizer access)
 {
@@ -112,7 +112,7 @@ public sealed class WorkflowOwnershipGuard(
         }
 
         var contentItem = await contentManager.GetAsync(definitionId, VersionOptions.Latest);
-        var part = contentItem?.Get<WorkflowDefinitionPart>(typeof(WorkflowDefinitionPart).Name);
+        var part = contentItem?.Get<WorkflowDefinitionFieldSet>(ContentFieldSetName.Of<WorkflowDefinitionFieldSet>());
         return part is null || part.SerializedData is null ? null : partMapper.MapModel(part).CustomProperties;
     }
 

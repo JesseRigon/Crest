@@ -356,7 +356,7 @@ The permission model):
 
 ### Parties
 
-- `GroveOrganizationPart`, `GroveOrganizationIndex`, `OrganizationScopedTypes` and
+- `OwningOrganizationFieldSet`, `GroveOrganizationIndex`, `OrganizationScopedTypes` and
   `OrganizationScopeProvider` (the organization row scope, reading the acting organization
   Members supplies) live in `Grove.Parties/Server/Organizations` (namespace
   `Grove.Parties.Organizations`), registered by Parties; no abstractions project, since a

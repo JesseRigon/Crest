@@ -48,6 +48,14 @@ public class ContentItemDisplayManager : BaseDisplayManager, IContentItemDisplay
         var contentTypeDefinition = await _contentDefinitionManager.GetTypeDefinitionAsync(contentItem.ContentType)
             ?? throw new NullReferenceException($"Content Type {contentItem.ContentType} does not exist.");
 
+        return await BuildDisplayAsync(contentItem, contentTypeDefinition, displayType, groupId);
+    }
+
+    public async Task<IShape> BuildDisplayAsync(ContentItem contentItem, ContentTypeDefinition contentTypeDefinition, string displayType, string groupId)
+    {
+        ArgumentNullException.ThrowIfNull(contentItem);
+        ArgumentNullException.ThrowIfNull(contentTypeDefinition);
+
         var actualDisplayType = string.IsNullOrEmpty(displayType) ? PlatformConstants.DisplayType.Detail : displayType;
         var hasStereotype = contentTypeDefinition.TryGetStereotype(out var stereotype);
 
@@ -66,6 +74,7 @@ public class ContentItemDisplayManager : BaseDisplayManager, IContentItemDisplay
 
         var itemShape = await CreateContentShapeAsync(actualShapeType);
         itemShape.Properties["ContentItem"] = contentItem;
+        itemShape.Properties[IContentItemDisplayManager.ContentTypeDefinitionProperty] = contentTypeDefinition;
         itemShape.Properties["Stereotype"] = stereotype;
 
         var metadata = itemShape.Metadata;

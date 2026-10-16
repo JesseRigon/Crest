@@ -1,3 +1,4 @@
+using Grove.Workflows.Extensions;
 using Fluid;
 using Microsoft.Extensions.DependencyInjection;
 using Grove.Apis;
@@ -18,10 +19,7 @@ using Grove.Security.Permissions;
 using Grove.Infrastructure.Settings.Deployment;
 using Grove.Contents.Taxonomies;
 using Grove.Contents.Taxonomies.Drivers;
-using Grove.Contents.Taxonomies.Fields;
 using Grove.Contents.Taxonomies.GraphQL;
-using Grove.Contents.Taxonomies.Handlers;
-using Grove.Contents.Taxonomies.Indexing;
 using Grove.Contents.Taxonomies.Liquid;
 using Grove.Contents.Taxonomies.Models;
 using Grove.Contents.Taxonomies.Services;
@@ -34,13 +32,14 @@ public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
+        // The taxonomy displays its term tree itself.
+        services.Configure<Grove.Contents.Management.EmbeddedContentDisplayOptions>(options =>
+            options.DisplayedElsewhere.Add($"Taxonomy.{Models.TaxonomyFieldSet.TermsEmbedding}"));
+
         services.Configure<TemplateOptions>(o =>
         {
-            o.MemberAccessStrategy.Register<TaxonomyField>();
-            o.MemberAccessStrategy.Register<TaxonomyPartViewModel>();
-            o.MemberAccessStrategy.Register<TermPartViewModel>();
-            o.MemberAccessStrategy.Register<DisplayTaxonomyFieldViewModel>();
-            o.MemberAccessStrategy.Register<DisplayTaxonomyFieldTagsViewModel>();
+            o.MemberAccessStrategy.Register<TaxonomyFieldSetViewModel>();
+            o.MemberAccessStrategy.Register<TermFieldSetViewModel>();
         })
         .AddLiquidFilter<InheritedTermsFilter>("inherited_terms")
         .AddLiquidFilter<TaxonomyTermsFilter>("taxonomy_terms");
@@ -48,31 +47,20 @@ public sealed class Startup : StartupBase
         services.AddDataMigration<Migrations>();
         services.AddShapeTableProvider<TermShapes>();
         services.AddPermissionProvider<Permissions>();
-        services.AddApiContributor<Api.TaxonomiesApi>();
+
+        // Tags added by name from an option list field on a taxonomy's terms.
+        services.AddScoped<Grove.Contents.Management.IEmbeddedContentItemFactory, TaxonomyTermFactory>();
 
         // Taxonomy Part
-        services.AddContentPart<TaxonomyPart>()
-            .UseDisplayDriver<TaxonomyPartDisplayDriver>()
-            .AddHandler<TaxonomyPartHandler>();
-
-        // Taxonomy Field
-        services.AddContentField<TaxonomyField>()
-            .UseDisplayDriver<TaxonomyFieldDisplayDriver>(d => !string.Equals(d, "Tags", StringComparison.OrdinalIgnoreCase))
-            .AddHandler<TaxonomyFieldHandler>();
-
-        services.AddScoped<IContentFieldIndexHandler, TaxonomyFieldIndexHandler>();
-
-        // Taxonomy Tags Display Mode and Editor.
-        services.AddContentField<TaxonomyField>()
-            .UseDisplayDriver<TaxonomyFieldTagsDisplayDriver>(d => string.Equals(d, "Tags", StringComparison.OrdinalIgnoreCase));
-
-
-        services.AddScopedIndexProvider<TaxonomyIndexProvider>();
+        // The Taxonomy field set: its data is its field; its behaviour, the system flows below.
+        services.AddContentFieldSet<TaxonomyFieldSet>()
+            .UseDisplayDriver<TaxonomyFieldSetDisplayDriver>();
+        services.AddScoped<Services.TaxonomyBehaviour>();
 
         // Terms.
-        services.AddContentPart<TermPart>();
-        services.AddScoped<IContentHandler, TermPartContentHandler>();
-        services.AddScoped<IContentDisplayDriver, TermPartContentDriver>();
+        services.AddContentFieldSet<TermFieldSet>();
+        services.AddContentProjection<Projections.TermChildrenProjection>();
+        services.AddScoped<IContentDisplayDriver, TermFieldSetContentDriver>();
 
         services.AddScoped<IContentsTaxonomyListQueryService, DefaultContentsTaxonomyListQueryService>();
     }
@@ -86,7 +74,7 @@ public sealed class ContentsAdminListStartup : StartupBase
         services.AddScoped<IContentItemListFilter, TaxonomyContentItemListFilter>();
         services.AddSettingsGroup<TaxonomyContentsAdminListSettings>(
             TaxonomyContentsAdminListSettings.GroupId,
-            "Taxonomy Filters",
+            "Category Filters",
             Permissions.ManageTaxonomies,
             group => group.InMenu("settings", entryId: "taxonomyfilters"));
     }
@@ -107,7 +95,19 @@ public sealed class GraphQLStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddObjectGraphType<TaxonomyPart, TaxonomyPartQueryObjectType>();
-        services.AddObjectGraphType<TaxonomyField, TaxonomyFieldQueryObjectType>();
+        services.AddObjectGraphType<TaxonomyFieldSet, TaxonomyFieldSetQueryObjectType>();
+    }
+}
+
+/// <summary>The field set's system flows and their activities (docs/content-engine.md › Behaviour is workflows).</summary>
+[RequireFeatures(Grove.Workflows.WorkflowsConstants.ContentsFeatureId)]
+public sealed class WorkflowsStartup : StartupBase
+{
+    public override void ConfigureServices(IServiceCollection services)
+    {
+        services.AddScoped<Grove.Workflows.IWorkflowActivityProvider, Workflows.TaxonomyWorkflowProvider>();
+        services.AddScoped<Grove.Workflows.IWorkflowFlowProvider, Workflows.TaxonomyWorkflowProvider>();
+        services.AddScoped<Grove.Workflows.IWorkflowFieldSetHookAttachmentProvider, Workflows.TaxonomyWorkflowProvider>();
+        services.ConfigureGroveWorkflows(workflows => workflows.AddActivitiesFrom<WorkflowsStartup>());
     }
 }

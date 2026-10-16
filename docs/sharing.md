@@ -519,7 +519,7 @@ Implementation (`Grove.Contents/Sharing`, through `ContentSharingStartup`,
   The organization provider still ANDs on top: it is separate policy. Feature off, the content
   provider is as without sharing. In-memory scope evaluations of content are in the query,
   because a sharing scope holds semi-joins (`SystemQuerySource`, `ContentItemOptionSourceProvider`).
-- **Filed items** (74): `ContentShareFolderPart` on the item names its folder (any kind),
+- **Filed items** (74): `ContentShareFolderFieldSet` on the item names its folder (any kind),
   `ContentShareFolderIndex` lists what a folder holds, `ContentFolderChildSource` puts filed
   items below the folder, and `IContentShareFolders.MoveAsync` files or unfiles an item as a
   move (70).

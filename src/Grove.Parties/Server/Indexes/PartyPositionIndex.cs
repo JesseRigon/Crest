@@ -1,7 +1,6 @@
 using Grove.Parties.Constants;
 using Grove.Contents.Fields.Fields;
 using Grove.Contents.Management;
-using Grove.Contents.BagParts.Models;
 using YesSql.Indexes;
 using Grove.Fields;
 
@@ -46,13 +45,13 @@ public sealed class PartyPositionIndexProvider : IndexProvider<ContentItem>
                     return [];
                 }
 
-                var positions = contentItem.Get<BagPart>(PartiesConstants.Bags.Positions)?.ContentItems ?? [];
+                var positions = contentItem.Get<EmbeddedContentItems>(PartiesConstants.Bags.Positions)?.ContentItems ?? [];
 
                 return positions
                     .Select(position =>
                     {
-                        var part = position.Get<ContentPart>(PartiesConstants.ContentTypes.OrgPosition);
-                        var organizationId = part?.Get<OptionPickerField>("Organization")?.SelectedIds.FirstOrDefault();
+                        var part = position.Get<ContentFieldSet>(PartiesConstants.ContentTypes.OrgPosition);
+                        var organizationId = part?.Get<OptionListField>("Organization")?.SelectedIds.FirstOrDefault();
                         return organizationId is null
                             ? null
                             : new PartyPositionIndex

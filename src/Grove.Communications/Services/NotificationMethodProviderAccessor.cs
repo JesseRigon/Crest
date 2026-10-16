@@ -22,7 +22,7 @@ public class NotificationMethodProviderAccessor : INotificationMethodProviderAcc
             List<string> selectedMethods = [];
             string[] optout = [];
 
-            if (user.TryGet<UserNotificationPreferencesPart>(out var notificationPart))
+            if (user.TryGet<UserNotificationPreferencesFieldSet>(out var notificationPart))
             {
                 selectedMethods = notificationPart.Methods?.ToList() ?? [];
                 optout = notificationPart.Optout ?? [];

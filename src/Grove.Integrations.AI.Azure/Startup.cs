@@ -127,7 +127,7 @@ public sealed class FlowsStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddScoped<IAzureAISearchFieldIndexEvents, BagPartAzureAISearchFieldIndexEvents>();
+        services.AddScoped<IAzureAISearchFieldIndexEvents, EmbeddedContentAzureAISearchFieldIndexEvents>();
     }
 }
 

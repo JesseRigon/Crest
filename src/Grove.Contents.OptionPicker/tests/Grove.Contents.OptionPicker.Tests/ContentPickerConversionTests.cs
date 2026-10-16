@@ -20,7 +20,7 @@ public class ContentPickerConversionTests
     {
         var settings = new JsonObject
         {
-            ["ContentPartFieldSettings"] = new JsonObject { ["DisplayName"] = "Customer", ["Position"] = "3", ["Editor"] = "Lucene" },
+            ["ContentFieldSettings"] = new JsonObject { ["DisplayName"] = "Customer", ["Position"] = "3", ["Editor"] = "Lucene" },
             ["ContentPickerFieldSettings"] = new JsonObject
             {
                 ["Multiple"] = true,
@@ -32,11 +32,11 @@ public class ContentPickerConversionTests
                 ["TitlePattern"] = "{{ Model.ContentItem.DisplayText | upcase }}",
             },
             ["ContentPickerFieldLuceneEditorSettings"] = new JsonObject { ["Index"] = "x" },
-            ["GroveFieldVisibilitySettings"] = new JsonObject { ["Path"] = "Kind" },
+            ["FieldVisibilitySettings"] = new JsonObject { ["When"] = new JsonObject { ["Field"] = "Customer.Kind", ["Operator"] = "not empty" } },
         };
 
         var converted = ContentPickerConversion.ConvertSettings(settings);
-        var picker = converted["OptionPickerFieldSettings"]!;
+        var picker = converted["OptionListFieldSettings"]!;
 
         Assert.Equal("contentitem:Customer,Vendor,@Party", picker["SourceKey"]!.GetValue<string>());
         Assert.True(picker["Multiple"]!.GetValue<bool>());
@@ -46,9 +46,9 @@ public class ContentPickerConversionTests
         Assert.Equal("{{ Model.ContentItem.DisplayText | upcase }}", picker["TitlePattern"]!.GetValue<string>());
         Assert.Null(converted["ContentPickerFieldSettings"]);
         Assert.Null(converted["ContentPickerFieldLuceneEditorSettings"]);
-        Assert.Null(converted["ContentPartFieldSettings"]!["Editor"]);
-        Assert.Equal("3", converted["ContentPartFieldSettings"]!["Position"]!.GetValue<string>());
-        Assert.NotNull(converted["GroveFieldVisibilitySettings"]);
+        Assert.Null(converted["ContentFieldSettings"]!["Editor"]);
+        Assert.Equal("3", converted["ContentFieldSettings"]!["Position"]!.GetValue<string>());
+        Assert.NotNull(converted["FieldVisibilitySettings"]);
     }
 
     [Fact]
@@ -64,8 +64,8 @@ public class ContentPickerConversionTests
             },
         });
 
-        Assert.Equal("contentitem:*", converted["OptionPickerFieldSettings"]!["SourceKey"]!.GetValue<string>());
-        Assert.Null(converted["OptionPickerFieldSettings"]!["TitlePattern"]);
+        Assert.Equal("contentitem:*", converted["OptionListFieldSettings"]!["SourceKey"]!.GetValue<string>());
+        Assert.Null(converted["OptionListFieldSettings"]!["TitlePattern"]);
     }
 
     [Fact]
@@ -111,10 +111,10 @@ public class ContentPickerConversionTests
         var definitions = JsonNode.Parse("""
             {
               "name": "ContentDefinition",
-              "ContentParts": [
+              "ContentFieldSets": [
                 {
                   "Name": "Invoice",
-                  "ContentPartFieldDefinitionRecords": [
+                  "ContentFieldDefinitionRecords": [
                     { "FieldName": "ContentPickerField", "Name": "Customer", "Settings": { "ContentPickerFieldSettings": { "DisplayedContentTypes": [ "Customer" ] } } },
                     { "FieldName": "TextField", "Name": "Number", "Settings": {} }
                   ]
@@ -124,9 +124,9 @@ public class ContentPickerConversionTests
             """)!.AsObject();
 
         Assert.True(ContentPickerConversion.ConvertDefinitionStep(definitions));
-        var fields = definitions["ContentParts"]![0]!["ContentPartFieldDefinitionRecords"]!;
-        Assert.Equal("OptionPickerField", fields[0]!["FieldName"]!.GetValue<string>());
-        Assert.Equal("contentitem:Customer", fields[0]!["Settings"]!["OptionPickerFieldSettings"]!["SourceKey"]!.GetValue<string>());
+        var fields = definitions["ContentFieldSets"]![0]!["ContentFieldDefinitionRecords"]!;
+        Assert.Equal("OptionListField", fields[0]!["FieldName"]!.GetValue<string>());
+        Assert.Equal("contentitem:Customer", fields[0]!["Settings"]!["OptionListFieldSettings"]!["SourceKey"]!.GetValue<string>());
         Assert.Equal("TextField", fields[1]!["FieldName"]!.GetValue<string>());
 
         var data = JsonNode.Parse("""
@@ -145,10 +145,10 @@ public class ContentPickerConversionTests
 
         var item = new ContentItem { ContentType = "Invoice" };
         item.Merge(content);
-        var field = item.Get<ContentPart>("Invoice")!.Get<OptionPickerField>("Customer")!;
+        var field = item.Get<ContentFieldSet>("Invoice")!.Get<OptionListField>("Customer")!;
 
         var options = new TemplateOptions();
-        options.MemberAccessStrategy.Register<OptionPickerField>();
+        options.MemberAccessStrategy.Register<OptionListField>();
         var template = new FluidParser().Parse("{{ Field.SelectedIds | join: ',' }} from {{ Field.SourceKey }}");
         var output = await template.RenderAsync(new TemplateContext(new { Field = field }, options));
 
@@ -159,9 +159,9 @@ public class ContentPickerConversionTests
     {
         var settings = new JsonObject
         {
-            [nameof(OptionPickerFieldSettings)] = new JsonObject { ["SourceKey"] = OptionSourceKeys.ForContentItems([pickerField]) },
+            [nameof(OptionListFieldSettings)] = new JsonObject { ["SourceKey"] = OptionSourceKeys.ForContentItems([pickerField]) },
         };
-        var part = new ContentPartDefinition(name, [new ContentPartFieldDefinition(new ContentFieldDefinition(ContentPickerConversion.FieldType), pickerField, settings)], new JsonObject());
-        return new ContentTypeDefinition(name, name, [new ContentTypePartDefinition(name, part, new JsonObject())], new JsonObject());
+        var part = new ContentFieldSetDefinition(name, [new ContentFieldDefinition(new ContentFieldTypeDefinition(ContentPickerConversion.FieldType), pickerField, settings)], new JsonObject());
+        return new ContentTypeDefinition(name, name, [new ContentTypeFieldSetDefinition(name, part, new JsonObject())], new JsonObject());
     }
 }

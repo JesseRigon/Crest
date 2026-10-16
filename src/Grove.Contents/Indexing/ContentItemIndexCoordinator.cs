@@ -12,20 +12,20 @@ namespace Grove.Contents.Indexing;
 public class ContentItemIndexCoordinator : IDocumentIndexHandler
 {
     private readonly IContentDefinitionManager _contentDefinitionManager;
-    private readonly ITypeActivatorFactory<ContentPart> _contentPartFactory;
-    private readonly IEnumerable<IContentPartIndexHandler> _partIndexHandlers;
+    private readonly ITypeActivatorFactory<ContentFieldSet> _contentFieldSetFactory;
+    private readonly IEnumerable<IContentFieldSetIndexHandler> _partIndexHandlers;
     private readonly IEnumerable<IContentFieldIndexHandler> _fieldIndexHandlers;
     private readonly ILogger _logger;
 
     public ContentItemIndexCoordinator(
         IContentDefinitionManager contentDefinitionManager,
-        ITypeActivatorFactory<ContentPart> contentPartFactory,
-        IEnumerable<IContentPartIndexHandler> partIndexHandlers,
+        ITypeActivatorFactory<ContentFieldSet> contentFieldSetFactory,
+        IEnumerable<IContentFieldSetIndexHandler> partIndexHandlers,
         IEnumerable<IContentFieldIndexHandler> fieldIndexHandlers,
         ILogger<ContentItemIndexCoordinator> logger)
     {
         _contentDefinitionManager = contentDefinitionManager;
-        _contentPartFactory = contentPartFactory;
+        _contentFieldSetFactory = contentFieldSetFactory;
         _partIndexHandlers = partIndexHandlers;
         _fieldIndexHandlers = fieldIndexHandlers;
         _logger = logger;
@@ -45,41 +45,41 @@ public class ContentItemIndexCoordinator : IDocumentIndexHandler
             return;
         }
 
-        foreach (var contentTypePartDefinition in contentTypeDefinition.Parts)
+        foreach (var contentTypeFieldSetDefinition in contentTypeDefinition.FieldSets)
         {
-            var partName = contentTypePartDefinition.Name;
-            var partTypeName = contentTypePartDefinition.PartDefinition.Name;
-            var partActivator = _contentPartFactory.GetTypeActivator(partTypeName);
-            var part = (ContentPart)contentItem.Get(partActivator.Type, partName);
+            var partName = contentTypeFieldSetDefinition.Name;
+            var fieldSetTypeName = contentTypeFieldSetDefinition.FieldSetDefinition.Name;
+            var partActivator = _contentFieldSetFactory.GetTypeActivator(fieldSetTypeName);
+            var part = (ContentFieldSet)contentItem.Get(partActivator.Type, partName);
 
-            var contentTypePartDefinitionMethod = contentTypePartDefinition.GetType().GetMethod("GetSettings");
-            var contentTypePartDefinitionGeneric = contentTypePartDefinitionMethod.MakeGenericMethod(context.Settings.GetType());
-            var typePartIndexSettings = (IContentIndexSettings)contentTypePartDefinitionGeneric.Invoke(contentTypePartDefinition, null);
+            var contentTypeFieldSetDefinitionMethod = contentTypeFieldSetDefinition.GetType().GetMethod("GetSettings");
+            var contentTypeFieldSetDefinitionGeneric = contentTypeFieldSetDefinitionMethod.MakeGenericMethod(context.Settings.GetType());
+            var typeFieldSetIndexSettings = (IContentIndexSettings)contentTypeFieldSetDefinitionGeneric.Invoke(contentTypeFieldSetDefinition, null);
 
             // Skip this part if it's not included in the index and it's not the default type part
-            if (contentTypeDefinition.Name != partTypeName && !typePartIndexSettings.Included)
+            if (contentTypeDefinition.Name != fieldSetTypeName && !typeFieldSetIndexSettings.Included)
             {
                 continue;
             }
 
-            await _partIndexHandlers.InvokeAsync((handler, part, contentTypePartDefinition, context, typePartIndexSettings) =>
-                handler.BuildIndexAsync(part, contentTypePartDefinition, context, typePartIndexSettings),
-                    part, contentTypePartDefinition, context, typePartIndexSettings, _logger);
+            await _partIndexHandlers.InvokeAsync((handler, part, contentTypeFieldSetDefinition, context, typeFieldSetIndexSettings) =>
+                handler.BuildIndexAsync(part, contentTypeFieldSetDefinition, context, typeFieldSetIndexSettings),
+                    part, contentTypeFieldSetDefinition, context, typeFieldSetIndexSettings, _logger);
 
-            foreach (var contentPartFieldDefinition in contentTypePartDefinition.PartDefinition.Fields)
+            foreach (var contentFieldDefinition in contentTypeFieldSetDefinition.FieldSetDefinition.Fields)
             {
-                var contentPartFieldDefinitionMethod = contentPartFieldDefinition.GetType().GetMethod("GetSettings");
-                var contentPartFieldDefinitionGeneric = contentPartFieldDefinitionMethod.MakeGenericMethod(context.Settings.GetType());
-                var partFieldIndexSettings = (IContentIndexSettings)contentPartFieldDefinitionGeneric.Invoke(contentPartFieldDefinition, null);
+                var contentFieldDefinitionMethod = contentFieldDefinition.GetType().GetMethod("GetSettings");
+                var contentFieldDefinitionGeneric = contentFieldDefinitionMethod.MakeGenericMethod(context.Settings.GetType());
+                var partFieldIndexSettings = (IContentIndexSettings)contentFieldDefinitionGeneric.Invoke(contentFieldDefinition, null);
 
                 if (!partFieldIndexSettings.Included)
                 {
                     continue;
                 }
 
-                await _fieldIndexHandlers.InvokeAsync((handler, part, contentTypePartDefinition, contentPartFieldDefinition, context, partFieldIndexSettings) =>
-                    handler.BuildIndexAsync(part, contentTypePartDefinition, contentPartFieldDefinition, context, partFieldIndexSettings),
-                        part, contentTypePartDefinition, contentPartFieldDefinition, context, partFieldIndexSettings, _logger);
+                await _fieldIndexHandlers.InvokeAsync((handler, part, contentTypeFieldSetDefinition, contentFieldDefinition, context, partFieldIndexSettings) =>
+                    handler.BuildIndexAsync(part, contentTypeFieldSetDefinition, contentFieldDefinition, context, partFieldIndexSettings),
+                        part, contentTypeFieldSetDefinition, contentFieldDefinition, context, partFieldIndexSettings, _logger);
             }
         }
 

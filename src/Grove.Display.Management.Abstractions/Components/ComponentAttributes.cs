@@ -40,7 +40,7 @@ public sealed class BlazorComponentAttribute(string name) : Attribute
 
     /// <summary>
     /// The value types this component edits (an editor, § 1 and decision 2): content field and
-    /// part names (<c>TextField</c>, <c>TitlePart</c>) or value types; <c>*</c> edits anything.
+    /// part names (<c>TextField</c>, <c>TitleFieldSet</c>) or value types; <c>*</c> edits anything.
     /// The editor tree picks a field's editor by it.
     /// </summary>
     public string[]? Edits { get; set; }

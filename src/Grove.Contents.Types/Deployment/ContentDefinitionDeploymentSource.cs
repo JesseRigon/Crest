@@ -23,16 +23,16 @@ public sealed class ContentDefinitionDeploymentSource
             : contentTypeDefinitionRecord.ContentTypeDefinitionRecords
                 .Where(x => step.ContentTypes.Contains(x.Name));
 
-        var contentParts = step.IncludeAll
-            ? contentTypeDefinitionRecord.ContentPartDefinitionRecords
-            : contentTypeDefinitionRecord.ContentPartDefinitionRecords
-                    .Where(x => step.ContentParts.Contains(x.Name));
+        var contentFieldSets = step.IncludeAll
+            ? contentTypeDefinitionRecord.ContentFieldSetDefinitionRecords
+            : contentTypeDefinitionRecord.ContentFieldSetDefinitionRecords
+                    .Where(x => step.ContentFieldSets.Contains(x.Name));
 
         result.Steps.Add(new JsonObject
         {
             ["name"] = "ContentDefinition",
             ["ContentTypes"] = JArray.FromObject(contentTypes),
-            ["ContentParts"] = JArray.FromObject(contentParts),
+            ["ContentFieldSets"] = JArray.FromObject(contentFieldSets),
         });
     }
 }

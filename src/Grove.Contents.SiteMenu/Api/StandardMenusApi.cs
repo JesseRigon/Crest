@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 using Grove.Api;
 using Grove;
 using Grove.Contents.Management;
@@ -75,8 +76,11 @@ public sealed class StandardMenusHandlers(
 
         var menu = await contentManager.NewAsync("Menu");
         menu.DisplayText = name;
-        EnsureMenuItemsList(menu.Content);
-        await contentManager.PublishAsync(menu);
+        menu.Alter<ContentFieldSet>("Title", title => title.Alter<Grove.Contents.Fields.Fields.TextField>("Title", text => text.Text = name));
+        EnsureMenuItems(menu.Content);
+
+        // A new menu is created (its id, version and lifecycle), published at once.
+        await contentManager.CreateAsync(menu, VersionOptions.Published);
 
         return Ok(StandardMenuSummary.From(menu));
     }
@@ -97,8 +101,8 @@ public sealed class StandardMenusHandlers(
         }
 
         menu.DisplayText = name;
-        await contentManager.PublishAsync(menu);
-        return Ok(StandardMenuSummary.From(menu));
+        menu.Alter<ContentFieldSet>("Title", title => title.Alter<Grove.Contents.Fields.Fields.TextField>("Title", text => text.Text = name));
+        return await SaveAsync(menu);
     }
 
     public async Task<IResult> ToggleMenuAsync(string menuId)
@@ -146,7 +150,7 @@ public sealed class StandardMenusHandlers(
         copy.ContentItemId = string.Empty;
         copy.ContentItemVersionId = string.Empty;
         RegenerateNodeIds(copy.Content);
-        await contentManager.PublishAsync(copy);
+        await contentManager.CreateAsync(copy, VersionOptions.Published);
 
         return Ok(StandardMenuSummary.From(copy));
     }
@@ -166,6 +170,24 @@ public sealed class StandardMenusHandlers(
 
         await contentManager.RemoveAsync(menu);
         return NoContent();
+    }
+
+    // A changed menu is saved like any item: updated (its system flows sanitize the HTML items),
+    // validated (every item's address), then published; a refusal answers 400 by field.
+    private async Task<IResult> SaveAsync(PlatformContentItem menu)
+    {
+        await contentManager.UpdateAsync(menu);
+        var validation = await contentManager.ValidateAsync(menu);
+        if (!validation.Succeeded)
+        {
+            await HttpContext.RequestServices.GetRequiredService<Grove.Data.Documents.IDocumentStore>().CancelAsync();
+            return ApiProblems.Validation(validation.Errors
+                .GroupBy(error => error.MemberNames?.FirstOrDefault() ?? string.Empty)
+                .ToDictionary(errors => errors.Key, errors => errors.Select(error => error.ErrorMessage ?? string.Empty).ToArray()));
+        }
+
+        await contentManager.PublishAsync(menu);
+        return Ok(StandardMenuSummary.From(menu));
     }
 
     public async Task<IResult> CreateNodeAsync(string menuId, StandardMenuNodeEditModel model)
@@ -193,8 +215,7 @@ public sealed class StandardMenusHandlers(
         }
 
         siblings.Insert(ClampPosition(model.Position, siblings.Count), node);
-        await contentManager.PublishAsync(menu);
-        return Ok(StandardMenuSummary.From(menu));
+        return await SaveAsync(menu);
     }
 
     public async Task<IResult> UpdateNodeAsync(string menuId, string nodeId, StandardMenuNodeEditModel model)
@@ -216,8 +237,7 @@ public sealed class StandardMenusHandlers(
         }
 
         ApplyNode(node, model);
-        await contentManager.PublishAsync(menu);
-        return Ok(StandardMenuSummary.From(menu));
+        return await SaveAsync(menu);
     }
 
     public async Task<IResult> MoveNodeAsync(string menuId, string nodeId, StandardMenuNodeMoveModel model)
@@ -250,8 +270,7 @@ public sealed class StandardMenusHandlers(
 
         sourceArray.Remove(node);
         targetArray.Insert(ClampPosition(model.Position, targetArray.Count), node);
-        await contentManager.PublishAsync(menu);
-        return Ok(StandardMenuSummary.From(menu));
+        return await SaveAsync(menu);
     }
 
     public async Task<IResult> DuplicateNodeAsync(string menuId, string nodeId)
@@ -276,8 +295,7 @@ public sealed class StandardMenusHandlers(
         copy["DisplayText"] = $"{ReadString(node, "DisplayText") ?? "Menu item"} Copy";
         RegenerateNodeIds(copy);
         siblings.Insert(siblings.IndexOf(node) + 1, copy);
-        await contentManager.PublishAsync(menu);
-        return Ok(StandardMenuSummary.From(menu));
+        return await SaveAsync(menu);
     }
 
     public async Task<IResult> DeleteNodeAsync(string menuId, string nodeId)
@@ -299,8 +317,7 @@ public sealed class StandardMenusHandlers(
         }
 
         siblings.Remove(node);
-        await contentManager.PublishAsync(menu);
-        return Ok(StandardMenuSummary.From(menu));
+        return await SaveAsync(menu);
     }
 
     private Task<bool> IsAuthorizedAsync() => authorizationService.AuthorizeAsync(User, Grove.Contents.SiteMenu.Permissions.ManageMenu);
@@ -333,9 +350,9 @@ public sealed class StandardMenusHandlers(
         var contentItem = await contentManager.NewAsync(model.Type);
         contentItem.DisplayText = model.Text?.Trim() ?? string.Empty;
         ApplyNode(contentItem.Content, model);
-        EnsureMenuItemsList(contentItem.Content);
+        EnsureMenuItems(contentItem.Content);
         var node = JsonSerializer.SerializeToNode(contentItem)?.AsObject() ?? [];
-        EnsureMenuItemsList(node);
+        EnsureMenuItems(node);
         return node;
     }
 
@@ -347,10 +364,10 @@ public sealed class StandardMenusHandlers(
         if (string.Equals(type, "ContentMenuItem", StringComparison.OrdinalIgnoreCase))
         {
             // A content menu item links to a content item, chosen by id (the MVC menu admin's
-            // ContentMenuItemPart editor, ported).
-            node["ContentMenuItemPart"] = new JsonObject
+            // ContentMenuItemFieldSet editor, ported).
+            node["ContentMenuItem"] = new JsonObject
             {
-                ["CheckContentPermissions"] = model.CheckContentPermissions,
+                ["CheckContentPermissions"] = new JsonObject { ["Value"] = model.CheckContentPermissions },
                 ["SelectedContentItem"] = new JsonObject
                 {
                     ["SourceKey"] = "contentitem:*",
@@ -360,45 +377,45 @@ public sealed class StandardMenusHandlers(
         }
         else if (string.Equals(type, "HtmlMenuItem", StringComparison.OrdinalIgnoreCase))
         {
-            node["HtmlMenuItemPart"] = new JsonObject
+            node["HtmlMenuItem"] = new JsonObject
             {
-                [nameof(HtmlMenuItemPart.Url)] = model.Url?.Trim() ?? string.Empty,
-                [nameof(HtmlMenuItemPart.Target)] = model.Target?.Trim() ?? string.Empty,
-                [nameof(HtmlMenuItemPart.Html)] = model.Html?.Trim() ?? string.Empty,
+                [nameof(HtmlMenuItemFieldSet.Url)] = new JsonObject { ["Text"] = model.Url?.Trim() ?? string.Empty },
+                [nameof(HtmlMenuItemFieldSet.Target)] = new JsonObject { ["Text"] = model.Target?.Trim() ?? string.Empty },
+                [nameof(HtmlMenuItemFieldSet.Html)] = new JsonObject { ["Html"] = model.Html?.Trim() ?? string.Empty },
             };
         }
         else
         {
-            node["LinkMenuItemPart"] = new JsonObject
+            node["LinkMenuItem"] = new JsonObject
             {
-                [nameof(LinkMenuItemPart.Url)] = model.Url?.Trim() ?? string.Empty,
-                [nameof(LinkMenuItemPart.Target)] = model.Target?.Trim() ?? string.Empty,
+                [nameof(LinkMenuItemFieldSet.Url)] = new JsonObject { ["Text"] = model.Url?.Trim() ?? string.Empty },
+                [nameof(LinkMenuItemFieldSet.Target)] = new JsonObject { ["Text"] = model.Target?.Trim() ?? string.Empty },
             };
         }
 
         if (model.PermissionNames is { Length: > 0 })
         {
-            node["MenuItemPermissionPart"] = new JsonObject { ["PermissionNames"] = new JsonArray(model.PermissionNames.Select(name => JsonValue.Create(name)).ToArray()) };
+            node["MenuItemPermission"] = new JsonObject { ["PermissionNames"] = new JsonObject { ["Values"] = new JsonArray(model.PermissionNames.Select(name => JsonValue.Create(name)).ToArray()) } };
         }
         else
         {
-            node.Remove("MenuItemPermissionPart");
+            node.Remove("MenuItemPermission");
         }
 
-        EnsureMenuItemsList(node);
+        EnsureMenuItems(node);
     }
 
     private static bool TryGetChildren(JsonObject menuOrNode, string? parentNodeId, out JsonArray children)
     {
         if (string.IsNullOrWhiteSpace(parentNodeId))
         {
-            children = EnsureMenuItemsList(menuOrNode);
+            children = EnsureMenuItems(menuOrNode);
             return true;
         }
 
         if (TryFindNode(menuOrNode, parentNodeId, out var parent, out _))
         {
-            children = EnsureMenuItemsList(parent);
+            children = EnsureMenuItems(parent);
             return true;
         }
 
@@ -408,12 +425,12 @@ public sealed class StandardMenusHandlers(
 
     private static bool TryFindNode(JsonObject source, string nodeId, out JsonObject node, out JsonArray? siblings)
     {
-        foreach (var child in EnsureMenuItemsList(source).OfType<JsonObject>())
+        foreach (var child in EnsureMenuItems(source).OfType<JsonObject>())
         {
             if (string.Equals(ReadString(child, "ContentItemId"), nodeId, StringComparison.OrdinalIgnoreCase))
             {
                 node = child;
-                siblings = EnsureMenuItemsList(source);
+                siblings = EnsureMenuItems(source);
                 return true;
             }
 
@@ -435,7 +452,7 @@ public sealed class StandardMenusHandlers(
             return false;
         }
 
-        foreach (var child in EnsureMenuItemsList(node).OfType<JsonObject>())
+        foreach (var child in EnsureMenuItems(node).OfType<JsonObject>())
         {
             if (string.Equals(ReadString(child, "ContentItemId"), possibleDescendantId, StringComparison.OrdinalIgnoreCase) || IsDescendant(child, possibleDescendantId))
             {
@@ -446,16 +463,17 @@ public sealed class StandardMenusHandlers(
         return false;
     }
 
-    private static JsonArray EnsureMenuItemsList(JsonObject source)
+    // The items under a menu or a menu item: its MenuItems embedding.
+    private static JsonArray EnsureMenuItems(JsonObject source)
     {
-        if (source["MenuItemsListPart"] is not JsonObject part)
+        if (source[MenuItemsEmbedding.Name] is not JsonObject embedding)
         {
-            source["MenuItemsListPart"] = part = [];
+            source[MenuItemsEmbedding.Name] = embedding = [];
         }
 
-        if (part["MenuItems"] is not JsonArray items)
+        if (embedding["ContentItems"] is not JsonArray items)
         {
-            part["MenuItems"] = items = [];
+            embedding["ContentItems"] = items = [];
         }
 
         return items;
@@ -465,7 +483,7 @@ public sealed class StandardMenusHandlers(
     {
         source["ContentItemId"] = Guid.NewGuid().ToString("n");
         source["ContentItemVersionId"] = Guid.NewGuid().ToString("n");
-        foreach (var child in EnsureMenuItemsList(source).OfType<JsonObject>())
+        foreach (var child in EnsureMenuItems(source).OfType<JsonObject>())
         {
             RegenerateNodeIds(child);
         }

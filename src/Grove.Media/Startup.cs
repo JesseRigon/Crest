@@ -1,3 +1,4 @@
+using Grove.Contents.Fields;
 using Fluid;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -211,7 +212,7 @@ public sealed class Startup : StartupBase
         );
 
         // Media Field
-        services.AddContentField<MediaField>()
+        services.AddFieldType<MediaField, Grove.Media.Settings.MediaFieldSettings>()
             .UseDisplayDriver<MediaFieldDisplayDriver>()
             .AddHandler<AttachedMediaFieldHandler>()
             .AddHandler<MediaFieldHandler>();

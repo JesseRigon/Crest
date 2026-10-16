@@ -29,7 +29,7 @@ public sealed class ScheduledArchivingBackgroundTask : IBackgroundTask
     {
         var itemsToArchive = await serviceProvider
             .GetRequiredService<ISession>()
-            .QueryIndex<ArchiveLaterPartIndex>(index => index.Latest && index.Published && index.ScheduledArchiveDateTimeUtc < _clock.UtcNow)
+            .QueryIndex<ArchiveLaterIndex>(index => index.Latest && index.Published && index.ScheduledArchiveDateTimeUtc < _clock.UtcNow)
             .ListAsync(cancellationToken);
 
         if (!itemsToArchive.Any())
@@ -43,11 +43,7 @@ public sealed class ScheduledArchivingBackgroundTask : IBackgroundTask
         {
             var contentItem = await contentManager.GetAsync(item.ContentItemId);
 
-            if (contentItem.TryGet<ArchiveLaterPart>(out var part))
-            {
-                part.ScheduledArchiveUtc = null;
-                part.Apply();
-            }
+            // The schedule is cleared by the field set's system flow when the item is unpublished.
 
             if (_logger.IsEnabled(LogLevel.Debug))
             {

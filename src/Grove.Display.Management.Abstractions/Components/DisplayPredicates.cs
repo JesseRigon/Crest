@@ -9,7 +9,9 @@ namespace Grove.Display.Management.Components;
 /// bindings): a fixed operator list, <c>and</c> / <c>or</c> / <c>not</c>, and nothing else. The
 /// template parser stores a predicate as data on a <see cref="DisplayBinding"/>, the validator
 /// checks it here, and <see cref="DisplayState"/> evaluates it here, in the browser, whenever a
-/// source changes. Text compares ordinally; numbers as numbers.
+/// source changes. Field conditions (<see cref="FieldConditions"/>) are evaluated here too: one
+/// evaluator for display bindings, field visibility and a type's field rules. Text compares
+/// ordinally; numbers as numbers; a list equals a value it holds.
 /// </summary>
 public static class DisplayPredicates
 {
@@ -33,6 +35,35 @@ public static class DisplayPredicates
 
     /// <summary>Whether the operator takes an operand (<c>empty</c> and <c>not empty</c> do not).</summary>
     public static bool TakesOperand(string @operator) => @operator is not (Empty or NotEmpty);
+
+    /// <summary>
+    /// The value <paramref name="binding"/> reads, its comparisons and combinations evaluated
+    /// here; <paramref name="readSource"/> reads a plain source (a node's output, a variable, the
+    /// event, a field, a literal).
+    /// </summary>
+    public static JsonNode? Read(DisplayBinding binding, Func<DisplayBinding, JsonNode?> readSource)
+    {
+        if (binding.Combinator is { } combinator)
+        {
+            var terms = binding.Terms ?? [];
+            return JsonValue.Create(combinator switch
+            {
+                And => terms.All(term => IsTrue(Read(term, readSource))),
+                Or => terms.Any(term => IsTrue(Read(term, readSource))),
+                Not => terms.Count > 0 && !IsTrue(Read(terms[0], readSource)),
+                _ => false,
+            });
+        }
+
+        if (binding.Operator is { } @operator)
+        {
+            var left = readSource(binding);
+            var right = binding.Operand is { } operand ? Read(operand, readSource) : null;
+            return JsonValue.Create(Evaluate(@operator, left, right));
+        }
+
+        return readSource(binding);
+    }
 
     public static bool Evaluate(string @operator, JsonNode? left, JsonNode? right) => @operator switch
     {
@@ -90,6 +121,7 @@ public static class DisplayPredicates
         Output = binding.Output,
         Variable = binding.Variable,
         Event = binding.Event,
+        Field = binding.Field,
         Value = binding.Value?.DeepClone(),
         Path = binding.Path,
         Operator = binding.Operator,
@@ -103,6 +135,12 @@ public static class DisplayPredicates
         if (left is null || right is null)
         {
             return IsEmpty(left) && IsEmpty(right);
+        }
+
+        // A list (a field holding several values) equals each value it holds.
+        if (left is JsonArray items && right is JsonValue)
+        {
+            return items.Any(item => Equals(item, right));
         }
 
         if (left is JsonValue a && right is JsonValue b)

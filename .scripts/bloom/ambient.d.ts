@@ -92,7 +92,7 @@ declare const iconPickerVue: {
 declare function initAdminMenuPermissionsPicker(element: Element | null): void;
 
 // Defined by Grove.Contents.SiteMenu (Assets/js/menu-permission-picker.js) - a separate, near-identical
-// copy of the picker above for MenuItemPermissionPart, unrelated to the AdminMenu tree editors.
+// copy of the picker above for MenuItemPermissionFieldSet, unrelated to the AdminMenu tree editors.
 declare function initMenuPermissionsPicker(element: Element | null): void;
 
 interface NoUiSliderInstance {

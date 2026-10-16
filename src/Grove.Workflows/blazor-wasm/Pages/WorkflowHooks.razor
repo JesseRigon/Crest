@@ -8,7 +8,9 @@
    modules declare, the flows attached to it - the module's own, then the tenant's - and, for
    a user who may edit workflows, attaching a published flow or detaching one. The flow runs
    inside the host's transaction, so the API refuses a flow that is not atomic. Grove
-   components throughout; this page is not part of the forked Studio. *@
+   components throughout; this page is not part of the forked Studio. Content types have a
+   slot per lifecycle point (docs/workflows.md › Hook slots); the page shows one type's at a
+   time, beside the slots that already have attachments. *@
 
 <PageTitle>@T["Hooks"]</PageTitle>
 
@@ -26,12 +28,19 @@
         <GroveAlert AlertStyle="AlertStyle.Danger" Summary="@T["Hook action failed"]" Detail="@Error" />
     }
 
+    @if (ContentTypes.Length > 0)
+    {
+        <GroveFormField Text="@T["Content type"]">
+            <GroveDropDown TValue="string" @bind-Value="SelectedContentType" Data="@ContentTypes" AllowClear="true" AllowFiltering="true" Placeholder="@T["Its lifecycle hooks"]" Style="min-width: 16rem;" data-testid="hook-content-type" />
+        </GroveFormField>
+    }
+
     @if (Slots.Length == 0 && !IsBusy)
     {
         <GroveCard><GroveText TextStyle="TextStyle.Body1">@T["No module declares a hook slot."]</GroveText></GroveCard>
     }
 
-    @foreach (var slot in Slots)
+    @foreach (var slot in Slots.Where(IsShown))
     {
         var descriptor = slot.Slot;
         <GroveCard data-testid="hook-slot" data-slot="@descriptor.Key">
@@ -119,6 +128,21 @@
     private WorkflowHookCandidateModel[] Candidates { get; set; } = [];
     private Dictionary<string, AttachDraft> Drafts { get; } = new(StringComparer.OrdinalIgnoreCase);
     private bool CanEdit { get; set; }
+    private string[] ContentTypes { get; set; } = [];
+    private string? SelectedContentType { get; set; }
+
+    private const string ContentSlotPrefix = "content:";
+
+    // A content lifecycle slot is keyed content:{Type}.{point}.
+    private static string? ContentTypeOf(string key) =>
+        key.StartsWith(ContentSlotPrefix, StringComparison.OrdinalIgnoreCase) && key.LastIndexOf('.') is var dot and > 0
+            ? key[ContentSlotPrefix.Length..dot]
+            : null;
+
+    private bool IsShown(WorkflowHookSlotModel slot) =>
+        ContentTypeOf(slot.Slot.Key) is not { } type
+        || slot.Attachments.Count > 0
+        || string.Equals(type, SelectedContentType, StringComparison.OrdinalIgnoreCase);
     private bool IsBusy { get; set; }
     private string? Error { get; set; }
 
@@ -133,6 +157,7 @@
         try
         {
             Slots = await Http.GetFromJsonAsync<WorkflowHookSlotModel[]>(WorkflowsConstants.Routes.HooksApi) ?? [];
+            ContentTypes = [.. Slots.Select(slot => ContentTypeOf(slot.Slot.Key)).OfType<string>().Distinct(StringComparer.OrdinalIgnoreCase).Order(StringComparer.OrdinalIgnoreCase)];
 
             // Only a user who may edit workflows gets the picker; the API answers 403 otherwise.
             var candidates = await Http.GetAsync($"{WorkflowsConstants.Routes.HooksApi}/candidates");

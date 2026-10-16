@@ -14,14 +14,26 @@ public sealed class ContentEditorTests
         "Invoice",
         "Invoice",
         [
-            new GroveContentPartMetadata("Invoice", "Invoice",
+            new GroveContentFieldSetMetadata("Invoice", "Invoice",
             [
                 new GroveContentFieldMetadata("Number", "TextField", "Number", true, string.Empty, "1", null),
                 new GroveContentFieldMetadata("Express", "BooleanField", "Express", false, string.Empty, "2", null),
                 new GroveContentFieldMetadata("Courier", "TextField", "Courier", true, string.Empty, "3",
-                    new JsonObject { ["GroveFieldVisibilitySettings"] = new JsonObject { ["Path"] = "Express", ["Operator"] = "Any" } }),
+                    new JsonObject { ["FieldVisibilitySettings"] = new JsonObject { ["When"] = new JsonObject { ["Field"] = "Express", ["Operator"] = "not empty" } } }),
                 new GroveContentFieldMetadata("Region", "TextField", "Region", false, string.Empty, "4",
-                    new JsonObject { ["GroveFieldVisibilitySettings"] = new JsonObject { ["Path"] = "Invoice.Number", ["Operator"] = "In", ["Keys"] = new JsonArray("EU-1", "EU-2") } }),
+                    new JsonObject
+                    {
+                        ["FieldVisibilitySettings"] = new JsonObject
+                        {
+                            ["When"] = new JsonObject
+                            {
+                                ["Combinator"] = "or",
+                                ["Terms"] = new JsonArray(
+                                    new JsonObject { ["Field"] = "Number", ["Operator"] = "==", ["Operand"] = new JsonObject { ["Value"] = "EU-1" } },
+                                    new JsonObject { ["Field"] = "Number", ["Operator"] = "==", ["Operand"] = new JsonObject { ["Value"] = "EU-2" } }),
+                            },
+                        },
+                    }),
             ], null),
         ]);
 
@@ -33,10 +45,10 @@ public sealed class ContentEditorTests
         context.Changed += () => changes++;
 
         context.Set("Invoice", "Number", "Text", JsonValue.Create("EU-1"));
-        context.Set("TitlePart", null, "Title", JsonValue.Create("Invoice EU-1"));
+        context.Set("Title", null, "Title", JsonValue.Create("Invoice EU-1"));
 
         Assert.Equal("EU-1", context.Content["Invoice"]!["Number"]!["Text"]!.GetValue<string>());
-        Assert.Equal("Invoice EU-1", context.Content["TitlePart"]!["Title"]!.GetValue<string>());
+        Assert.Equal("Invoice EU-1", context.Content["Title"]!["Title"]!.GetValue<string>());
         Assert.Equal(2, changes);
     }
 
@@ -80,13 +92,13 @@ public sealed class ContentEditorTests
         Assert.Equal("TextFieldEditor", text.Name);
         Assert.True(registry.TryGetEditor("DateTimeField", out var date));
         Assert.Equal("DateFieldEditor", date.Name);
-        Assert.True(registry.TryGetEditor("HtmlBodyPart", out var html));
+        Assert.True(registry.TryGetEditor("HtmlField", out var html));
         Assert.Equal("HtmlEditor", html.Name);
         Assert.True(registry.TryGetEditor("SomethingNew", out var fallback));
         Assert.Equal("JsonEditor", fallback.Name);
 
         // Editors take the part and field they edit; the rest comes from the context.
-        Assert.NotNull(text.Parameter(nameof(FieldEditorBase.PartName)));
+        Assert.NotNull(text.Parameter(nameof(FieldEditorBase.FieldSetName)));
         Assert.NotNull(text.Parameter(nameof(FieldEditorBase.FieldName)));
     }
 

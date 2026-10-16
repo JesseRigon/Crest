@@ -14,7 +14,7 @@ namespace Grove.ContentGroups;
 public sealed class ContentGroupService(
     IEnumerable<IContentGroupProvider> providers,
     IEnumerable<IContentGroupEntryResolver> resolvers,
-    IDocumentManager<GroveContentGroupsDocument> documents,
+    IDocumentManager<ContentGroupsDocument> documents,
     ISiteService siteService)
 {
     private readonly Dictionary<string, ContentGroupResolvedEntry?> _resolved = new(StringComparer.OrdinalIgnoreCase);
@@ -24,7 +24,7 @@ public sealed class ContentGroupService(
 
     // The shared cache only refreshes after the request commits, so a write returns
     // its result from the mutable document it just changed, never from a re-read.
-    private async Task<IReadOnlyList<ContentGroupModel>> ListAsync(GroveContentGroupsDocument document, CancellationToken cancellationToken)
+    private async Task<IReadOnlyList<ContentGroupModel>> ListAsync(ContentGroupsDocument document, CancellationToken cancellationToken)
     {
         var declared = Declared();
         var models = new List<ContentGroupModel>();
@@ -217,7 +217,7 @@ public sealed class ContentGroupService(
 
     private static IEnumerable<(string Key, ContentGroupDefinition? Definition, ContentGroupOverride? Override)> Merge(
         IReadOnlyList<ContentGroupDefinition> declared,
-        GroveContentGroupsDocument document)
+        ContentGroupsDocument document)
     {
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var definition in declared)
@@ -256,10 +256,10 @@ public sealed class ContentGroupService(
         return resolved;
     }
 
-    private async Task<ContentGroupModel> RequireGroupAsync(string key, GroveContentGroupsDocument document, CancellationToken cancellationToken) =>
+    private async Task<ContentGroupModel> RequireGroupAsync(string key, ContentGroupsDocument document, CancellationToken cancellationToken) =>
         (await ListAsync(document, cancellationToken)).First(group => string.Equals(group.Key, key, StringComparison.OrdinalIgnoreCase));
 
-    private static ContentGroupOverride GetOrCreateOverride(GroveContentGroupsDocument document, string key)
+    private static ContentGroupOverride GetOrCreateOverride(ContentGroupsDocument document, string key)
     {
         if (!document.Groups.TryGetValue(key, out var @override))
         {

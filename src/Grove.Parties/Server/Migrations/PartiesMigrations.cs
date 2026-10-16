@@ -15,7 +15,6 @@ using Grove.Contents.Management.Metadata.Settings;
 using Grove.Contents.Management.Records;
 using Grove.Data.Migration;
 using Grove.Environment.Shell.Scope;
-using Grove.Contents.BagParts.Models;
 using YesSql;
 using YesSql.Sql;
 using Grove.Fields;
@@ -58,7 +57,7 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
     // bags so a party can have any number of each, typed by tenant-editable kinds.
     private async Task DefinePartyPartsAsync()
     {
-        await contentDefinitionManager.AlterPartDefinitionAsync(PartiesConstants.ContentTypes.Person, part => part
+        await contentDefinitionManager.AlterFieldSetDefinitionAsync(PartiesConstants.ContentTypes.Person, part => part
             .Attachable()
             .Reusable(false)
             .WithDisplayName("Person")
@@ -71,21 +70,21 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
                 .OfType("TextField")
                 .WithDisplayName("Last name")
                 .WithPosition("1"))
-            // The user <-> Person link, person side. A real user picker (indexed by
-            // Grove.Contents.Fields.Indexing.SQL.UserPicker) so "which person is
-            // this account" is a query, not a scan.
+            // The user <-> Person link, person side. An option list field on the users
+            // source (indexed by the option list field index) so "which person is this
+            // account" is a query, not a scan.
             .WithField(PartyUserLinkService.PortalUserField, field => field
-                .OfType("UserPickerField")
+                .OfType("OptionListField")
                 .WithDisplayName("Portal user")
                 .WithDescription("The Grove user account that IS this person, once one exists (set by the module that creates the account).")
                 .WithPosition("2")
-                .MergeSettings<UserPickerFieldSettings>(settings =>
+                .MergeSettings<OptionListFieldSettings>(settings =>
                 {
+                    settings.SourceKey = Grove.Models.OptionSourceKeys.UserProvider;
                     settings.Multiple = false;
-                    settings.DisplayAllUsers = true;
                 })));
 
-        await contentDefinitionManager.AlterPartDefinitionAsync(PartiesConstants.ContentTypes.Organization, part => part
+        await contentDefinitionManager.AlterFieldSetDefinitionAsync(PartiesConstants.ContentTypes.Organization, part => part
             .Attachable()
             .Reusable(false)
             .WithDisplayName("Organization")
@@ -108,10 +107,10 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
                 .WithDescription("The organization of one person; it reads as the person.")
                 .WithPosition("2"))
             .WithField(PartiesConstants.OrganizationFields.ParentOrganization, field => field
-                .OfType("OptionPickerField")
+                .OfType("OptionListField")
                 .WithDisplayName("Parent organization")
                 .WithPosition("1")
-                .MergeSettings<OptionPickerFieldSettings>(settings =>
+                .MergeSettings<OptionListFieldSettings>(settings =>
                 {
                     settings.Multiple = false;
                     settings.SourceKey = OptionSourceKeys.ForContentItems([PartiesConstants.ContentTypes.Organization]);
@@ -123,7 +122,7 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
     // deferred tasks themselves.
     private async Task DefineContactElementsAsync()
     {
-        await contentDefinitionManager.AlterPartDefinitionAsync(PartiesConstants.ContentTypes.ContactPoint, part => part
+        await contentDefinitionManager.AlterFieldSetDefinitionAsync(PartiesConstants.ContentTypes.ContactPoint, part => part
             .Attachable()
             .Reusable(false)
             .WithDisplayName("Contact point")
@@ -145,9 +144,9 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
 
         await contentDefinitionManager.AlterTypeDefinitionAsync(PartiesConstants.ContentTypes.ContactPoint, type => type
             .WithDisplayName("Contact point")
-            .WithPart(PartiesConstants.ContentTypes.ContactPoint, part => part.WithPosition("0")));
+            .WithFieldSet(PartiesConstants.ContentTypes.ContactPoint, part => part.WithPosition("0")));
 
-        await contentDefinitionManager.AlterPartDefinitionAsync(PartiesConstants.ContentTypes.Address, part => part
+        await contentDefinitionManager.AlterFieldSetDefinitionAsync(PartiesConstants.ContentTypes.Address, part => part
             .Attachable()
             .Reusable(false)
             .WithDisplayName("Address")
@@ -184,7 +183,7 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
 
         await contentDefinitionManager.AlterTypeDefinitionAsync(PartiesConstants.ContentTypes.Address, type => type
             .WithDisplayName("Address")
-            .WithPart(PartiesConstants.ContentTypes.Address, part => part.WithPosition("0")));
+            .WithFieldSet(PartiesConstants.ContentTypes.Address, part => part.WithPosition("0")));
     }
 
     // Org structure: a Person holds positions in Organizations (many, in many). The
@@ -193,16 +192,16 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
     // makes the organization-side lookup a query.
     private async Task DefineOrgPositionAsync()
     {
-        await contentDefinitionManager.AlterPartDefinitionAsync(PartiesConstants.ContentTypes.OrgPosition, part => part
+        await contentDefinitionManager.AlterFieldSetDefinitionAsync(PartiesConstants.ContentTypes.OrgPosition, part => part
             .Attachable()
             .Reusable(false)
             .WithDisplayName("Organization position")
             .WithDescription("A position a person holds in an organization.")
             .WithField("Organization", field => field
-                .OfType("OptionPickerField")
+                .OfType("OptionListField")
                 .WithDisplayName("Organization")
                 .WithPosition("0")
-                .MergeSettings<OptionPickerFieldSettings>(settings =>
+                .MergeSettings<OptionListFieldSettings>(settings =>
                 {
                     settings.Multiple = false;
                     settings.SourceKey = OptionSourceKeys.ForContentItems([PartiesConstants.ContentTypes.Organization]);
@@ -223,7 +222,7 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
 
         await contentDefinitionManager.AlterTypeDefinitionAsync(PartiesConstants.ContentTypes.OrgPosition, type => type
             .WithDisplayName("Organization position")
-            .WithPart(PartiesConstants.ContentTypes.OrgPosition, part => part.WithPosition("0")));
+            .WithFieldSet(PartiesConstants.ContentTypes.OrgPosition, part => part.WithPosition("0")));
     }
 
     // An organization's legal entity names: a kinded bag like contact points, so an
@@ -231,7 +230,7 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
     // of them is a display name; the title stays the name shown (docs/parties.md).
     private async Task DefineOrganizationNameAsync()
     {
-        await contentDefinitionManager.AlterPartDefinitionAsync(PartiesConstants.ContentTypes.OrganizationName, part => part
+        await contentDefinitionManager.AlterFieldSetDefinitionAsync(PartiesConstants.ContentTypes.OrganizationName, part => part
             .Attachable()
             .Reusable(false)
             .WithDisplayName("Legal entity name")
@@ -248,7 +247,7 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
 
         await contentDefinitionManager.AlterTypeDefinitionAsync(PartiesConstants.ContentTypes.OrganizationName, type => type
             .WithDisplayName("Legal entity name")
-            .WithPart(PartiesConstants.ContentTypes.OrganizationName, part => part.WithPosition("0")));
+            .WithFieldSet(PartiesConstants.ContentTypes.OrganizationName, part => part.WithPosition("0")));
     }
 
     // An association: a typed connection between two parties beside reports-to (sales
@@ -259,7 +258,7 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
     // deferred vocabulary task.
     private async Task DefineAssociationAsync()
     {
-        await contentDefinitionManager.AlterPartDefinitionAsync(PartiesConstants.ContentTypes.Association, part => part
+        await contentDefinitionManager.AlterFieldSetDefinitionAsync(PartiesConstants.ContentTypes.Association, part => part
             .Attachable(false)
             .WithDisplayName("Association")
             .WithDescription("A typed connection between two parties that is not reports-to.")
@@ -274,24 +273,24 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
             .Listable()
             .Versionable()
             .Securable()
-            .WithPart("TitlePart", part => part.WithPosition("0"))
-            .WithPart(PartiesConstants.ContentTypes.Association, part => part.WithPosition("1")));
+            .WithFieldSet("Title", part => part.WithPosition("0"))
+            .WithFieldSet(PartiesConstants.ContentTypes.Association, part => part.WithPosition("1")));
 
-        static Grove.Contents.Management.Metadata.Builders.ContentPartFieldDefinitionBuilder PersonPicker(Grove.Contents.Management.Metadata.Builders.ContentPartFieldDefinitionBuilder field, string name, string position) => field
-            .OfType("OptionPickerField")
+        static Grove.Contents.Management.Metadata.Builders.ContentFieldDefinitionBuilder PersonPicker(Grove.Contents.Management.Metadata.Builders.ContentFieldDefinitionBuilder field, string name, string position) => field
+            .OfType("OptionListField")
             .WithDisplayName(name)
             .WithPosition(position)
-            .MergeSettings<OptionPickerFieldSettings>(settings =>
+            .MergeSettings<OptionListFieldSettings>(settings =>
             {
                 settings.Multiple = false;
                 settings.SourceKey = OptionSourceKeys.ForContentItems([PartiesConstants.ContentTypes.Person]);
             });
 
-        static Grove.Contents.Management.Metadata.Builders.ContentPartFieldDefinitionBuilder OrganizationPicker(Grove.Contents.Management.Metadata.Builders.ContentPartFieldDefinitionBuilder field, string name, string position) => field
-            .OfType("OptionPickerField")
+        static Grove.Contents.Management.Metadata.Builders.ContentFieldDefinitionBuilder OrganizationPicker(Grove.Contents.Management.Metadata.Builders.ContentFieldDefinitionBuilder field, string name, string position) => field
+            .OfType("OptionListField")
             .WithDisplayName(name)
             .WithPosition(position)
-            .MergeSettings<OptionPickerFieldSettings>(settings =>
+            .MergeSettings<OptionListFieldSettings>(settings =>
             {
                 settings.Multiple = false;
                 settings.SourceKey = OptionSourceKeys.ForContentItems([PartiesConstants.ContentTypes.Organization]);
@@ -371,7 +370,7 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
     // type from its own migration (agents.md).
     private async Task DefineLocationAsync()
     {
-        await contentDefinitionManager.AlterPartDefinitionAsync(PartiesConstants.ContentTypes.LocationPoint, part => part
+        await contentDefinitionManager.AlterFieldSetDefinitionAsync(PartiesConstants.ContentTypes.LocationPoint, part => part
             .Attachable()
             .Reusable(false)
             .WithDisplayName("Location point")
@@ -398,9 +397,9 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
 
         await contentDefinitionManager.AlterTypeDefinitionAsync(PartiesConstants.ContentTypes.LocationPoint, type => type
             .WithDisplayName("Location point")
-            .WithPart(PartiesConstants.ContentTypes.LocationPoint, part => part.WithPosition("0")));
+            .WithFieldSet(PartiesConstants.ContentTypes.LocationPoint, part => part.WithPosition("0")));
 
-        await contentDefinitionManager.AlterPartDefinitionAsync(PartiesConstants.ContentTypes.Location, part => part
+        await contentDefinitionManager.AlterFieldSetDefinitionAsync(PartiesConstants.ContentTypes.Location, part => part
             .Attachable(false)
             .WithDisplayName("Location")
             .WithDescription("A place the tenant operates from.")
@@ -427,16 +426,16 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
             .Draftable()
             .Versionable()
             .Securable()
-            .WithPart("TitlePart", part => part.WithPosition("0"))
-            .WithPart(PartiesConstants.ContentTypes.Location, part => part.WithPosition("1"))
-            .WithPart(PartiesConstants.Bags.Addresses, "BagPart", part => part
+            .WithFieldSet("Title", part => part.WithPosition("0"))
+            .WithFieldSet(PartiesConstants.ContentTypes.Location, part => part.WithPosition("1"))
+            .WithEmbedding(PartiesConstants.Bags.Addresses, embedding => embedding
                 .WithDisplayName("Addresses")
                 .WithPosition("2")
-                .WithSettings(new BagPartSettings { ContainedContentTypes = [PartiesConstants.ContentTypes.Address] }))
-            .WithPart(PartiesConstants.Bags.Points, "BagPart", part => part
+                .Allow(PartiesConstants.ContentTypes.Address))
+            .WithEmbedding(PartiesConstants.Bags.Points, embedding => embedding
                 .WithDisplayName("Points")
                 .WithPosition("3")
-                .WithSettings(new BagPartSettings { ContainedContentTypes = [PartiesConstants.ContentTypes.LocationPoint] })));
+                .Allow(PartiesConstants.ContentTypes.LocationPoint)));
     }
 
     private async Task CreateLocationIndexAsync()
@@ -478,22 +477,22 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
             .Draftable()
             .Versionable()
             .Securable()
-            .WithPart("TitlePart", part => part.WithPosition("0"))
-            .WithPart(PartiesConstants.ContentTypes.Person, part => part.WithPosition("1"))
+            .WithFieldSet("Title", part => part.WithPosition("0"))
+            .WithFieldSet(PartiesConstants.ContentTypes.Person, part => part.WithPosition("1"))
             // Parties attaches the context reference; Grove never names Person (agents.md).
-            .WithPart(RegionsConstants.Parts.RegionalProfileReference, part => part.WithPosition("5"))
-            .WithPart(PartiesConstants.Bags.ContactPoints, "BagPart", part => part
+            .WithFieldSet(RegionsConstants.FieldSets.RegionalProfileReference, part => part.WithPosition("5"))
+            .WithEmbedding(PartiesConstants.Bags.ContactPoints, embedding => embedding
                 .WithDisplayName("Contact points")
                 .WithPosition("2")
-                .WithSettings(new BagPartSettings { ContainedContentTypes = [PartiesConstants.ContentTypes.ContactPoint] }))
-            .WithPart(PartiesConstants.Bags.Addresses, "BagPart", part => part
+                .Allow(PartiesConstants.ContentTypes.ContactPoint))
+            .WithEmbedding(PartiesConstants.Bags.Addresses, embedding => embedding
                 .WithDisplayName("Addresses")
                 .WithPosition("3")
-                .WithSettings(new BagPartSettings { ContainedContentTypes = [PartiesConstants.ContentTypes.Address] }))
-            .WithPart(PartiesConstants.Bags.Positions, "BagPart", part => part
+                .Allow(PartiesConstants.ContentTypes.Address))
+            .WithEmbedding(PartiesConstants.Bags.Positions, embedding => embedding
                 .WithDisplayName("Positions")
                 .WithPosition("4")
-                .WithSettings(new BagPartSettings { ContainedContentTypes = [PartiesConstants.ContentTypes.OrgPosition] })));
+                .Allow(PartiesConstants.ContentTypes.OrgPosition)));
 
         await contentDefinitionManager.AlterTypeDefinitionAsync(PartiesConstants.ContentTypes.Organization, type => type
             .WithDisplayName("Organization")
@@ -502,21 +501,21 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
             .Draftable()
             .Versionable()
             .Securable()
-            .WithPart("TitlePart", part => part.WithPosition("0"))
-            .WithPart(PartiesConstants.ContentTypes.Organization, part => part.WithPosition("1"))
-            .WithPart(RegionsConstants.Parts.RegionalProfileReference, part => part.WithPosition("5"))
-            .WithPart(PartiesConstants.Bags.ContactPoints, "BagPart", part => part
+            .WithFieldSet("Title", part => part.WithPosition("0"))
+            .WithFieldSet(PartiesConstants.ContentTypes.Organization, part => part.WithPosition("1"))
+            .WithFieldSet(RegionsConstants.FieldSets.RegionalProfileReference, part => part.WithPosition("5"))
+            .WithEmbedding(PartiesConstants.Bags.ContactPoints, embedding => embedding
                 .WithDisplayName("Contact points")
                 .WithPosition("2")
-                .WithSettings(new BagPartSettings { ContainedContentTypes = [PartiesConstants.ContentTypes.ContactPoint] }))
-            .WithPart(PartiesConstants.Bags.Addresses, "BagPart", part => part
+                .Allow(PartiesConstants.ContentTypes.ContactPoint))
+            .WithEmbedding(PartiesConstants.Bags.Addresses, embedding => embedding
                 .WithDisplayName("Addresses")
                 .WithPosition("3")
-                .WithSettings(new BagPartSettings { ContainedContentTypes = [PartiesConstants.ContentTypes.Address] }))
-            .WithPart(PartiesConstants.Bags.OrganizationNames, "BagPart", part => part
+                .Allow(PartiesConstants.ContentTypes.Address))
+            .WithEmbedding(PartiesConstants.Bags.OrganizationNames, embedding => embedding
                 .WithDisplayName("Legal entity names")
                 .WithPosition("4")
-                .WithSettings(new BagPartSettings { ContainedContentTypes = [PartiesConstants.ContentTypes.OrganizationName] })));
+                .Allow(PartiesConstants.ContentTypes.OrganizationName)));
     }
 
     // The party-domain vocabularies this module OWNS (the cross-domain ones - honorifics,
@@ -535,15 +534,15 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
     {
         ShellScope.AddDeferredTask(async scope =>
         {
-            var contentPartLists = scope.ServiceProvider.GetRequiredService<IContentPartListService>();
+            var optionLists = scope.ServiceProvider.GetRequiredService<IOptionListService>();
 
-            await SeedPartyVocabulariesAsync(contentPartLists);
+            await SeedPartyVocabulariesAsync(optionLists);
         });
     }
 
-    private static async Task SeedPartyVocabulariesAsync(IContentPartListService contentPartLists)
+    private static async Task SeedPartyVocabulariesAsync(IOptionListService optionLists)
     {
-        await contentPartLists.SeedAsync(new ContentPartListSeed(
+        await optionLists.SeedAsync(new OptionListSeed(
             PartiesOptionSets.ContactPointKind,
             "Contact point kind",
             [
@@ -560,7 +559,7 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
                 new(ContactPointKinds.Other, "Other", Category: "other"),
             ]));
 
-        await contentPartLists.SeedAsync(new ContentPartListSeed(
+        await optionLists.SeedAsync(new OptionListSeed(
             PartiesOptionSets.AddressKind,
             "Address kind",
             [
@@ -573,7 +572,7 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
 
         // The legal form only: a trade name is a "dba" legal entity name of the
         // organization, not a kind of organization (docs/parties.md).
-        await contentPartLists.SeedAsync(new ContentPartListSeed(
+        await optionLists.SeedAsync(new OptionListSeed(
             PartiesOptionSets.OrganizationType,
             "Organization type",
             [
@@ -586,7 +585,7 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
 
         // Kinds of legal entity name. "dba" is where trade names live (the organization
         // type is the legal form only); a superseded name becomes "former".
-        await contentPartLists.SeedAsync(new ContentPartListSeed(
+        await optionLists.SeedAsync(new OptionListSeed(
             PartiesOptionSets.OrganizationNameKind,
             "Legal entity name kind",
             [
@@ -598,7 +597,7 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
 
         // Association types: the module's own types are seeded and data-locked (code
         // may branch on them); tenants add their own types on top.
-        await contentPartLists.SeedAsync(new ContentPartListSeed(
+        await optionLists.SeedAsync(new OptionListSeed(
             PartiesOptionSets.AssociationType,
             "Association type",
             [
@@ -607,13 +606,13 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
             ],
             DataLock: true));
 
-        await contentPartLists.AttachToContentTypeAsync(
+        await optionLists.AttachToContentTypeAsync(
             PartiesOptionSets.OrganizationType, PartiesConstants.ContentTypes.Organization, "OrganizationType", "Organization type");
         // Industry is NAICS, all levels, held once in the global store (ruling
         // 2026-10-06); tenants add their own industries as additions over it.
-        await contentPartLists.AttachToContentTypeAsync(
+        await optionLists.AttachToContentTypeAsync(
             GlobalLists.Naics, PartiesConstants.ContentTypes.Organization, "Industry", "Industry");
-        await contentPartLists.AttachToContentTypeAsync(
+        await optionLists.AttachToContentTypeAsync(
             PartiesOptionSets.AssociationType, PartiesConstants.ContentTypes.Association, "Type", "Type",
             settings => settings.Required = true);
     }
@@ -634,18 +633,18 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
     {
         ShellScope.AddDeferredTask(async scope =>
         {
-            var contentPartLists = scope.ServiceProvider.GetRequiredService<IContentPartListService>();
+            var optionLists = scope.ServiceProvider.GetRequiredService<IOptionListService>();
 
-            await contentPartLists.AttachToContentTypeAsync(
+            await optionLists.AttachToContentTypeAsync(
                 PartiesOptionSets.ContactPointKind, PartiesConstants.ContentTypes.ContactPoint, "Kind", "Kind",
                 settings => settings.Required = true);
-            await contentPartLists.AttachToContentTypeAsync(
+            await optionLists.AttachToContentTypeAsync(
                 GlobalPhoneCountryCodes, PartiesConstants.ContentTypes.ContactPoint, "PhoneCountry", "Phone country");
 
-            await contentPartLists.AttachToContentTypeAsync(
+            await optionLists.AttachToContentTypeAsync(
                 PartiesOptionSets.AddressKind, PartiesConstants.ContentTypes.Address, "Kind", "Kind",
                 settings => settings.Required = true);
-            await contentPartLists.AttachToContentTypeAsync(
+            await optionLists.AttachToContentTypeAsync(
                 PartiesOptionSets.OrganizationNameKind, PartiesConstants.ContentTypes.OrganizationName, "Kind", "Kind",
                 settings => settings.Required = true);
         });
@@ -653,7 +652,7 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
 
     // Tenants provisioned before the global reference lists were wired in.
     // Person's name furniture and language come from Grove's shared GLOBAL lists
-    // (seeded by the Grove.Contents.PartLists feature itself) rather than lists this
+    // (seeded by the Grove.Contents.OptionLists feature itself) rather than lists this
     // module owns - honorifics, name suffixes and languages cross every domain
     // boundary.
     //
@@ -666,11 +665,11 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
     {
         ShellScope.AddDeferredTask(async scope =>
         {
-            var contentPartLists = scope.ServiceProvider.GetRequiredService<IContentPartListService>();
+            var optionLists = scope.ServiceProvider.GetRequiredService<IOptionListService>();
 
-            await contentPartLists.AttachToContentTypeAsync(GlobalLists.Honorifics, PartiesConstants.ContentTypes.Person, "Honorific", "Honorific");
-            await contentPartLists.AttachToContentTypeAsync(GlobalLists.NameSuffixes, PartiesConstants.ContentTypes.Person, "Suffix", "Suffix");
-            await contentPartLists.AttachToContentTypeAsync(GlobalLists.Languages, PartiesConstants.ContentTypes.Person, "PreferredLanguage", "Preferred language");
+            await optionLists.AttachToContentTypeAsync(GlobalLists.Honorifics, PartiesConstants.ContentTypes.Person, "Honorific", "Honorific");
+            await optionLists.AttachToContentTypeAsync(GlobalLists.NameSuffixes, PartiesConstants.ContentTypes.Person, "Suffix", "Suffix");
+            await optionLists.AttachToContentTypeAsync(GlobalLists.Languages, PartiesConstants.ContentTypes.Person, "PreferredLanguage", "Preferred language");
         });
     }
 }

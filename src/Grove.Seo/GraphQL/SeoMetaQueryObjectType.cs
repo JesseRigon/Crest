@@ -5,11 +5,11 @@ using Grove.Seo.Models;
 
 namespace Grove.Seo.GraphQL;
 
-public class SeoMetaQueryObjectType : ObjectGraphType<SeoMetaPart>
+public class SeoMetaQueryObjectType : ObjectGraphType<SeoMetaFieldSet>
 {
     public SeoMetaQueryObjectType(IStringLocalizer<SeoMetaQueryObjectType> S)
     {
-        Name = nameof(SeoMetaPart);
+        Name = nameof(SeoMetaFieldSet);
         Description = S["SEO meta fields"];
 
         Field(x => x.Render)

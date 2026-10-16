@@ -22,7 +22,7 @@ public class PartyRoleBaseTests
         var organization = new ContentItem { ContentType = PartiesConstants.ContentTypes.Organization };
         Assert.False(IndividualOrganizationService.IsIndividual(organization));
 
-        organization.Alter<ContentPart>(PartiesConstants.ContentTypes.Organization, part =>
+        organization.Alter<ContentFieldSet>(PartiesConstants.ContentTypes.Organization, part =>
             part.Alter<BooleanField>(PartiesConstants.OrganizationFields.Individual, field => field.Value = true));
         Assert.True(IndividualOrganizationService.IsIndividual(organization));
 

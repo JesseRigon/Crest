@@ -14,8 +14,8 @@ public sealed class AutorouteContentRouteSource(ISession session) : IContentRout
     public async Task<(IReadOnlyList<(string Path, string ContentItemId)> Items, int Total)> QueryAsync(string? search, int skip, int take, CancellationToken cancellationToken = default)
     {
         var query = string.IsNullOrWhiteSpace(search)
-            ? session.QueryIndex<AutoroutePartIndex>(index => index.Published)
-            : session.QueryIndex<AutoroutePartIndex>(index => index.Published && index.Path.Contains(search.Trim()));
+            ? session.QueryIndex<AutorouteIndex>(index => index.Published)
+            : session.QueryIndex<AutorouteIndex>(index => index.Published && index.Path.Contains(search.Trim()));
 
         var total = await query.CountAsync();
         var rows = await query.OrderBy(index => index.Path).Skip(skip).Take(take).ListAsync();

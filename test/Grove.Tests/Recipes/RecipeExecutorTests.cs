@@ -52,12 +52,12 @@ public class RecipeExecutorTests
             // Assert
             var recipeStep = (recipeEventHandlers.Single() as RecipeEventHandler).Context.Step;
 
-            Assert.Equal(expected, recipeStep.SelectNode("data[0].TitlePart.Title").ToString());
+            Assert.Equal(expected, recipeStep.SelectNode("data[0].Title.Title.Text").ToString());
         });
     }
 
     [Fact]
-    public async Task ContentDefinitionStep_PartNameIsMissingRecipeExecutionException_Succeeds()
+    public async Task ContentDefinitionStep_FieldSetNameIsMissingRecipeExecutionException_Succeeds()
     {
         using var context = new BlogContext();
         await context.InitializeAsync();

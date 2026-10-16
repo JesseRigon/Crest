@@ -102,15 +102,15 @@ public sealed class Migrations : DataMigration
 
         foreach (var contentTypeDefinition in contentTypeDefinitions)
         {
-            foreach (var partDefinition in contentTypeDefinition.Parts)
+            foreach (var partDefinition in contentTypeDefinition.FieldSets)
             {
-                await _contentDefinitionManager.AlterPartDefinitionAsync(partDefinition.Name, partBuilder =>
+                await _contentDefinitionManager.AlterFieldSetDefinitionAsync(partDefinition.Name, partBuilder =>
                 {
-                    if (partDefinition.Settings.TryGetPropertyValue("ContentIndexSettings", out var existingPartSettings) &&
+                    if (partDefinition.Settings.TryGetPropertyValue("ContentIndexSettings", out var existingFieldSetSettings) &&
                         !partDefinition.Settings.ContainsKey(nameof(LuceneContentIndexSettings)))
                     {
-                        var included = existingPartSettings["Included"];
-                        var analyzed = existingPartSettings["Analyzed"];
+                        var included = existingFieldSetSettings["Included"];
+                        var analyzed = existingFieldSetSettings["Analyzed"];
 
                         if (included is not null)
                         {
@@ -118,19 +118,19 @@ public sealed class Migrations : DataMigration
                             {
                                 if ((bool)included && !(bool)analyzed)
                                 {
-                                    existingPartSettings["Keyword"] = true;
+                                    existingFieldSetSettings["Keyword"] = true;
                                 }
                             }
                             else
                             {
                                 if ((bool)included)
                                 {
-                                    existingPartSettings["Keyword"] = true;
+                                    existingFieldSetSettings["Keyword"] = true;
                                 }
                             }
                         }
 
-                        var jExistingPartSettings = existingPartSettings.AsObject();
+                        var jExistingPartSettings = existingFieldSetSettings.AsObject();
 
                         // We remove unnecessary properties from old releases.
                         jExistingPartSettings.Remove("Analyzed");
@@ -145,17 +145,17 @@ public sealed class Migrations : DataMigration
             }
         }
 
-        var partDefinitions = await _contentDefinitionManager.LoadPartDefinitionsAsync();
+        var partDefinitions = await _contentDefinitionManager.LoadFieldSetDefinitionsAsync();
 
         foreach (var partDefinition in partDefinitions)
         {
-            await _contentDefinitionManager.AlterPartDefinitionAsync(partDefinition.Name, partBuilder =>
+            await _contentDefinitionManager.AlterFieldSetDefinitionAsync(partDefinition.Name, partBuilder =>
             {
-                if (partDefinition.Settings.TryGetPropertyValue("ContentIndexSettings", out var existingPartSettings) &&
+                if (partDefinition.Settings.TryGetPropertyValue("ContentIndexSettings", out var existingFieldSetSettings) &&
                     !partDefinition.Settings.ContainsKey(nameof(LuceneContentIndexSettings)))
                 {
-                    var included = existingPartSettings["Included"];
-                    var analyzed = existingPartSettings["Analyzed"];
+                    var included = existingFieldSetSettings["Included"];
+                    var analyzed = existingFieldSetSettings["Analyzed"];
 
                     if (included != null)
                     {
@@ -163,19 +163,19 @@ public sealed class Migrations : DataMigration
                         {
                             if ((bool)included && !(bool)analyzed)
                             {
-                                existingPartSettings["Keyword"] = true;
+                                existingFieldSetSettings["Keyword"] = true;
                             }
                         }
                         else
                         {
                             if ((bool)included)
                             {
-                                existingPartSettings["Keyword"] = true;
+                                existingFieldSetSettings["Keyword"] = true;
                             }
                         }
                     }
 
-                    var jExistingPartSettings = existingPartSettings.AsObject();
+                    var jExistingPartSettings = existingFieldSetSettings.AsObject();
 
                     // We remove unnecessary properties from old releases.
                     jExistingPartSettings.Remove("Analyzed");

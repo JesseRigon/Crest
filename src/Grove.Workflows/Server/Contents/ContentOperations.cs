@@ -191,7 +191,7 @@ public sealed class ContentOperationService(
                 return $"Field {pathText} does not exist on {item.ContentType}.";
             }
 
-            fields.WriteField(item, path, field.FieldDefinition.Name, value);
+            fields.WriteField(item, path, field.FieldTypeDefinition.Name, value);
         }
 
         return null;
@@ -304,7 +304,7 @@ public class ContentOperation : Activity
         return string.IsNullOrWhiteSpace(id) ? null : id;
     }
 
-    /// <summary>The synthetic field inputs' values as field JSON, keyed Part.Field; unset inputs are left out.</summary>
+    /// <summary>The synthetic field inputs' values as field JSON, keyed FieldSet.Field; unset inputs are left out.</summary>
     private Dictionary<string, JsonObject?> Values(ActivityExecutionContext context)
     {
         var values = new Dictionary<string, JsonObject?>(StringComparer.OrdinalIgnoreCase);
@@ -339,8 +339,7 @@ public static class ContentFieldValues
         ["BooleanField"] = (typeof(bool?), "Value"),
         ["DateField"] = (typeof(DateTime?), "Value"),
         ["DateTimeField"] = (typeof(DateTime?), "Value"),
-        ["UserPickerField"] = (typeof(IList<string>), "UserIds"),
-        ["OptionPickerField"] = (typeof(IList<string>), "SelectedIds"),
+        ["OptionListField"] = (typeof(IList<string>), "SelectedIds"),
     };
 
     /// <summary>The CLR type a field kind is set with; null for a kind set only by Copy fields.</summary>
@@ -376,7 +375,7 @@ public static class ContentFieldValues
 /// <summary>
 /// Emits one <see cref="ActivityDescriptor"/> per content type and operation (the registry's
 /// content operations, docs/workflows.md › Tasks › 3): create and update take the type's
-/// fields as typed synthetic inputs (<c>Part.Field</c>); every operation carries the gate's
+/// fields as typed synthetic inputs (<c>FieldSet.Field</c>); every operation carries the gate's
 /// permission (the owner variation of the operation's content permission) asked against the
 /// type, so the per-type permissions decide. The CLR type is always
 /// <see cref="ContentOperation"/>.
@@ -418,11 +417,11 @@ public sealed class ContentOperationActivityProvider(IContentDefinitionManager d
 
         if (writes)
         {
-            foreach (var part in type.Parts)
+            foreach (var part in type.FieldSets)
             {
-                foreach (var field in part.PartDefinition.Fields)
+                foreach (var field in part.FieldSetDefinition.Fields)
                 {
-                    if (ContentFieldValues.ClrTypeOf(field.FieldDefinition.Name) is not { } clrType)
+                    if (ContentFieldValues.ClrTypeOf(field.FieldTypeDefinition.Name) is not { } clrType)
                     {
                         continue;
                     }
@@ -433,7 +432,7 @@ public sealed class ContentOperationActivityProvider(IContentDefinitionManager d
                     {
                         Name = syntheticName,
                         DisplayName = field.DisplayName() is { Length: > 0 } display ? display : path,
-                        Description = $"{path} ({field.FieldDefinition.Name}). Empty leaves the field as it is.",
+                        Description = $"{path} ({field.FieldTypeDefinition.Name}). Empty leaves the field as it is.",
                         Type = clrType,
                         IsWrapped = true,
                         IsSynthetic = true,
@@ -442,7 +441,7 @@ public sealed class ContentOperationActivityProvider(IContentDefinitionManager d
                         ValueGetter = activity => activity.SyntheticProperties.TryGetValue(syntheticName, out var value) ? value : null,
                         ValueSetter = (activity, value) => activity.SyntheticProperties[syntheticName] = value!,
                     };
-                    fieldsByInput[syntheticName] = [path, field.FieldDefinition.Name];
+                    fieldsByInput[syntheticName] = [path, field.FieldTypeDefinition.Name];
                     inputs.Add(input);
                 }
             }

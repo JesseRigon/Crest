@@ -79,7 +79,7 @@ public sealed class Startup : StartupBase
         services.AddSingleton<Organizations.OrganizationScopedTypes>();
         services.AddIndexProvider<Organizations.OrganizationIndexProvider>();
         services.AddDataMigration<Organizations.GroveOrganizationIndexMigrations>();
-        services.AddContentPart<Organizations.GroveOrganizationPart>();
+        services.AddContentFieldSet<Organizations.OwningOrganizationFieldSet>();
         services.AddScoped<Grove.Access.IScopeProvider, Organizations.OrganizationScopeProvider>();
     }
 }

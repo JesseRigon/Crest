@@ -25,6 +25,7 @@ using Grove.Contents.Recipes;
 using Grove.Contents.Security;
 using Grove.Contents.Services;
 using Grove.Contents.Sitemaps;
+using Grove.Data;
 using Grove.Data.Migration;
 using Grove.Deployment;
 using Grove.Display.Management;
@@ -57,6 +58,7 @@ public sealed class Startup : StartupBase
         // (their definitions are Grove.Contents.Types'; the groups' pages list items).
         services.AddApiContributor<Api.ContentItemsApi>();
         services.AddApiExceptionMapper<Api.ContentSaveRefusedExceptionMapper>();
+        services.AddApiExceptionMapper<Api.ContentLifecycleRefusedExceptionMapper>();
         services.AddScoped<Grove.ContentGroups.ContentGroupService>();
         services.AddScoped<Grove.ContentGroups.IContentGroupEntryResolver, Grove.ContentGroups.ContentTypeGroupEntryResolver>();
         services.AddDynamicPageSource<Grove.ContentGroups.ContentGroupPages>();
@@ -67,10 +69,10 @@ public sealed class Startup : StartupBase
             o.MemberAccessStrategy.Register<ContentItem>();
             o.MemberAccessStrategy.Register<ContentElement>();
             o.MemberAccessStrategy.Register<ShapeViewModel<ContentItem>>();
-            o.MemberAccessStrategy.Register<ContentTypePartDefinition>();
-            o.MemberAccessStrategy.Register<ContentPartFieldDefinition>();
+            o.MemberAccessStrategy.Register<ContentTypeFieldSetDefinition>();
             o.MemberAccessStrategy.Register<ContentFieldDefinition>();
-            o.MemberAccessStrategy.Register<ContentPartDefinition>();
+            o.MemberAccessStrategy.Register<ContentFieldTypeDefinition>();
+            o.MemberAccessStrategy.Register<ContentFieldSetDefinition>();
 
             o.Filters.AddFilter("display_text", DisplayTextFilter.DisplayText);
 
@@ -152,8 +154,18 @@ public sealed class Startup : StartupBase
 
         services.AddDataMigration<Migrations>();
 
+        // Embedded content items (docs/content-engine.md › Embedded content items): stable ids,
+        // the accessor, validation and snapshots; the embedded-item index; the parent's search
+        // document; the display.
+        services.AddScoped<IContentHandler, Embedding.EmbeddedContentHandler>();
+        services.AddScopedIndexProvider<Embedding.EmbeddedContentItemIndexProvider>();
+        services.AddScoped<IDocumentIndexHandler, Embedding.EmbeddedContentSearchIndexHandler>();
+        services.AddScoped<IContentDisplayDriver, Embedding.EmbeddedContentDisplayDriver>();
+        services.AddScoped<Grove.Services.IOptionSourceProvider, Embedding.EmbeddedContentOptionSourceProvider>();
+        services.AddScoped<IEmbeddedContentItemResolver, Embedding.EmbeddedContentItemResolver>();
+
         // Common Part: its editors are the editor tree's (the creation date and the owner).
-        services.AddContentPart<CommonPart>();
+        services.AddContentFieldSet<CommonFieldSet>();
 
         // FullTextAspect
         services.AddScoped<IContentHandler, FullTextAspectContentHandler>();
@@ -260,6 +272,7 @@ public sealed class DataLocalizationStartup : StartupBase
     {
         services.AddScoped<ILocalizationDataProvider, ContentTypeDataLocalizationProvider>();
         services.AddScoped<ILocalizationDataProvider, ContentFieldDataLocalizationProvider>();
+        services.AddScoped<ILocalizationDataProvider, ContentDefinitionLabelsDataLocalizationProvider>();
     }
 }
 

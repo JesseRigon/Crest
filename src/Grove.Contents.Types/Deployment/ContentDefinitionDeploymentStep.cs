@@ -23,5 +23,5 @@ public class ContentDefinitionDeploymentStep : DeploymentStep
 
     public string[] ContentTypes { get; set; }
 
-    public string[] ContentParts { get; set; }
+    public string[] ContentFieldSets { get; set; }
 }

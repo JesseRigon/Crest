@@ -3,22 +3,22 @@ using Grove.Contents.Management.Metadata.Models;
 
 namespace Grove.Data.Indexing;
 
-public class BuildFieldIndexContext : BuildPartIndexContext
+public class BuildFieldIndexContext : BuildFieldSetIndexContext
 {
     public BuildFieldIndexContext(
         ContentItemDocumentIndex documentIndex,
         ContentItem contentItem,
         IList<string> keys,
-        ContentPart contentPart,
-        ContentTypePartDefinition typePartDefinition,
-        ContentPartFieldDefinition partFieldDefinition,
+        ContentFieldSet contentFieldSet,
+        ContentTypeFieldSetDefinition typeFieldSetDefinition,
+        ContentFieldDefinition partFieldDefinition,
         IContentIndexSettings settings)
-        : base(documentIndex, contentItem, keys, typePartDefinition, settings)
+        : base(documentIndex, contentItem, keys, typeFieldSetDefinition, settings)
     {
-        ContentPartFieldDefinition = partFieldDefinition;
-        ContentPart = contentPart;
+        ContentFieldDefinition = partFieldDefinition;
+        ContentFieldSet = contentFieldSet;
     }
 
-    public ContentPart ContentPart { get; }
-    public ContentPartFieldDefinition ContentPartFieldDefinition { get; }
+    public ContentFieldSet ContentFieldSet { get; }
+    public ContentFieldDefinition ContentFieldDefinition { get; }
 }

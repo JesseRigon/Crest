@@ -9,12 +9,12 @@ namespace Grove.Display.Components.Editors;
 
 /// <summary>
 /// The editor of an item's own page body (docs/widgets.md, ruling 2026-10-13: the
-/// <c>DisplayTreePart</c>): the tree as JSON until the designer canvas is scoped to one item.
+/// <c>DisplayTreeFieldSet</c>): the tree as JSON until the designer canvas is scoped to one item.
 /// Every edit is checked like a template (<see cref="DisplayTreeValidator.ValidateStored"/>:
 /// registered components, properties that fit the schema, sound wiring; nothing in it can be
 /// code), the problems shown under it; the server checks again when the item is saved.
 /// </summary>
-[BlazorComponent("DisplayTreeEditor", DisplayName = "Page body", Category = "Editors", Icon = "dashboard_customize", Edits = ["DisplayTreePart"])]
+[BlazorComponent("DisplayTreeEditor", DisplayName = "Page body", Category = "Editors", Icon = "dashboard_customize", Edits = ["DisplayTree"])]
 public sealed class DisplayTreeEditor : FieldEditorBase
 {
     private static readonly JsonSerializerOptions s_indented = new() { WriteIndented = true };

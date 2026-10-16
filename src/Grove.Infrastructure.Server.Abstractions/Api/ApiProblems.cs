@@ -23,7 +23,7 @@ public static class ApiProblems
     /// <summary>
     /// The errors raised below the API layer in this request (the content manager's refusals, the
     /// part and field handlers' validation): the error contract's map, keyed by field path
-    /// (<c>Part.Field</c>), setting name or <c>""</c>.
+    /// (<c>FieldSet.Field</c>), setting name or <c>""</c>.
     /// </summary>
     public static IResult Validation(Grove.Validation.IValidationSink sink) => Validation(sink.Errors);
 

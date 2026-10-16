@@ -37,4 +37,11 @@
     <PackageReference Include="Markdig" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- The field set's behaviour is system flows: its activities on the engine. -->
+    <ProjectReference Include="..\Grove.Workflows\Abstractions\Grove.Workflows.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Workflows\engine\src\modules\Grove.Workflows.Core\Grove.Workflows.Core.csproj" />
+    <ProjectReference Include="..\Grove.Workflows\engine\src\modules\Grove.Workflows.Engine\Grove.Workflows.Engine.csproj" />
+  </ItemGroup>
+
 </Project>

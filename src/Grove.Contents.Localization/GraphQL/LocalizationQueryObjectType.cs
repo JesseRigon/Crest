@@ -9,11 +9,11 @@ using Grove.Contents.Management.GraphQL.Queries.Types;
 
 namespace Grove.Contents.Localization.GraphQL;
 
-public class LocalizationQueryObjectType : ObjectGraphType<LocalizationPart>
+public class LocalizationQueryObjectType : ObjectGraphType<LocalizationFieldSet>
 {
     public LocalizationQueryObjectType(IStringLocalizer<LocalizationQueryObjectType> S)
     {
-        Name = "LocalizationPart";
+        Name = "LocalizationFieldSet";
         Description = S["Localization cultures for your content item."];
 
         Field(x => x.Culture).Description(S["The culture for your content item."]);
@@ -25,7 +25,7 @@ public class LocalizationQueryObjectType : ObjectGraphType<LocalizationPart>
             .ResolveLockedAsync(GetContentItemsByLocalizationSetAsync);
     }
 
-    private static async ValueTask<IEnumerable<ContentItem>> GetContentItemsByLocalizationSetAsync(IResolveFieldContext<LocalizationPart> context)
+    private static async ValueTask<IEnumerable<ContentItem>> GetContentItemsByLocalizationSetAsync(IResolveFieldContext<LocalizationFieldSet> context)
     {
         var culture = context.GetArgument<string>("culture");
         var contentLocalizationManager = context.RequestServices.GetService<IContentLocalizationManager>();

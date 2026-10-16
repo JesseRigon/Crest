@@ -5,18 +5,18 @@ namespace Grove.Contents.Taxonomies;
 
 internal static class TermAlternatesFactory
 {
-    private static readonly ConcurrentDictionary<TermPartAlternatesCacheKey, string[]> s_termPartCache = new();
+    private static readonly ConcurrentDictionary<TermFieldSetAlternatesCacheKey, string[]> s_termFieldSetCache = new();
     private static readonly ConcurrentDictionary<TermAlternatesCacheKey, string[]> s_termCache = new();
 
-    public static string[] GetTermPartAlternates(string contentType, string displayType)
+    public static string[] GetTermFieldSetAlternates(string contentType, string displayType)
     {
-        var key = new TermPartAlternatesCacheKey(contentType ?? string.Empty, displayType ?? string.Empty);
+        var key = new TermFieldSetAlternatesCacheKey(contentType ?? string.Empty, displayType ?? string.Empty);
 
-        return s_termPartCache.GetOrAdd(key, static k =>
+        return s_termFieldSetCache.GetOrAdd(key, static k =>
         [
-            $"TermPart_{k.DisplayType}",
-            $"{k.ContentType}__TermPart",
-            $"{k.ContentType}_{k.DisplayType}__TermPart"
+            $"Term_{k.DisplayType}",
+            $"{k.ContentType}__Term",
+            $"{k.ContentType}_{k.DisplayType}__Term"
         ]);
     }
 
@@ -41,7 +41,7 @@ internal static class TermAlternatesFactory
         });
     }
 
-    private readonly record struct TermPartAlternatesCacheKey(
+    private readonly record struct TermFieldSetAlternatesCacheKey(
         string ContentType,
         string DisplayType);
 

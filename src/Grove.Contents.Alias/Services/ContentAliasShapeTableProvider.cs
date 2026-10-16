@@ -15,13 +15,13 @@ public sealed class ContentAliasShapeTableProvider : ShapeTableProvider
                 var shape = displaying.Shape;
                 var contentItem = shape.GetProperty<ContentItem>("ContentItem");
 
-                if (contentItem?.TryGet<AliasPart>(out var aliasPart) == true)
+                if (contentItem?.TryGet<AliasFieldSet>(out var aliasFieldSet) == true)
                 {
                     var displayType = displaying.Shape.Metadata.DisplayType;
 
                     // Get cached alternates and add them efficiently
                     var cachedAlternates = AliasAlternatesFactory.GetAlternates(
-                        aliasPart.Alias,
+                        aliasFieldSet.Alias,
                         displayType);
 
                     displaying.Shape.Metadata.Alternates.AddRange(cachedAlternates);

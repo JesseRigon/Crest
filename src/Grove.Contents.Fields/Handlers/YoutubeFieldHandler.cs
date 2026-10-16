@@ -52,11 +52,11 @@ public class YoutubeFieldHandler : ContentFieldHandler<YoutubeField>
 
     public override Task ValidatingAsync(ValidateContentFieldContext context, YoutubeField field)
     {
-        var settings = context.ContentPartFieldDefinition.GetSettings<YoutubeFieldSettings>();
+        var settings = context.ContentFieldDefinition.GetSettings<YoutubeFieldSettings>();
 
         if (settings.Required && string.IsNullOrWhiteSpace(field.RawAddress))
         {
-            context.Fail(S["A value is required for '{0}'.", context.ContentPartFieldDefinition.DisplayName()], nameof(field.RawAddress));
+            context.Fail(S["A value is required for '{0}'.", context.ContentFieldDefinition.DisplayName()], nameof(field.RawAddress));
         }
 
         if (field.RawAddress != null)

@@ -51,12 +51,12 @@ public sealed class ContentPickerRelationshipGuard(
             return;
         }
 
-        foreach (var part in typeDefinition.Parts)
+        foreach (var part in typeDefinition.FieldSets)
         {
-            foreach (var field in part.PartDefinition.Fields.Where(field => field.FieldDefinition.Name == nameof(OptionPickerField)
-                && OptionSourceKeys.Split(field.GetSettings<OptionPickerFieldSettings>().SourceKey).Provider == OptionSourceKeys.ContentItemProvider))
+            foreach (var field in part.FieldSetDefinition.Fields.Where(field => field.FieldTypeDefinition.Name == nameof(OptionListField)
+                && OptionSourceKeys.Split(field.GetSettings<OptionListFieldSettings>().SourceKey).Provider == OptionSourceKeys.ContentItemProvider))
             {
-                var selected = item.Get<ContentPart>(part.Name)?.Get<OptionPickerField>(field.Name)?.SelectedIds ?? [];
+                var selected = item.Get<ContentFieldSet>(part.Name)?.Get<OptionListField>(field.Name)?.SelectedIds ?? [];
                 if (selected.Length == 0)
                 {
                     continue;
@@ -77,7 +77,7 @@ public sealed class ContentPickerRelationshipGuard(
             return;
         }
 
-        var contained = await contentManager.PopulateAspectAsync<ContainedContentItemsAspect>(item);
+        var contained = await contentManager.PopulateAspectAsync<EmbeddedContentItemsAspect>(item);
         foreach (var accessor in contained.Accessors)
         {
             foreach (var node in accessor.Invoke((JsonObject)item.Content).OfType<JsonObject>())
@@ -93,9 +93,9 @@ public sealed class ContentPickerRelationshipGuard(
     // A source restricted to types (or stereotypes) refuses a target of any other type; the
     // all-types source refuses a type with a stereotype. An id that resolves to no item is left
     // to the handlers - a stale reference must not block an unrelated save.
-    private async Task CheckTargetTypesAsync(ContentPartFieldDefinition field, string[] selected, List<string> errors)
+    private async Task CheckTargetTypesAsync(ContentFieldDefinition field, string[] selected, List<string> errors)
     {
-        var scope = ContentItemSourceScope.Parse(OptionSourceKeys.Split(field.GetSettings<OptionPickerFieldSettings>().SourceKey).Qualifier);
+        var scope = ContentItemSourceScope.Parse(OptionSourceKeys.Split(field.GetSettings<OptionListFieldSettings>().SourceKey).Qualifier);
 
         var rows = await session.QueryIndex<ContentItemIndex>(index => index.ContentItemId.IsIn(selected) && index.Latest).ListAsync();
         foreach (var contentType in rows.Select(row => row.ContentType).Distinct(StringComparer.Ordinal))

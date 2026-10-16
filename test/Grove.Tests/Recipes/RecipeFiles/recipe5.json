@@ -28,12 +28,12 @@
               "Securable": true
             }
           },
-          "ContentTypePartDefinitionRecords": [
+          "ContentTypeFieldSetDefinitionRecords": [
             {
-              "PartName": "Message",
+              "FieldSetName": "Message",
               "Name": "Message",
               "Settings": {
-                "ContentTypePartSettings": {
+                "ContentTypeFieldSetSettings": {
                   "Position": "5"
                 }
               }
@@ -57,8 +57,8 @@
           "Owner": "[js: parameters('AdminUserId')]",
           "Author": "[js: parameters('AdminUsername')]",
           "Message": {},
-          "TitlePart": {
-            "Title": "[sc text='some : text'/]"
+          "Title": {
+            "Title": { "Text": "[sc text='some : text'/]" }
           }
         }
       ]

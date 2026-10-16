@@ -5,7 +5,7 @@ using Grove.Contents.Localization.Models;
 
 namespace Grove.Contents.Localization.GraphQL;
 
-public class LocalizationInputObjectType : WhereInputObjectGraphType<LocalizationPart>
+public class LocalizationInputObjectType : WhereInputObjectGraphType<LocalizationFieldSet>
 {
     public LocalizationInputObjectType(IStringLocalizer<LocalizationInputObjectType> stringLocalizer)
         : base(stringLocalizer)

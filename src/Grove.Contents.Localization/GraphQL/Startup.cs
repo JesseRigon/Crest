@@ -13,9 +13,9 @@ public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddInputObjectGraphType<LocalizationPart, LocalizationInputObjectType>();
-        services.AddObjectGraphType<LocalizationPart, LocalizationQueryObjectType>();
-        services.AddTransient<IIndexAliasProvider, LocalizationPartIndexAliasProvider>();
+        services.AddInputObjectGraphType<LocalizationFieldSet, LocalizationInputObjectType>();
+        services.AddObjectGraphType<LocalizationFieldSet, LocalizationQueryObjectType>();
+        services.AddTransient<IIndexAliasProvider, LocalizationIndexAliasProvider>();
         services.AddWhereInputIndexPropertyProvider<LocalizedContentItemIndex>();
     }
 }

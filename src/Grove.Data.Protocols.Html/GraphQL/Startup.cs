@@ -10,6 +10,6 @@ public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddObjectGraphType<HtmlBodyPart, HtmlBodyQueryObjectType>();
+        services.AddObjectGraphType<HtmlBodyFieldSet, HtmlBodyQueryObjectType>();
     }
 }

@@ -11,7 +11,7 @@ public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddObjectGraphType<MarkdownBodyPart, MarkdownBodyQueryObjectType>();
+        services.AddObjectGraphType<MarkdownBodyFieldSet, MarkdownBodyQueryObjectType>();
         services.AddObjectGraphType<MarkdownField, MarkdownFieldQueryObjectType>();
     }
 }

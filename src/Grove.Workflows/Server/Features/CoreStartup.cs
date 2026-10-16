@@ -177,6 +177,7 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             .AddSingleton<ShellScopedBackgroundConsumers>()
             .Configure<Grove.Workflows.Runtime.Options.StimulusSenderOptions>(options => options.QueueUnmatchedBroadcastStimuli = false)
             .AddScoped<Hooks.WorkflowHookService>()
+            .AddSingleton<Hooks.WorkflowHookAttachmentCache>()
             .AddScoped<Hooks.WorkflowHookRunner>()
             .AddScoped<IWorkflowHookRunner>(sp => sp.GetRequiredService<Hooks.WorkflowHookRunner>())
             .AddScoped<Contents.ContentFieldValueCopier>()
@@ -276,8 +277,8 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             .AddScoped<IModularTenantEvents, PopulateRegistriesTask>()
             .AddScoped<IModularTenantEvents, StartHostedServices>()
             .AddScoped<IContentHandler, WorkflowDefinitionContentHandler>()
-            .AddScoped<WorkflowDefinitionPartMapper>()
-            .AddScoped<WorkflowDefinitionPartSerializer>()
+            .AddScoped<WorkflowDefinitionFieldSetMapper>()
+            .AddScoped<WorkflowDefinitionFieldSetSerializer>()
             .AddScoped<IWorkflowUserContextAccessor, WorkflowUserContextAccessor>()
             .AddScoped<IWorkflowAuthorizer, WorkflowAuthorizer>()
             // The fifth registry: what modules contribute (triggers, flows) and the one call they make.
@@ -286,6 +287,7 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             .AddScoped<IWorkflowTriggerPublisher, WorkflowTriggerPublisher>()
             .AddScoped<IWorkflowTriggerProvider, WorkflowsTriggerProvider>()
             .AddScoped<WorkflowFlowImporter>()
+            .AddSingleton<Registry.ShippedFlowsInstaller>()
             // Drop-down options for the designer's property panel.
             .AddScoped<IPropertyUIHandler, PermissionOptionsProvider>()
             .AddScoped<IPropertyUIHandler, WorkflowTriggerOptionsProvider>()

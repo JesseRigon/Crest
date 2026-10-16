@@ -32,11 +32,11 @@ public sealed class DynamicContentFieldsIndexAliasProvider : IIndexAliasProvider
         var aliases = new List<IndexAlias>();
 
         var types = await _contentDefinitionManager.ListTypeDefinitionsAsync();
-        var parts = types.SelectMany(t => t.Parts);
+        var parts = types.SelectMany(t => t.FieldSets);
 
         foreach (var part in parts)
         {
-            foreach (var field in part.PartDefinition.Fields)
+            foreach (var field in part.FieldSetDefinition.Fields)
             {
                 foreach (var fieldProvider in _contentFieldProviders)
                 {
@@ -62,7 +62,7 @@ public sealed class DynamicContentFieldsIndexAliasProvider : IIndexAliasProvider
 
                     aliases.Add(new IndexAlias
                     {
-                        Alias = $"{fieldIndex.AliasName}:ContentPart",
+                        Alias = $"{fieldIndex.AliasName}:ContentFieldSet",
                         Index = fieldIndex.IndexType.Name,
                         IndexType = fieldIndex.IndexType,
                         IsPartial = true,
@@ -93,19 +93,19 @@ public sealed class DynamicContentFieldsIndexAliasProvider : IIndexAliasProvider
     public void ContentFieldDetached(ContentFieldDetachedContext context)
         => InvalidateInternal();
 
-    public void ContentPartAttached(ContentPartAttachedContext context)
+    public void ContentFieldSetAttached(ContentFieldSetAttachedContext context)
         => InvalidateInternal();
 
-    public void ContentPartCreated(ContentPartCreatedContext context)
+    public void ContentFieldSetCreated(ContentFieldSetCreatedContext context)
         => InvalidateInternal();
 
-    public void ContentPartDetached(ContentPartDetachedContext context)
+    public void ContentFieldSetDetached(ContentFieldSetDetachedContext context)
         => InvalidateInternal();
 
-    public void ContentPartImported(ContentPartImportedContext context)
+    public void ContentFieldSetImported(ContentFieldSetImportedContext context)
         => InvalidateInternal();
 
-    public void ContentPartRemoved(ContentPartRemovedContext context)
+    public void ContentFieldSetRemoved(ContentFieldSetRemovedContext context)
         => InvalidateInternal();
 
     public void ContentTypeCreated(ContentTypeCreatedContext context)
@@ -120,23 +120,20 @@ public sealed class DynamicContentFieldsIndexAliasProvider : IIndexAliasProvider
     public void ContentTypeUpdated(ContentTypeUpdatedContext context)
         => InvalidateInternal();
 
-    public void ContentPartUpdated(ContentPartUpdatedContext context)
+    public void ContentFieldSetUpdated(ContentFieldSetUpdatedContext context)
         => InvalidateInternal();
 
-    public void ContentTypePartUpdated(ContentTypePartUpdatedContext context)
+    public void ContentTypeFieldSetUpdated(ContentTypeFieldSetUpdatedContext context)
         => InvalidateInternal();
 
     public void ContentFieldUpdated(ContentFieldUpdatedContext context)
-        => InvalidateInternal();
-
-    public void ContentPartFieldUpdated(ContentPartFieldUpdatedContext context)
         => InvalidateInternal();
 
     public void ContentTypeImporting(ContentTypeImportingContext context)
     {
     }
 
-    public void ContentPartImporting(ContentPartImportingContext context)
+    public void ContentFieldSetImporting(ContentFieldSetImportingContext context)
     {
     }
 }

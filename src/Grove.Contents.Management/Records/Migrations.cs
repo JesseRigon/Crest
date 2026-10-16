@@ -118,20 +118,20 @@ public sealed class Migrations : DataMigration
             {
                 builder.WithSettings(existingContentTypeSettings);
 
-                foreach (var contentTypePartDefinition in contentTypeDefinition.Parts)
+                foreach (var contentTypeFieldSetDefinition in contentTypeDefinition.FieldSets)
                 {
-                    var existingTypePartSettings = contentTypePartDefinition.Settings.ToObject<ContentTypePartSettings>();
+                    var existingTypeFieldSetSettings = contentTypeFieldSetDefinition.Settings.ToObject<ContentTypeFieldSetSettings>();
 
                     // Remove existing properties from JObject
-                    var contentTypePartSettingsProperties = existingTypePartSettings.GetType().GetProperties();
-                    foreach (var property in contentTypePartSettingsProperties)
+                    var contentTypeFieldSetSettingsProperties = existingTypeFieldSetSettings.GetType().GetProperties();
+                    foreach (var property in contentTypeFieldSetSettingsProperties)
                     {
-                        contentTypePartDefinition.Settings.Remove(property.Name);
+                        contentTypeFieldSetDefinition.Settings.Remove(property.Name);
                     }
 
-                    builder.WithPart(contentTypePartDefinition.Name, contentTypePartDefinition.PartDefinition, partBuilder =>
+                    builder.WithFieldSet(contentTypeFieldSetDefinition.Name, contentTypeFieldSetDefinition.FieldSetDefinition, partBuilder =>
                     {
-                        partBuilder.WithSettings(existingTypePartSettings);
+                        partBuilder.WithSettings(existingTypeFieldSetSettings);
                     });
                 }
             });
@@ -140,29 +140,29 @@ public sealed class Migrations : DataMigration
         return 4;
     }
 
-    // Migration content part definitions.
+    // Migration field set definitions.
     // This code can be removed in a later version.
     public async Task<int> UpdateFrom4Async()
     {
-        var partDefinitions = await _contentDefinitionManager.LoadPartDefinitionsAsync();
+        var partDefinitions = await _contentDefinitionManager.LoadFieldSetDefinitionsAsync();
         foreach (var partDefinition in partDefinitions)
         {
-            var existingPartSettings = partDefinition.Settings.ToObject<ContentPartSettings>();
+            var existingFieldSetSettings = partDefinition.Settings.ToObject<ContentFieldSetSettings>();
 
             // Do this before creating builder, so settings are removed from the builder settings object.
             // Remove existing properties from JObject
-            var contentTypeSettingsProperties = existingPartSettings.GetType().GetProperties();
+            var contentTypeSettingsProperties = existingFieldSetSettings.GetType().GetProperties();
             foreach (var property in contentTypeSettingsProperties)
             {
                 partDefinition.Settings.Remove(property.Name);
             }
 
-            await _contentDefinitionManager.AlterPartDefinitionAsync(partDefinition.Name, partBuilder =>
+            await _contentDefinitionManager.AlterFieldSetDefinitionAsync(partDefinition.Name, partBuilder =>
             {
-                partBuilder.WithSettings(existingPartSettings);
+                partBuilder.WithSettings(existingFieldSetSettings);
                 foreach (var fieldDefinition in partDefinition.Fields)
                 {
-                    var existingFieldSettings = fieldDefinition.Settings.ToObject<ContentPartFieldSettings>();
+                    var existingFieldSettings = fieldDefinition.Settings.ToObject<ContentFieldSettings>();
 
                     // Do this before creating builder, so settings are removed from the builder settings object.
                     // Remove existing properties from JObject

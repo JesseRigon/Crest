@@ -10,15 +10,15 @@ public static class RegionsConstants
         public const string RegionalProfile = "GroveRegionalProfile";
     }
 
-    public static class Parts
+    public static class FieldSets
     {
-        public const string RegionalProfile = "GroveRegionalProfilePart";
+        public const string RegionalProfile = "RegionalProfile";
 
         /// <summary>
         /// Attachable by DOWNSTREAM modules to whatever carries a context (Parties attaches
         /// it to Person and Organization). Grove never names those types.
         /// </summary>
-        public const string RegionalProfileReference = "GroveRegionalProfileReferencePart";
+        public const string RegionalProfileReference = "RegionalProfileReference";
     }
 
     public static class Routes

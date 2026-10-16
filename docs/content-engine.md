@@ -61,6 +61,15 @@ item holds). The names pair up, and none of them says "part":
 The definition model is the metaschema: the language types are written in. A content type is
 a schema written in it, and a content item is a document holding data in that schema.
 
+A field set defined in code is a `ContentFieldSet` class named `…FieldSet`. Its stored name (its
+definition's name and its key in an item's JSON) is the class name without the suffix:
+`TitleFieldSet` is stored as `Title`, `AutorouteFieldSet` as `Autoroute`.
+`ContentFieldSetName.Of<T>()` derives it, and every typed access (`As<T>`, `Get<T>`,
+`WithFieldSet<T>`, the field-set registrations) goes through it. Data, display shapes and
+editors name a field set by its stored name (`Content.Title.Title.Text` in Liquid, the `Title` and
+`Title_Summary` shapes, `Edits = ["Title"]`); its settings and GraphQL type are named by its
+class (`TitleFieldSetSettings`, `TitleFieldSet`).
+
 ### Type settings and stereotypes
 
 A type's settings say how its items behave in the content screens: **creatable** (offered on
@@ -85,6 +94,12 @@ reference it.
 - **Each type has its own field set**, created with the type and named after it. It holds the
   fields that belong to that type alone, is shown as the type's general group, and is edited
   on the type's page rather than on the Field groups page.
+  A field set defined in code whose stored name is a type's name is that type's own field set:
+  its properties and the tenant's fields share one object, a field never takes a property's
+  name, and removing the type keeps the definition when code defines it or another type
+  attaches it. A field set defined in code that several types attach never takes a type's name
+  (`OptionEntryFieldSet`, `OwningOrganizationFieldSet`), so a type's own fields never reach the
+  other types.
 - **The attachment carries the per-type choices.** What differs between types that share a
   set (the attachment's name, position, editor, and whether culture affects a field) is set on
   the `ContentTypeFieldSetDefinition`, never on the shared field.
@@ -146,19 +161,59 @@ Repeating one field set is a type with a single field set, or the field set atta
 once.
 
 How the engine carries an embedding:
-- **The declaration** holds the allowed types or stereotypes, the display type the embedded content items
-  render with, and whether the editor shows them collapsed.
-- **The embedded-items accessor** tells the content system where an item's embedded content items are, so
-  taxonomies, routing, the option list field's relationship guard and routing indexes find them.
-- **Editor labels** derive from the embedding's name and the allowed types' names ("Add variant"),
-  translated through data localization, never free text in the settings.
-- **The display** is one component in the component registry that tree templates place by the
-  embedding's name.
+- **The declaration** is an `EmbeddedContentDefinition` in the type's `Embeddings`, beside its
+  field-set attachments (records: `EmbeddedContentDefinitionRecords` on the type's record, in the
+  content definition recipe step and deployment; builder: `.WithEmbedding(name, e => …)`). It
+  holds the name, display name, description and position (an embedding takes its place among the
+  type's field groups in the editor), the allowed types (type names, `@Stereotype`, or `*` when
+  the parent names the type, as a taxonomy names its term type), the minimum and maximum count,
+  whether the order is meaningful, the display type the items render with, whether the editor
+  shows them collapsed, whether they are referenceable, whether they nest, the mode and, for a
+  snapshot, the referenced values its option list fields copy. Definition locks apply: a locked
+  embedding cannot be removed, and only its display name, description and position change. The
+  Content types page edits embeddings through `PUT/DELETE api/grove/content-types/{type}/embeddings`.
+- **Nested embeddings** form a tree: each item holds its child items under the embedding's name
+  (`{ "Terms": { "ContentItems": [ { …, "Terms": { "ContentItems": [ … ] } } ] } }`), at any depth.
+  A taxonomy's terms and a menu's items are nested, referenceable embeddings (`Terms`,
+  `MenuItems`).
+- **The embedded-items accessor** (`EmbeddedContentItemsAspect`) tells the content system where an
+  item's embedded content items are: every embedding for the option list field's relationship
+  guard, the referenceable ones for routing and routing indexes. Code reads an embedding with
+  `item.Embedded(name)` and writes it with `item.AlterEmbedded(name, …)` (`EmbeddedContentItems`).
+- **Stable ids.** Every embedded item, at every depth, gets an id on its first save (create,
+  update, draft, import) and keeps it; a clone's items get ids of their own.
+- **Referenceable items** are offered by the option source `embedded:{Type}.{Embedding}` (the
+  items of the published items of the type the caller may see), and an id resolves to its parent,
+  embedding and item through `IEmbeddedContentItemResolver`.
+- **The editor** is `EmbeddedContentItemsEditor`, one per embedding, unless a component declares
+  itself the editor of that embedding (`Edits = ["Taxonomy.Terms"]`). Its labels derive from the
+  allowed types' names ("Add variant"), translated through data localization, never free text in
+  the settings. Validation refuses counts outside the limits and items of types the embedding
+  does not allow, keyed by the embedding's name.
+- **The display** is one component in the component registry (`EmbeddedContentItems`), one shape
+  per embedding named after it, so tree templates place it by the embedding's name. A module that
+  displays an embedding itself (a taxonomy's term tree, a menu) names it in
+  `EmbeddedContentDisplayOptions`.
+- **GraphQL**: each embedding is a field on its parent type's object.
 - **Indexes are declared where their domain lives** and registered with the indexing and search
-  engines. Grove.Contents, which owns embedding, declares the embedded-item index (parent, embedding,
-  type, position) and adds embedded content items' fields to the parent's search document under the
-  embedding's path, so a search finds the parent by embedded content. A module keeps its own
-  domain indexes over embedded content items in that module.
+  engines. Grove.Contents, which owns embedding, declares the embedded-item index
+  (`EmbeddedContentItemIndex`: parent, embedding, item id, type, position) and adds embedded
+  content items' fields to the parent's search document under the embedding's path, so a search
+  finds the parent by embedded content. A module keeps its own domain indexes over embedded
+  content items in that module.
+- **A snapshot freezes on publish.** The parent's publish writes, beside a snapshot embedding's
+  items, `"Schema": { "Types": { "<Type>": … }, "Items": [ ids ] }`: each type's definition as the
+  items were written in it, and the items it froze. An item frozen by an earlier publish keeps its
+  schema entry. Each option list field in a frozen item writes `Copied` beside its ids: by id, the
+  option's key and the values the embedding names. A frozen item is read through its stored
+  schema, never through its type's current definition: `IEmbeddedContentReader` yields an
+  embedding's items each with the definition it reads through, and every reader takes it from
+  there. The display builds each item with its definition (`BuildDisplayAsync(item, definition)`,
+  carried on the shape to every driver), the editor shows frozen items read-only from the schema
+  beside them, Copy and Move fields take each side's definition, and GraphQL attaches each
+  resolved item's definition to the request's resolve context for the item's own resolvers. A
+  field calculated by its definition (a text field's pattern) is
+  written as data when it is computed; embedded items keep what was written.
 - **Storage** keeps today's shape: `{ "<EmbeddingName>": { "ContentItems": [ … ] } }` in the
   parent's document, with a snapshot embedding's schema beside its items.
 
@@ -181,30 +236,48 @@ A field type is declared by the module that owns its domain:
   Grove.Contents.Fields.Abstractions);
 - the generic types (text, number, date, boolean, link, …) by Grove.Contents.Fields.
 
-**Grove.Contents.Fields is the registry.** Every field type registers there, with its editor
-and display components, its settings, its indexing and its validation. The type editor offers
-exactly what is registered, and a field type is usable in any field set.
+**Grove.Contents.Fields is the registry.** Every field type registers there from the module that
+declares it (`services.AddFieldType<TField, TSettings>()`, `ContentFieldTypeOptions`), with its
+settings, its display driver and its handler; its editor and display components are the
+component registry's, its indexing the module's index handlers. The type editor offers exactly
+what is registered, refuses any other type, and a field type is usable in any field set.
 
 ### Validation and conditions run on the one expression engine
 
 Field validation, field visibility and hook conditions are expressions in the one expression
 engine that templates and workflows use ([blazor-display.md](blazor-display.md) › One
-expression engine): the same `Expression` model, the same predicates display bindings use, the
-same Liquid.
+expression engine): the same predicates display bindings use, the same Liquid.
+
+A **field condition** is a display binding predicate whose sources are fields: a comparison
+reads a field by its path (`{ "Field": "Invoice.Status", "Operator": "==", "Operand": { "Value":
+"Voided" } }`), and `and`, `or` and `not` combine comparisons (`{ "Combinator": "or", "Terms":
+[…] }`). The operators are the display predicates' (`==`, `!=`, `empty`, `not empty`,
+`contains`, `starts_with`, `ends_with`, `>`, `<`). A field compares its comparison values: an
+option list field its option keys (its stored ids resolve to keys, compared case-insensitively),
+any other field its stored value. No value is empty, one value is that value, several are a list,
+and a list equals each value it holds. One evaluator (`FieldConditions` over `DisplayPredicates`) runs in the editor and
+on the save.
 - **A field type's checks** (required, length, range, format) are its registered validation,
-  configured per attachment.
-- **Rules across fields** are predicates over field paths (`Address.Country == "US"` makes
-  `Address.State` required), declared on the type.
-- **Visibility** is a predicate too, on any field type. The editor evaluates it as the tree
-  re-renders and exempts a hidden field from required validation; the save evaluates the same
-  predicate and clears a hidden field's value, so hidden values are never kept dormant.
-  Conditions may chain (a field visible only when another visible field has a value), and the
-  save evaluates them to a fixpoint. An option list field compares by option key: its stored
-  ids resolve to keys on both sides of the comparison.
+  configured per attachment, with errors keyed `FieldSet.Field`.
+- **Rules across fields** are declared on the type (`FieldRulesSettings`): each rule is a `When`
+  condition over `FieldSet.Field` paths, a field path and an effect. `require` makes the field required while the condition
+  holds (a field its visibility hides stays exempt); `refuse` refuses the save with the rule's
+  message under the field. A rule on a locked field cannot be added, changed or removed. They
+  are edited under the type on the Content types page.
+- **Visibility** is a field condition on any field type (`FieldVisibilitySettings.When`, on the
+  field definition). The field set is shared, so the condition names its sibling fields by bare
+  name (`Status`), read from the same attachment wherever the field set is attached. The editor evaluates it as the tree re-renders and exempts a hidden field
+  from required validation; the save evaluates the same condition and clears a hidden field's
+  value, so hidden values are never kept dormant. Conditions may chain (a field visible only
+  when another visible field has a value), and the save evaluates them to a fixpoint.
 - **A before hook** may refuse a save with errors keyed by field path.
 
-Every refusal uses one error contract: a map keyed by field path (`FieldSet.Field`, `FieldSet`,
-the empty key for the item), answered as 400 and shown under each editor.
+The content manager's validation runs on every write path (the content API's create, update,
+draft and import, the workflow content operations and activities): it clears hidden fields
+before the field types' checks, then runs the type's rules and the validating hooks. Every
+refusal uses one error contract: a map keyed by field path (`FieldSet.Field`, `FieldSet`, the
+empty key for the item), answered as 400 and shown under each editor. A save guard's refusal
+and a before hook's refusal on any other point answer the same 400.
 
 ### Picking is one field type
 
@@ -217,9 +290,19 @@ source, and every source produces an option list to pick from:
 - currencies, time zones and cultures;
 - any source a module registers.
 
-`TaxonomyField` is retired in favour of an option list field on a taxonomy source. The same goes
-for `UserPickerField` and `LocalizationSetContentPickerField`, which become option sources.
-[The option list field](#the-option-list-field) describes sources, columns and filters.
+There is no other picker field type:
+- **Filing under a taxonomy** is an option list field on `embedded:Taxonomy.Terms` (the terms are
+  the taxonomy's referenceable embedding) with a static filter on `Parent` naming the taxonomy,
+  and on `Leaf` when only leaves may be picked. With `AllowCreate`, the editor adds a tag (a new
+  root term) by name. Term pages and the content list's taxonomy filters query the option list
+  field index by the selected term id.
+- **A user reference** is an option list field on `users`, limited to some roles by a filter on
+  `Roles`.
+- **A localization set reference** ("this page, in whatever culture is read") is an option list
+  field on `localization-set:{Types}`.
+
+Recipes that still carry the retired taxonomy, user and localization set picker fields convert on
+import. [The option list field](#the-option-list-field) describes sources, columns and filters.
 
 ### Taxonomies and option lists are different things
 
@@ -250,7 +333,7 @@ declare the feature in their manifests.
 - **`OptionList`**: a title and the `OptionListFieldSet`: `Key` (the list's stable logical key,
   such as `pricing.modifier-kind`), `Source`, `OptionContentType`, `DataLock`, `EditLock`, and
   its options as referenceable embedded content items.
-- **`Option`**: a title and the `OptionFieldSet`: `Key` (what code switches on), `Source`
+- **`Option`**: a title and the `OptionEntryFieldSet`: `Key` (what code switches on), `Source`
   (Module or Tenant), `Hidden`, `Position`, `Category`, `DisplayTextPlural`, `Value`, `Parent`.
 
 **The identity rule.** Content stores the option's id, code compares `Key`, people read the
@@ -285,7 +368,7 @@ renamed freely without breaking logic.
   own lock check.
 
 **Custom fields on options.** Tenants add fields to an option content type at run time. Each
-list names its `OptionContentType` (any type carrying `OptionFieldSet`), assignable from the
+list names its `OptionContentType` (any type carrying `OptionEntryFieldSet`), assignable from the
 list header; retargeting a list that has options is refused, because existing options keep
 their stored type. Values travel as strings in a `Fields` map (null leaves a field untouched,
 blank clears it, an unknown name is a 400); one accessor knows the document shape, and numeric
@@ -350,8 +433,10 @@ in:
 | Source | Lists |
 |---|---|
 | `optionlist` | Option lists: tenant configuration, always fully in memory, one document |
-| `users` | Users, multi-column, including `Property:<dotted.path>` into the user document |
+| `users` | Users, multi-column, including `Property:<dotted.path>` into the user document; a `Roles` filter keeps the users holding any of its roles |
 | `contentitem` | Content items, with SQL pushdown, the title pattern, edit and create links |
+| `embedded` | A referenceable embedding's items (`embedded:Taxonomy.Terms`), with their parent, their path of names, whether they are a leaf and their page; adds an item by name where the owning module allows it |
+| `localization-set` | Localization sets of the listed types, named by their item in the current culture |
 | `currency`, `timezone`, `culture` | The services that own them |
 
 - The API is read with `QueryOptionSources` (Administrator, Editor, Author, Contributor), and
@@ -359,6 +444,12 @@ in:
 - A column's `Path` is interpreted by its provider, which advertises its paths; custom fields
   are `Field:<Name>`. Filter and search columns are computed even when not displayed.
 - `GetByIdsAsync` leaves out ids it cannot resolve; it never returns a hollow row.
+- A row may carry the record's page (`Url`), which the field's display links to.
+- **Adding by name.** An attachment with `AllowCreate` lets the editor add a record to a source
+  that implements `IOptionSourceInlineCreate` (`POST api/grove/option-sources/create`). The
+  attachment's static filters say where the record goes, and the source authorizes the caller.
+  The `embedded` source hands the request to the `IEmbeddedContentItemFactory` that the
+  embedding's owning module registers (Taxonomies adds a root term to the taxonomy).
 
 **Sort is a setting of the attachment, not list data.** `SortColumns`, per attachment or per
 query, applied by every provider through the shared `OptionRowSorter` ("by group" is
@@ -395,6 +486,9 @@ never re-reads the live record ([Live and snapshot embeddings](#live-and-snapsho
 `OptionListFieldIndex` is partitioned per content type (a new partition is a migration), one row
 per selected id, with the selected key carried so code can query by key without joining ids to
 keys. Display columns are never indexed: they are projections of the referenced record.
+Search indexing stores the selected ids as keywords; a selection from a nested embedding (a
+taxonomy's terms) also stores each selected item's ancestors under `{field}.Inherited`, so a
+search for a parent term finds what is filed under its children.
 
 The `contentitem` source pushes sort and filter into SQL where it can, over the text, numeric and
 boolean field indexes (Grove.Infrastructure.Server depends on `Grove.Contents.Fields.Indexing.SQL`
@@ -441,7 +535,10 @@ generating a URL, scheduling a publish, keeping a container's order and filing a
 
   The lifecycle, per type, with a hook and a trigger at each point: creating, updating,
   validating, saving a draft, publishing, unpublishing, removing, cloning, importing and
-  localizing. Each point's payload carries the item's old and new values.
+  localizing. Each point's payload carries the item's old and new values; the old values are the
+  stored version, read only when a hook or trigger needs them. A hook's refusal
+  names the fields it is about, and the content items API answers it as 400 with the errors
+  under those field paths. A hook's own write to the item it is about runs no hooks again.
 - **Flows declare the fields they depend on** ([workflows.md](workflows.md) › Field
   dependencies). Each dependency is a field path with a required marker and a read or write
   marker. At publish, a type that lacks a field a flow requires gets a warning; at run time a
@@ -454,8 +551,49 @@ generating a URL, scheduling a publish, keeping a container's order and filing a
   within each slot's policy.
 
 - **Preview runs the before hooks without committing.** Previewing an unsaved item runs its
-  hooks in a unit of work that is rolled back, so the preview shows the title, URL and other
-  values the hooks would write.
+  hooks (creating, or updating for an existing item, then publishing) in a unit of work that is
+  rolled back, so the preview shows the title, URL and other values the hooks would write. A
+  hook's refusal does not stop the preview.
+
+**What a module ships with a field set.** A field set's data, its behaviour and its read-time
+values are three separate things:
+- **Its data is fields.** The field set's values are fields defined by the owning module's
+  migration (a title is a text field `Title`, a scheduled date a date-time field). The C# class
+  stays as a typed accessor over those fields, so code reads `item.As<TitleFieldSet>().Title`
+  while Liquid, templates, recipes and the API read the field shape
+  (`Title.Title.Text`). Fields a system flow requires carry module locks. Fields the field
+  set's own editor shows, or that a flow alone writes, use the `None` editor mode
+  (`ContentFieldEditors.None`): the editor tree leaves them out. They also have no display of
+  their own (`ContentFieldDisplayModes.None`): the field set's display shows what they mean. Values that no field type can
+  hold stay properties on the field set: lists of records (SEO custom meta tags, a template's
+  inputs and outputs) and a page body's display tree.
+- **Its behaviour is system flows.** What runs at a lifecycle point and writes or checks stored
+  values (setting the display text, generating a URL, sanitizing markup, checking a page body)
+  is a module activity. The module ships the flow definitions (`Data/workflows`) and attaches
+  them to the field set's hooks through `IWorkflowFieldSetHookAttachmentProvider`. A refusal
+  names the field it is about. These flows are published to run as the system
+  (`Grove.RunsAsSystem`): they keep the module's own data consistent whoever saves the item.
+  A module that welds a field set on items rather than attaching it through the definition (a child item's `ParentContentItem`) declares it through
+  `IWorkflowWeldedFieldSetSource`, so the set's flows attach the same way.
+- **Its read-time values are read projections.** Values produced when an item is read (its
+  route values, its culture, a body rendered from Markdown, HTML or Liquid, a preview URL, SEO
+  metadata, a list's feed) are small registered projection classes, not flows: a
+  `ContentFieldSetProjection<T>` per field set, or an `IContentProjection` over the whole item.
+  They run on the item's aspect reads.
+- **Derived caches belong to the owning module.** Route entries, the alias index, the
+  localization index and the contained-item index are the module's own state. Its system flows'
+  activities maintain them on the hooks. What an activity changes outside the unit's session
+  (a cache eviction, a route or localization state refresh) waits for the commit
+  (`IDocumentStore.AfterCommit`, or a document manager's update), and a cancelled unit (a
+  refused save, a preview) runs none of it.
+
+Embedded content items have no lifecycle of their own, so behaviour over them runs on the
+parent's hooks. A menu's flows, attached to its `Menu` field set, check every item's address
+and sanitize HTML items' markup, reading each item through the definition its embedding gives
+it ([Live and snapshot embeddings](#live-and-snapshot-embeddings)).
+
+The workflow features that carry content behaviour (Grove.Workflows and its contents feature)
+are always enabled, so every module's system flows run.
 
 All behaviour data lives in fields, so it is visible, indexable, editable and usable by
 queries, the API and other flows like any other data.
@@ -464,21 +602,27 @@ What is not workflow behaviour:
 - **Indexing** is the data layer's: each field type declares how it is indexed, and the store
   maintains the indexes on save. No flow takes part.
 - **Reading** runs no flow. Flows run in the action pipelines; reads go through the read
-  pipelines ([workflows.md](workflows.md) › The four pipelines). How read-time values (an
-  item's URL, culture, rendered body) are produced is an open question below.
+  pipelines ([workflows.md](workflows.md) › The four pipelines), where read projections
+  produce the read-time values.
 
 ## Localization
 
 Every translated name goes through the localization registry ([localization.md](localization.md)):
-- **Definition labels** are localization sources: type names, field-set names, each
-  attachment's name (Billing, Shipping), field labels and descriptions, and embedding names.
-  The editor's labels ("Add variant") derive from them.
+- **Definition labels** are localization sources: type names (`Content Types`), field-set
+  names and descriptions (`Content Field Sets`), each attachment's name (Billing, Shipping;
+  `Content Field Set Attachments:{Type}`), field labels and descriptions
+  (`Content Fields:{Attachment}`), and embedding names (`Content Embeddings:{Type}`). The
+  editor's section titles, field labels and add labels ("Add variant") are read through them, and
+  so are the field displays' labels.
 - **Picked values translate through their source.** An option list field shows the label its
   source gives in the current culture (an option's, a term's, an item's), so the
   registry holds each label once, never once per field that picks it.
 - **Culture-formatted values** (amounts, quantities with units, dates) follow the culture
   settings, not a per-field translation. Whether culture affects a field is set on its
-  attachment, because a shared field may be culture-dependent on one type and not on another.
+  attachment (`FieldCultureSettings.InvariantFields`, the "Culture affects this field" switch on
+  the Content types page), because a shared field may be culture-dependent on one type and not
+  on another. A field culture does not affect displays its numbers and dates the same in every
+  culture.
 - **Field values are not translated per culture.** Translating a string field's value is not
   built.
 
@@ -500,10 +644,9 @@ through `api/grove/content-items`.
   `api/grove/lists/{id}/items`; a child is created on the create page with `?containerId=`,
   and the server fills its `ParentContentItemFieldSet`.
 - **The module that owns a field set answers what its editor needs:**
-  `api/grove/taxonomies/{id}/terms` and `/tags`, `api/grove/lists/{id}/items` and `/order`,
-  `api/grove/content-localization/{id}` and `/localize`, `api/grove/option-sources` (every
-  option list field's rows, content items included) and
-  `api/grove/content-fields/localization-sets` (the localization set source's candidates).
+  `api/grove/lists/{id}/items` and `/order`,
+  `api/grove/content-localization/{id}` and `/localize`, and `api/grove/option-sources` (every
+  option list field's rows, whatever the source: content items, terms, users, localization sets).
 - **Preview** renders the unsaved item through `api/grove/content-preview`
   (Grove.Contents.Preview).
 - **Saving** validates first and refuses with the field-path error contract
@@ -568,7 +711,7 @@ adds its own guard call.
 ### GraphQL
 
 GraphQL is generated from the operations registry ([workflows.md](workflows.md) › Generate
-the surfaces), like REST and RPC. The stock GraphQL content schema, with its per-part types, is
+the surfaces), like REST and RPC. The stock GraphQL content schema, with its per-field-set types, is
 retired. A content type's object has a field per field set and per embedding, generated from
 the definitions.
 
@@ -580,9 +723,11 @@ Two pages edit definitions, split by ownership:
   option list field's attachment editor and each field's visibility condition. It owns them
   because a field set is shared: a field change lands on every type that carries the set.
 - **Content types** owns which types carry which field sets and embeddings, each attachment's
-  settings (name, description, position), the type settings and the type's Content menu entry.
+  settings (name, description, position), the type settings, the type's field rules and its
+  Content menu entry.
 
-They are backed by `api/grove/content-types/*`, `api/grove/field-visibility` and
+They are backed by `api/grove/content-types/*` (a type's field rules at
+`api/grove/content-types/{type}/field-rules`), `api/grove/field-visibility` and
 `GET/PUT/DELETE api/grove/option-picker/attachment`, all gated by `EditContentTypes`
 (Grove.Contents.Types). Settings writes replace the whole section, never merge JSON: a merge
 would bring back deleted rows.
@@ -673,111 +818,54 @@ Templates); admin and ERP screens are Blazor pages with no Liquid path in.
   not rebaselined. The `content-type-menu-toggle` check flips a real setting through the API,
   and a crash mid-check can leave it set.
 
-## Today: content parts
+## Module field sets
 
-The engine runs on OrchardCore's content parts, kept until field sets and workflows replace
-them. A part plays several roles at once:
-- **a part made only of fields** is a field set under another name. This includes each type's
-  own part, which OrchardCore creates because it can attach fields only to parts, and the
-  part's "Reusable" setting, which allows attaching it to one type more than once;
-- **`BagPart`** is embedded content items implemented as a part: its value is a list of full
-  content items serialized inside the parent's document;
-- **code parts** hold data as part properties and run behaviour in handlers. Their data
-  becomes fields in a field set and their behaviour becomes system flows:
+The engine runs on OrchardCore's content model under the field-set names. A field set made
+only of fields is the target shape, including each type's own set and the "Reusable" setting,
+which allows attaching a set to one type more than once. The modules' field sets follow
+[What a module ships with a field set](#behaviour-is-workflows):
 
-| Code part | Behaviour | Data it keeps as part properties today |
-|---|---|---|
-| `TitlePart` | The item's title and display text | `Title` |
-| `AutoroutePart` | The item's URL | `Path`, the pattern settings |
-| `AliasPart` | A stable alias | `Alias` |
-| `PublishLaterPart`, `ArchiveLaterPart` | Scheduled publishing and archiving | the scheduled dates |
-| `ListPart` / `ContainedPart` | Child content items under a parent (a blog's posts) | the parent reference, the order |
-| `LocalizationPart` | Translations | the culture, the localization set |
-| `SeoMetaPart`, `SitemapPart` | Search metadata, sitemap entry | their settings and values |
-| `TaxonomyPart` / `TermPart` | Being a taxonomy or a term | the terms |
-| `HtmlBodyPart`, `MarkdownBodyPart` | The item's body: sanitized on save, rendered for the body aspect | the source |
-| `DisplayTreePart` | The item's page body as a display tree, indexed as text | the tree |
-| `PreviewPart` | The preview URL | its pattern setting |
-| `CommonPart` | Editing the owner and dates | none (item properties) |
-| `AuditTrailPart` | A comment recorded with the audit entry | the comment |
-| `ContentShareFolderPart` | Filing the item in a sharing folder | the folder kind and id |
-| `MenuPart`, `MenuItemsListPart` | A menu and its items | the items (embedded content items) |
-| `LinkMenuItemPart`, `HtmlMenuItemPart`, `ContentMenuItemPart`, `MenuItemPermissionPart` | A menu item's target and visibility | URL, target, markup, permissions |
-| `TemplatePart`, `DesignedPagePart` | A template and a designed page | the bound name, the source |
-| `UserNotificationPreferencesPart` | A user's notification channels (on users, not content) | the methods, the opt-outs |
-| `WorkflowDefinitionPart` | A stored workflow definition | the definition ids and version |
+| Field set | Data (fields) | Behaviour (system flows) | Read projections |
+|---|---|---|---|
+| `TitleFieldSet` | `Title` | the display text from the title; a title is required when the attachment says so | |
+| `AutorouteFieldSet` | `Path`, `SetHomepage`, `Disabled`, `RouteContainedItems`, `Absolute` | the path generated and kept unique; route entries registered; cleared on cloning and translating | route values, contained items' route values, the default route |
+| `AliasFieldSet` | `Alias` | the alias generated, checked and kept unique; the alias cache invalidated | |
+| `PublishLaterFieldSet`, `ArchiveLaterFieldSet` | the scheduled date | the schedule cleared on publishing or unpublishing | |
+| `LocalizationFieldSet` | `Culture`, `LocalizationSet` | the culture and set assigned on creating; the set cleared on cloning; the localization index kept | the culture |
+| `HtmlBodyFieldSet`, `MarkdownBodyFieldSet` | `Html`, `Markdown` | markup sanitized; Liquid checked | the rendered body |
+| `SeoMetaFieldSet`, `SitemapFieldSet` | the metadata texts, `Render`, the images; the sitemap entry's flags, frequency and priority | the canonical address and schema checked | the meta tags, the sitemap entry |
+| `TaxonomyFieldSet` / `TermFieldSet` | `TermContentType`; the term's `TaxonomyContentItemId` | terms owned by their taxonomy; the term type checked | the term's children |
+| `ChildContentItemsFieldSet` / `ParentContentItemFieldSet` (Grove.Contents.Hierarchy) | the feed settings; the parent's `ListContentItemId`, `ListContentType`, `Order` | a child filed and ordered in its list, checked against the list, ordered on cloning, joined to the translated list | the list's feed |
+| `MenuFieldSet` | none (the items are the `MenuItems` embedding) | the items' addresses checked and HTML items' markup sanitized | |
+| `LinkMenuItemFieldSet`, `HtmlMenuItemFieldSet`, `ContentMenuItemFieldSet`, `MenuItemPermissionFieldSet` | `Url`, `Target`, `Html`, `CheckContentPermissions`, `PermissionNames` | run by the menu's flows | |
+| `DisplayTreeFieldSet` | the tree (a property: no field type holds a display tree) | the page body checked | the body's text |
+| `PreviewFieldSet` | none (its pattern is an attachment setting) | | the preview URL |
+| `CommonFieldSet` | none (item properties) | | |
+| `AuditTrailFieldSet` | `Comment` | | |
+| `ContentShareFolderFieldSet` | `FolderKind`, `FolderId` | | |
+| `TemplateFieldSet`, `DesignedPageFieldSet` | the name, source and descriptive texts; `IsComposite`, `AllowAnonymous` (a template's inputs and outputs stay properties) | | |
+| `WorkflowDefinitionFieldSet` | the definition ids, version, flags and serialized definition | | |
 
-Each part's **settings** (a route pattern, the types a list allows) become settings on the
-field set's attachment; its **data** becomes fields. Parts on users and on settings become field
-sets the same way. `WorkflowDefinitionPart` keeps its behaviour in code: a workflow cannot run
-the engine that loads it.
+Each field set's **settings** (a route pattern, the types a list allows) are settings on its
+attachment. `UserNotificationPreferencesFieldSet` is stored on users, which are not content
+items, so it keeps its values as properties. `WorkflowDefinitionFieldSet`'s lifecycle runs no
+flows: a workflow cannot run the engine that loads it.
+
+What stays as content handlers is cross-cutting infrastructure, not a field set's behaviour:
+the index providers that diff versions (alias, autoroute, localization, publish-later,
+archive-later), the content manager's own handlers (versions, common dates, the full-text
+aspect, embedded items' validation), the audit trail, sharing recalculation, search indexing,
+media cleanup and import, display-tree versioning, template publishing, the menu's field-set
+weld, and the Parties and Members role, drive and group handlers.
 
 ## Code that still has to change
 
-- Parts renamed to field sets in code, in the definition store and in every screen, with the
-  same function: shared definitions, attachable more than once per type, each type's own set.
-  `ContentPartDefinition` becomes `ContentFieldSetDefinition`, `ContentTypePartDefinition`
-  becomes `ContentTypeFieldSetDefinition`, `ContentPartFieldDefinition` becomes
-  `ContentFieldDefinition` and `ContentPart` becomes `ContentFieldSet`, with their builders,
-  records, events and handlers (`AlterPartDefinitionAsync`, `ContentPartFieldSettings`,
-  `ContentTypePartSettings` included).
-- `BagPart` replaced by embedded content items declared on the parent type. From Grove.Contents.BagParts:
-  - `BagPart`, `BagPartSettings` and `BagPartSettingType` become `EmbeddedContentDefinition` on the type (the allowed content types or stereotypes);
-  - `BagPartHandler`'s contained-items aspect becomes the embedded-items accessor;
-  - `BagPartBlocksEditorSettings`' free-text labels are dropped for derived, translated labels;
-  - the `BagPart` display shape and its view model become the one display component for `EmbeddedContentItems`;
-  - the Liquid registration of `BagPartViewModel` is dropped;
-  - the two indexing handlers become Grove.Contents' embedded-item index and search contribution;
-  - the migration's two OrchardCore upgrade steps are deleted.
-- Each code part in the table above split into a field set holding its data and system flows
-  carrying its behaviour, attached as hooks and triggers on the type's lifecycle; its handlers
-  deleted.
-- Per-type content lifecycle slots: a hook (inside the saving unit of work) and a trigger
-  (after commit) at every lifecycle point, with old and new values in the payload. Today
-  workflow slots are global and content events reach workflows only after commit.
-- Field locks for fields that system flows require.
-- A field set and its system flows attach and detach together.
-- Validation, visibility and hook conditions on the one expression engine, with the field-path
-  error contract answered as 400. Today validation is part and field handlers keyed
-  `Part.Field`, and visibility is `GroveFieldVisibilitySettings { Path, Operator: Any|Equals|In,
-  Keys }` on the field definition, enforced by Grove.Contents.Types' `FieldVisibilityEnforcer`
-  with Grove.Contents.OptionPicker's `IFieldComparisonValueResolver` turning ids into keys.
-- Embedded content items keep stable ids and are indexed by them; referenceable embeddings;
-  live and snapshot embeddings, with a snapshot's schema stored beside its items.
-- Field paths renamed from `Part.Field` to `FieldSet.Field` in field dependencies, `Copy
-  fields` mappings, the error contract and templates; permission scopes from
-  `ContentPart:{type}.{part}` to `ContentFieldSet:{type}.{fieldSet}`; localization keys from
-  `Content Fields:{PartName}` to `Content Fields:{FieldSetAttachment}`.
-- The "Content Parts" page renamed "Field groups".
-- Stored keys keep their names except part-derived ones, which drop "Part": `TitlePart` is
-  stored as `Title`, `AutoroutePart` as `Autoroute`. A type's own set and embedding names are
-  unchanged.
-- Definition labels (field-set, attachment, field and embedding names) registered as
-  localization sources; a culture-affected setting per field on the attachment.
-- Preview runs before hooks in a rolled-back unit of work.
-- Content part lists renamed to option lists: the `Grove.Contents.PartLists` feature becomes
-  `Grove.Contents.OptionLists`; `ContentPartList` and `GroveContentPartListPart` become
-  `OptionList` and `OptionListFieldSet`; `GroveOptionPart` becomes `OptionFieldSet` (the type
-  stays `Option`); `GroveOptionFieldSettings` becomes `OptionFieldSettings`; the
-  `api/grove/content-part-lists` routes become `api/grove/option-lists`; the
-  `*ContentPartLists` permissions become `*OptionLists`; the `list:` source prefix, the `list`
-  content-group kind and the `contentpartlist` provider become `optionlist`;
-  `GroveContentPartListMigrations` becomes `OptionListMigrations`;
-  `Grove.Contents.PartLists.BlazorWasm` becomes `Grove.Contents.OptionLists.BlazorWasm`.
-- Grove.Contents.Lists renamed Grove.Contents.Hierarchy: `ListPart` becomes
-  `ChildContentItemsFieldSet` on the parent type (the allowed child types, page size, manual
-  order, feed) and `ContainedPart` becomes `ParentContentItemFieldSet` on each child (the
-  parent's id, the position). Screens say "Child items" and "Parent".
-- `OptionPickerField` renamed `OptionListField`, with its settings (`OptionPickerFieldSettings`),
-  editor, display, index (`OptionPickerFieldIndex`) and GraphQL type.
-- Taxonomies are labelled "Categories" in every screen.
-- `TaxonomyField`, `UserPickerField` and `LocalizationSetContentPickerField` replaced by
-  option list field sources, with their stored values converted.
-- The field types that do not register through Grove.Contents.Fields' registry yet do so.
-- Type names that carry the project name, which the naming rule forbids
-  ([architecture.md](architecture.md) › Naming): `GroveContentPartListPart`,
-  `GroveOptionPart`, `GroveRegionalProfilePart`, `GroveRegionalProfileReferencePart`,
-  `GroveOrganizationPart`, `GroveContentGroupsDocument`.
+- Code field sets that keep structured lists as properties (Fruitful's
+  `TaxSnapshotFieldSet.Lines`, `TaxRuleFieldSet.Components`, `TaxApportionmentFieldSet.Shares`)
+  become embeddings of line types.
+- A compiled execution mode per flow ([workflows.md](workflows.md) › Performance dials).
+- The stored-data upgrade ([Open questions](#open-questions)).
+- Translating a field's value per culture ([Localization](#localization)).
 
 ## Still to build
 
@@ -812,16 +900,11 @@ Nothing here is scheduled unless stated.
 
 ## Open questions
 
-- [ ] **Read-time values.** Some values are produced when an item is read, not stored: its URL
-  and route values, its culture, a body rendered from Markdown, HTML or Liquid, a preview URL,
-  the embedded-items accessor. Derived caches (route entries, localization state) live outside
-  fields too. Whether each is a declared read projection, a stored field a hook writes, or a
-  module's cache, placed on the read pipelines and their compiled or definition-based paths.
 - [ ] **Recalculating around a snapshot.** Only embeddings are snapshot, never a whole type: a
   parent's calculated fields (subtotal, tax, total) stay calculated by their hooks. Whether
   those hooks read the rules effective on the document's date, and how a published document is
   corrected once its rules have changed.
-- [ ] **Stored-data upgrade.** Item JSON is keyed by part names (`"TitlePart": { "Title": … }`),
-  and so are the definition store, recipes, indexes over part properties, audit diffs,
+- [ ] **Stored-data upgrade.** Data stored before field sets is keyed by part names
+  (`"TitlePart": { "Title": … }`), and so are its definition store, indexes, audit diffs,
   templates and localization keys. Development tenants are reset; an upgrade step that
   rewrites them is needed before data that must be kept exists.

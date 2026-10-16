@@ -2,8 +2,10 @@ using Grove.Contents.Alias.Indexes;
 using Grove.Contents.Alias.Models;
 using Grove.Contents.Management.Metadata;
 using Grove.Contents.Management.Metadata.Settings;
+using Grove.Contents.Types;
 using Grove.Data.Migration;
 using YesSql.Sql;
+using Grove.Contents.Management;
 
 namespace Grove.Contents.Alias;
 
@@ -18,19 +20,21 @@ public sealed class Migrations : DataMigration
 
     public async Task<int> CreateAsync()
     {
-        await _contentDefinitionManager.AlterPartDefinitionAsync(nameof(AliasPart), builder => builder
+        await _contentDefinitionManager.AlterFieldSetDefinitionAsync(ContentFieldSetName.Of<AliasFieldSet>(), builder => builder
             .Attachable()
             .WithDescription("Provides a way to define custom aliases for content items."));
 
-        await SchemaBuilder.CreateMapIndexTableAsync<AliasPartIndex>(table => table
-            .Column<string>("Alias", col => col.WithLength(AliasPart.MaxAliasLength))
+        await DefineAliasFieldAsync();
+
+        await SchemaBuilder.CreateMapIndexTableAsync<AliasIndex>(table => table
+            .Column<string>("Alias", col => col.WithLength(AliasFieldSet.MaxAliasLength))
             .Column<string>("ContentItemId", c => c.WithLength(26))
             .Column<bool>("Latest", c => c.WithDefault(false))
             .Column<bool>("Published", c => c.WithDefault(true))
         );
 
-        await SchemaBuilder.AlterIndexTableAsync<AliasPartIndex>(table => table
-            .CreateIndex("IDX_AliasPartIndex_DocumentId",
+        await SchemaBuilder.AlterIndexTableAsync<AliasIndex>(table => table
+            .CreateIndex("IDX_AliasIndex_DocumentId",
                 "DocumentId",
                 "Alias",
                 "ContentItemId",
@@ -39,17 +43,17 @@ public sealed class Migrations : DataMigration
         );
 
         // Shortcut other migration steps on new content definition schemas.
-        return 4;
+        return 5;
     }
 
     // This code can be removed in a later version as Latest and Published are alterations.
     public async Task<int> UpdateFrom1Async()
     {
-        await SchemaBuilder.AlterIndexTableAsync<AliasPartIndex>(table => table
+        await SchemaBuilder.AlterIndexTableAsync<AliasIndex>(table => table
             .AddColumn<bool>("Latest", c => c.WithDefault(false))
         );
 
-        await SchemaBuilder.AlterIndexTableAsync<AliasPartIndex>(table => table
+        await SchemaBuilder.AlterIndexTableAsync<AliasIndex>(table => table
             .AddColumn<bool>("Published", c => c.WithDefault(true))
         );
 
@@ -60,15 +64,15 @@ public sealed class Migrations : DataMigration
     public async Task<int> UpdateFrom2Async()
     {
         // Can't be fully created on existing databases where the 'Alias' may be of 767 chars.
-        await SchemaBuilder.AlterIndexTableAsync<AliasPartIndex>(table => table
-            // .CreateIndex("IDX_AliasPartIndex_DocumentId",
+        await SchemaBuilder.AlterIndexTableAsync<AliasIndex>(table => table
+            // .CreateIndex("IDX_AliasIndex_DocumentId",
             //    "DocumentId",
             //    "Alias",
             //    "ContentItemId",
             //    "Latest",
             //    "Published")
 
-            .CreateIndex("IDX_AliasPartIndex_DocumentId",
+            .CreateIndex("IDX_AliasIndex_DocumentId",
                 "DocumentId",
                 "Alias")
         );
@@ -81,8 +85,8 @@ public sealed class Migrations : DataMigration
     {
         // In the previous migration step, an index was not fully created,
         // but here, we can create a separate one for the missing columns.
-        await SchemaBuilder.AlterIndexTableAsync<AliasPartIndex>(table => table
-            .CreateIndex("IDX_AliasPartIndex_DocumentId_ContentItemId",
+        await SchemaBuilder.AlterIndexTableAsync<AliasIndex>(table => table
+            .CreateIndex("IDX_AliasIndex_DocumentId_ContentItemId",
                 "DocumentId",
                 "ContentItemId",
                 "Published",
@@ -91,4 +95,21 @@ public sealed class Migrations : DataMigration
 
         return 4;
     }
+
+    // The alias is a field (docs/content-engine.md › Behaviour is workflows), locked by the module:
+    // its system flows require it.
+    public async Task<int> UpdateFrom4Async()
+    {
+        await DefineAliasFieldAsync();
+        return 5;
+    }
+
+    private Task DefineAliasFieldAsync() =>
+        _contentDefinitionManager.AlterFieldSetDefinitionAsync(ContentFieldSetName.Of<AliasFieldSet>(), builder => builder
+            .WithField(AliasFieldSet.AliasField, field => field
+                .OfType("TextField")
+                .WithDisplayMode(ContentFieldDisplayModes.None)
+                .WithDisplayName("Alias")
+                .WithPosition("0")
+                .Locked()));
 }
