@@ -65,6 +65,12 @@ public class ModularTenantContainerMiddleware
                     await scope.HandleExceptionAsync(feature.Error);
                 }
             });
+
+            return;
         }
+
+        // No tenant claims this host and prefix, and the Default tenant declares a host of its own.
+        httpContext.Response.StatusCode = StatusCodes.Status404NotFound;
+        await httpContext.Response.WriteAsync("No site is configured for this address.");
     }
 }

@@ -284,6 +284,15 @@ The **tenant shell** is resolved by `ModularTenantContainerMiddleware` through t
 shell table (host and prefix, then host, then prefix, then the default) and opened as the
 request's `ShellScope`; `ModularTenantRouterMiddleware` moves the prefix into `PathBase`.
 
+**A tenant is chosen by the request's address, never by the user.** Each tenant declares its
+hosts (`RequestUrlHost`, comma-separated, wildcard subdomains as `*.example.com`) and an optional
+URL prefix; the shell table matches host with port and prefix, then host and prefix, then host
+with port, then host, then prefix. Users, roles and data are per tenant, so one user name in two
+tenants is two accounts, and auth cookies are scoped to the host name. The Default tenant
+catches only requests no other tenant claims, and only while it declares no host: development
+hosts give it their own host (`grove.localhost`, `fruitful.localhost`, `venti.localhost`), so a
+request for any other name finds no tenant.
+
 The **theme shell** is `ShellSelectionMiddleware` (a startup filter): infrastructure paths get
 a path strip only; `{shell}/api` and `/api` go through `IAccessGate.AdmitApiAsync` (the shell
 prefix decides the side; a valid `X-Shell` may only confirm it, a disagreeing one is 403, an
@@ -397,6 +406,12 @@ authorized routes) use the Access types.
   (`UserClassClaimsProvider`) beside the contributor; target: the contributor.
 - [ ] **Antiforgery and bearer callers.** Antiforgery on every write blocks bearer callers
   ([machine-actors.md](machine-actors.md)).
+- [ ] **Self-service custom domains.** A tenant's own administrator adds and removes the
+  tenant's domains and subdomains as a tenant setting, without host-level tenant administration:
+  ownership is proved by a DNS TXT record before a domain is accepted, a certificate is issued
+  and renewed for each verified domain (ACME), a domain claimed by another tenant is refused,
+  and every change reloads the running shell table. Today hosts are set only on the host's
+  Tenants page (`RequestUrlHost`).
 - [ ] **Public media and content endpoints that start a flow.** None exists, so the anonymous
   exception for them has nothing to admit yet.
 
