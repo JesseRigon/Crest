@@ -68,7 +68,7 @@ all features coexist. That holds three rules for every feature:
   invalid stays an error.
 - **Migrations write schema and definitions only.** Content (list seeds, pickers attached to
   seeded lists, default records) is written in a deferred shell-scope task, which runs after
-  every feature's migration ([content-items.md](content-items.md)): during setup the features
+  every feature's migration ([content-engine.md](content-engine.md) › Option lists): during setup the features
   migrated later have no index tables yet.
 - **Feature events do not assume tables.** `Installed`/`Enabled` events of a setup or an enable
   run before the activation that runs the migrations; a handler that needs its tables leaves the

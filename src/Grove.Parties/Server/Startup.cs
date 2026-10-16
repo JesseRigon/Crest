@@ -41,8 +41,8 @@ public sealed class Startup : StartupBase
         services.AddScoped<IPartyAssociationService, PartyAssociationService>();
         services.AddScoped<IIndividualOrganizationService, IndividualOrganizationService>();
         services.AddScoped<IPartyRoleService, PartyRoleService>();
-        // The parent picker's cycle rule, on every save path (docs/content-items.md ›
-        // Picker relationship handlers).
+        // The parent picker's cycle rule, on every save path (docs/content-engine.md ›
+        // Relationship guard).
         services.AddContentPickerRelationshipHandler<ParentOrganizationRelationshipHandler>(
             PartiesConstants.ContentTypes.Organization, PartiesConstants.OrganizationFields.ParentOrganization);
         services.AddScoped<PartyContactsService>();

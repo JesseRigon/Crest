@@ -12,7 +12,7 @@ namespace Grove.Contents.Liquid;
 /// back door: an item reaches the template only when the request's caller may view it,
 /// decided by the one access decision; with no caller nothing loads (fail-closed). The
 /// sandbox is what a template can REACH, and this is where a template reaches the store
-/// (docs/content-items.md › Fluid sandboxing).
+/// (docs/content-engine.md › Liquid over content).
 /// </summary>
 public class ContentItemFilter : ILiquidFilter
 {

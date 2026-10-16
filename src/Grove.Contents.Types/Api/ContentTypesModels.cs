@@ -23,7 +23,7 @@ public sealed record ContentType(
         source.Parts.Select(ContentTypePart.From).ToArray());
 }
 
-/// <summary>Lock is the attachment's own lock (docs/content-items.md › Definition locks): None, Tenant or Module.</summary>
+/// <summary>Lock is the attachment's own lock (docs/content-engine.md › Definition locks): None, Tenant or Module.</summary>
 public sealed record ContentTypePart(
     string Name,
     JsonObject Settings,

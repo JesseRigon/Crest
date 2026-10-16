@@ -271,8 +271,10 @@ data), `Grove.Data.Localization.ContentLanguageHeader` and `Grove.Data.Localizat
 
 ## CMS content
 
-Localized page/content-item text goes through stock Orchard Core Content Localization —
-unchanged by anything in this document.
+Content definition labels (type, field-set, attachment, field and embedding names) are
+localization sources in the registry, and picked values translate through their option source
+([content-engine.md](content-engine.md) › Localization). Translating a content item's field
+values per culture is not built.
 
 ## Planned: cross-tenant translation suggestions ("internal Crowdin")
 

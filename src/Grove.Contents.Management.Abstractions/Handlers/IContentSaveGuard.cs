@@ -5,8 +5,7 @@ namespace Grove.Contents.Management.Handlers;
 /// updating handlers and before the item is written. Unlike a content handler, whose
 /// exceptions are logged and swallowed, a guard's refusal stops the write: the content
 /// manager throws <see cref="ContentSaveRefusedException"/>. This is where a rule that
-/// generic editors must not bypass belongs (docs/content-items.md › Picker relationship
-/// handlers).
+/// generic editors must not bypass belongs (docs/content-engine.md › Relationship guard).
 /// </summary>
 public interface IContentSaveGuard
 {

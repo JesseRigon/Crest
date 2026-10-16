@@ -649,8 +649,8 @@ is specific about the fields it depends on (id, created date, the transaction pa
 status, party id, subtotal, total, ...); those are marked required and **locked in the
 shipped content type definition** so tenants cannot make them optional or hidden. The lock
 mechanism lives in Grove: the field/part-definition counterpart of Grove's option-list locks
-(None|Tenant|Module, module locks unliftable in-tenant), tracked in
-[content-items.md](content-items.md).
+(None|Tenant|Module, module locks unliftable in-tenant), described in
+[content-engine.md](content-engine.md) › Definition locks.
 
 **Activities compose.** Sub-actions such as "write a journal entry" are activities of their
 own, chained and nested like functions: `UsableAsActivity` makes a published definition a

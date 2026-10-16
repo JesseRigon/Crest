@@ -66,7 +66,7 @@ public sealed class Startup : StartupBase
 }
 
 /// <summary>
-/// Definition locks (docs/content-items.md › Definition locks). Last of all startups so the
+/// Definition locks (docs/content-engine.md › Definition locks). Last of all startups so the
 /// decorators wrap whatever the content-types services registered; a locked change answers 409.
 /// </summary>
 public sealed class DefinitionLocksStartup : StartupBase

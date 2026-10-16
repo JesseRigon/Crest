@@ -17,7 +17,7 @@ public sealed class LiquidTemplateOptionsSetup : IConfigureOptions<TemplateOptio
         // The sandbox's resource bound: Liquid is tenant-authored (title patterns, templates),
         // so a template cannot loop or recurse without end. What it can REACH is bounded by
         // the data-loading filters, which go through the caller's access decision
-        // (docs/content-items.md › Fluid sandboxing).
+        // (docs/content-engine.md › Liquid over content).
         options.MaxSteps = 1_000_000;
         options.MaxRecursion = 100;
 

@@ -24,7 +24,7 @@ Status: ☐ open, ◐ partial, ☑ done.
 - ☑ The global store needs no host call (`AddGroveGlobalStore`) (globals.md)
 - ☑ Global schema versioning moves onto `DataMigration` (queries.md)
 - ☑ One `GroveTenant` model, not two (regions.md)
-- ☑ `option_label` / `option_list` Liquid filters (content-items.md)
+- ☑ `option_label` / `option_list` Liquid filters (content-engine.md › Liquid over content)
 - ☑ "DBA" out of the organization-type seed; `convert-to-staff` removed (parties.md)
 - ☑ Platform modules' unused activity display drivers and views deleted (workflows.md)
 - ◐ Host references out of Grove's test solution and comments; a publishing gate test (architecture.md #4) - left: item-classification list move, pre-publish review
@@ -206,21 +206,29 @@ Status: ☐ open, ◐ partial, ☑ done.
 
 ## Content engine (content-engine.md)
 
-- ☐ Parts renamed to field sets in code, the definition store and screens, same function (content-engine.md › Field sets)
-- ☐ `BagPart` replaced by type nesting declared on the parent type (content-engine.md › Nested types)
-- ☐ Code parts split into a field set for their data and system flows for their behaviour, on content event hook slots ("before" slots inside the saving unit of work), with field locks for fields system flows require (content-engine.md › Behaviour is workflows)
-- ☐ Option lists renamed to enums in code (feature, types, parts, routes, permissions, client library); screens say "Option lists"; taxonomies labelled "Categories" in screens (content-engine.md › Names)
-- ☐ `TaxonomyField`, `UserPickerField` and `LocalizationSetContentPickerField` replaced by option-picker sources (content-engine.md › Picking is one field type)
+- ☐ Parts renamed to field sets in code, the definition store and screens, same function: `ContentFieldSetDefinition`, `ContentTypeFieldSetDefinition`, `ContentFieldDefinition`, `ContentFieldSet` (content-engine.md › Definitions and data in code)
+- ☐ `BagPart` replaced by `EmbeddedContentDefinition` on the parent type and `EmbeddedContentItems` in the item (content-engine.md › Embedded content items)
+- ☐ Code parts split into a field set for their data and system flows for their behaviour, attached as hooks (inside the saving unit of work) and triggers (after commit) on per-type lifecycle slots with old and new values, with field locks for fields system flows require (content-engine.md › Behaviour is workflows)
+- ☐ Validation, visibility and hook conditions on the one expression engine; one field-path error contract answered as 400 (content-engine.md › Validation and conditions)
+- ☐ Embedded content items with stable ids, referenceable embeddings, and live and snapshot embeddings (content-engine.md › Live and snapshot embeddings)
+- ☐ Field paths, permission scopes and localization keys renamed from parts to field sets; the "Content Parts" page renamed "Field groups" (content-engine.md › Code that still has to change)
+- ☐ Definition labels as localization sources; a culture-affected setting per field on the attachment (content-engine.md › Localization)
+- ☐ Preview runs before hooks in a rolled-back unit of work (content-engine.md › Behaviour is workflows)
+- ☑ content-items.md merged into content-engine.md and deleted
+- ☐ A compiled execution mode per flow, after the content engine work (workflows.md › Performance dials)
+- ☐ Content part lists renamed to option lists (`OptionList`, `Option`; feature, field sets, routes, permissions, source prefix, client library) and `OptionPickerField` renamed `OptionListField`; taxonomies labelled "Categories" in screens (content-engine.md › Code that still has to change)
+- ☐ `TaxonomyField`, `UserPickerField` and `LocalizationSetContentPickerField` replaced by option list field sources (content-engine.md › Picking is one field type)
 - ☐ Every field type registers through Grove.Contents.Fields' registry from its own module (content-engine.md › Fields and field types)
+- ☐ Grove.Contents.Lists renamed Grove.Contents.Hierarchy, with `ChildContentItemsFieldSet` and `ParentContentItemFieldSet` (content-engine.md › Code that still has to change)
 - ☐ Project name out of type names: `GroveContentPartListPart`, `GroveOptionPart`, `GroveRegionalProfilePart`, `GroveRegionalProfileReferencePart`, `GroveOrganizationPart`, `GroveContentGroupsDocument`
 
-## Content items (content-items.md)
+## Content items (content-engine.md)
 
 - ☑ Picker relationship handlers; hierarchical Category; Fluid sandboxing with data scope
 - ☑ The option picker field family to Grove.Contents.OptionPicker, contracts and DTOs in Grove.Contents.OptionPicker.Abstractions; field visibility in Grove.Contents.Types over `IFieldComparisonValueResolver` (server.md § 3, S2)
-- ☑ Content Part Lists as the `Grove.Contents.PartLists` feature of Grove.Contents (its page the `Grove.Contents.PartLists.BlazorWasm` library, served while the feature is on); the option sources API gated by Grove.Contents.OptionPicker's `QueryOptionSources` (content-items.md, server.md § 3)
+- ☑ Content Part Lists as the `Grove.Contents.PartLists` feature of Grove.Contents (its page the `Grove.Contents.PartLists.BlazorWasm` library, served while the feature is on); the option sources API gated by Grove.Contents.OptionPicker's `QueryOptionSources` (content-engine.md › Option lists, server.md § 3)
 - ☑ The option picker's UI in its module's client library, `Grove.Contents.OptionPicker.BlazorWasm`: the `OptionPicker` component and the `OptionPickerField` editor facet in the component registry (server.md § 3)
-- ☑ ContentPickerField merged into the option picker: the content items source gained types/stereotypes/all, the Liquid title pattern, edit and create links and ordered selection; definitions and stored values converted by migration and on recipe import; the display, GraphQL, Liquid, index, save guard, workflows, Menu, Parties and Fruitful moved over; the field, its settings, drivers, index, result providers (Default, Lucene, Elasticsearch, and their `*.ContentPicker` features) and the content-items endpoint of `ContentPickerApi` deleted (content-items.md › Option pickers, server.md § 3)
+- ☑ ContentPickerField merged into the option picker: the content items source gained types/stereotypes/all, the Liquid title pattern, edit and create links and ordered selection; definitions and stored values converted by migration and on recipe import; the display, GraphQL, Liquid, index, save guard, workflows, Menu, Parties and Fruitful moved over; the field, its settings, drivers, index, result providers (Default, Lucene, Elasticsearch, and their `*.ContentPicker` features) and the content-items endpoint of `ContentPickerApi` deleted (content-engine.md › The option list field, server.md § 3)
 
 ## Architecture (architecture.md)
 

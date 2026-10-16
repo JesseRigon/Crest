@@ -96,7 +96,7 @@
                                                 <GroveBadge Text="@T["{0} fields", part.Part.Fields.Length]" BadgeStyle="BadgeStyle.Info" />
                                                 @if (part.Lock != "None")
                                                 {
-                                                    @* A locked attachment stays on the type (docs/content-items.md › Definition locks). *@
+                                                    @* A locked attachment stays on the type (docs/content-engine.md › Definition locks). *@
                                                     <GroveBadge Text="@(part.Lock == "Module" ? T["Locked by module"] : T["Locked"])" BadgeStyle="BadgeStyle.Warning" data-testid="attachment-lock" />
                                                 }
                                             </GroveStack>

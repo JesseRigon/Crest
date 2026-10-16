@@ -193,7 +193,7 @@ hides survive every reseed.
   ([branding.md](branding.md)). API: `api/grove/parties/{orgId}/names`.
 - **Parent organization**: `ParentOrganization`, a picker on the Organization part restricted
   to Organization; `ParentOrganizationRelationshipHandler` refuses itself and any descendant
-  ([content-items.md](content-items.md) › Picker relationship handlers).
+  ([content-engine.md](content-engine.md) › Relationship guard).
 - **The tenant's own organization** exists **before the first user**: created at tenant setup
   by a deferred task (`ITenantOrganizationService`, titled with the site name; `EnsureAsync`
   also creates it when a staff user arrives first) because staff belong to it. It is

@@ -7,7 +7,7 @@ namespace Grove.Access.Users.Liquid;
 /// The data scope of the user-loading Liquid filters: a template sees the caller's own
 /// account, and other accounts only when the caller may view user profiles. With no
 /// caller nothing loads (fail-closed). Tenant-authored templates must not be a way to
-/// enumerate the user store (docs/content-items.md › Fluid sandboxing).
+/// enumerate the user store (docs/content-engine.md › Liquid over content).
 /// </summary>
 internal static class LiquidUserScope
 {

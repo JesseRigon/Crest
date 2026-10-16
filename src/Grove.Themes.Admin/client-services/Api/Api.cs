@@ -1649,7 +1649,7 @@ public sealed record ContentType(
     JsonObject Settings,
     ContentTypePart[] Parts);
 
-// Lock: the definition lock (None, Tenant, Module) the server reports - docs/content-items.md › Definition locks.
+// Lock: the definition lock (None, Tenant, Module) the server reports - docs/content-engine.md › Definition locks.
 public sealed record ContentTypePart(
     string Name,
     JsonObject Settings,

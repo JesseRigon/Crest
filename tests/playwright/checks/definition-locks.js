@@ -1,4 +1,4 @@
-// Definition locks (docs/content-items.md › Definition locks) from the tenant side, on a
+// Definition locks (docs/content-engine.md › Definition locks) from the tenant side, on a
 // part this check owns (GroveLockCheckPart, created if absent and left in place - there is
 // no Grove endpoint that deletes a part, and the check is idempotent). A Tenant lock on a
 // field refuses retyping, a visibility condition and an option-picker conversion (409, with

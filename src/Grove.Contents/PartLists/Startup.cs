@@ -11,7 +11,7 @@ using Grove.Security.Permissions;
 
 namespace Grove.Contents.PartLists;
 
-// Content Part Lists (docs/content-items.md): tenant-editable sets of options that modules
+// Content Part Lists (docs/content-engine.md › Option lists): tenant-editable sets of options that modules
 // declare and consume by key; tenants relabel, reorder and hide options at runtime. The
 // Grove.Contents.PartLists feature of this module; consumers declare it as a dependency.
 [Feature(PartListsFeature.Id)]
@@ -41,7 +41,7 @@ public sealed class Startup : StartupBase
     }
 }
 
-// option_list / option_label over the same service the API wraps (docs/content-items.md).
+// option_list / option_label over the same service the API wraps (docs/content-engine.md › Liquid over content).
 [Feature(PartListsFeature.Id)]
 [RequireFeatures("Grove.Display.Liquid")]
 public sealed class LiquidStartup : StartupBase

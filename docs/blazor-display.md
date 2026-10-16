@@ -510,7 +510,7 @@ Three kinds of page, one route table:
 | **Content page** (a content item with `AutoroutePart`, or a type a module routes) | Autoroute, through the site's content route component | the item's template (decision 10) |
 | **Designed page** (a tenant-authored tree with its own URL: a landing page, a dashboard, a per-type admin page) | data: a page record with route pattern + bucket (decision 9) | its stored tree |
 
-The third kind is what blazordesigner.md's page editor and content-items.md's per-type designed
+The third kind is what blazordesigner.md's page editor and content-engine.md's per-type designed
 pages need, and it is why the route table ([blazor-web.md](blazor-web.md)) accepts data-defined
 entries beside scanned ones, with the same bucket gate, the same permission check and the same
 per-tenant cache invalidation. A designed page in the admin bucket is reachable only through the
@@ -554,8 +554,8 @@ tree inline, but the route, the bucket and the authorization are the page's.
   as you type, until the designer canvas scoped to one item replaces it.
 - **Field editors** are components too: the editor tree resolves to editor components, and
   `UpdateEditorAsync` consumes the posted values. The generic content-item editor in the admin
-  shell is a rendered editor tree, not a hardcoded form, which is what per-type designed pages in
-  [content-items.md](content-items.md) need. Editors read and write through one
+  shell is a rendered editor tree, not a hardcoded form, which is what per-type designed pages
+  ([content-engine.md](content-engine.md) › Still to build) need. Editors read and write through one
   `ContentEditorContext` (with its visibility conditions and picker cascades), cascaded by the
   `ContentEditor` root, which publishes the edited content as an output. The server builds the
   editor tree as shapes (`ContentEditorTreeBuilder`, `GET api/grove/content-items/{id}/editor`,

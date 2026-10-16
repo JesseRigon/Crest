@@ -8,8 +8,8 @@ namespace Grove.Contents.Fields.Relationships;
 /// pickers (parent organization, parent location, parent account) are built in many
 /// ways, so the picker cannot know how to walk every graph; the owner can. Runs on every
 /// save path (it is called from the content manager's save guard), after the picker's own
-/// server-side checks of the allowed target types (docs/content-items.md › Picker
-/// relationship handlers).
+/// server-side checks of the allowed target types (docs/content-engine.md ›
+/// Relationship guard).
 /// </summary>
 public interface IContentPickerRelationshipHandler
 {

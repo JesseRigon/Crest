@@ -4,7 +4,7 @@ using Xunit;
 
 namespace Grove.Contents.PartLists.Tests;
 
-// option_label reads the label a human sees for what content stores (docs/content-items.md):
+// option_label reads the label a human sees for what content stores (docs/content-engine.md › Liquid over content):
 // a ContentItemId always, an option key only when the list is named.
 public class OptionLabelFilterTests
 {

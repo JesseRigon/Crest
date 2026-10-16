@@ -112,7 +112,7 @@ public sealed class ContentTypesHandlers(
             return NoContent();
         }
 
-        // A locked field keeps its type (docs/content-items.md › Definition locks); 409 via the lock filter.
+        // A locked field keeps its type (docs/content-engine.md › Definition locks); 409 via the lock filter.
         if (current is not null)
         {
             await locks.EnsureFieldChangeAsync(request.Part, request.Field, DefinitionChanges.Retyped);
@@ -256,7 +256,7 @@ public sealed class ContentTypesHandlers(
     /// <summary>
     /// Places or lifts a TENANT lock on a part definition (Part), one of its fields (Part +
     /// Field) or a part's attachment to a type (Type + Part). Module locks never move here;
-    /// the permission is LockContentDefinitions, not EditContentTypes (docs/content-items.md
+    /// the permission is LockContentDefinitions, not EditContentTypes (docs/content-engine.md
     /// › Definition locks).
     /// </summary>
     public async Task<IResult> SetLock([FromBody] SetDefinitionLockRequest request)

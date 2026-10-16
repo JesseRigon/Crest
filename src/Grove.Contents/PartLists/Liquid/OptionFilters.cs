@@ -6,8 +6,8 @@ using Fluid.Values;
 
 namespace Grove.Contents.PartLists.Liquid;
 
-// Liquid over the same service the content part lists API wraps (docs/content-items.md ›
-// Liquid filters over the services the API wraps). No authorization check: a list's
+// Liquid over the same service the content part lists API wraps (docs/content-engine.md ›
+// Liquid over content). No authorization check: a list's
 // options are labels, not data, and a template that needs a permission says so explicitly
 // (has_permission).
 

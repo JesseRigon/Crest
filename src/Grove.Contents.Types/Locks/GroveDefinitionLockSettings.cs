@@ -7,7 +7,7 @@ namespace Grove.Contents.Types;
 
 /// <summary>
 /// A lock on a content DEFINITION: a part definition, one of its fields, or a part's
-/// attachment to a type (docs/content-items.md › Definition locks). The definition-level
+/// attachment to a type (docs/content-engine.md › Definition locks). The definition-level
 /// counterpart of the option-list locks - one mechanism, two authorities
 /// (<see cref="DefinitionLockSources"/>): a Module lock is the owning module's
 /// contract (a system process downstream depends on the field being there, of that type,

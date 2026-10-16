@@ -120,8 +120,7 @@ features that bind fields to sources declare it (Grove.Parties, Grove.Data.Types
   the stored order of a multiple selection, and offers a create link per allowed creatable type the
   caller may create. On save, `ContentPickerRelationshipGuard` refuses a target of a type the source
   does not name and runs the relationship handlers the field's owner registered
-  (`IContentPickerRelationshipHandler`, [content-items.md](content-items.md) › Picker relationship
-  handlers).
+  (`IContentPickerRelationshipHandler`, [content-engine.md](content-engine.md) › Relationship guard).
 - **The UI** is the module's client library, `Grove.Contents.OptionPicker.BlazorWasm` (eager,
   `[assembly: GroveEager]`, so the editor is in the shell's component registry before any route
   loads): `GroveOptionPicker`, registered as the placeable component `OptionPicker` for templates

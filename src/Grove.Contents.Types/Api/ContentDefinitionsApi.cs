@@ -67,7 +67,7 @@ public sealed record ContentPartSettingsModel(string Name, JsonObject Settings, 
 /// docs/blazor-display.md, replacing the MVC ContentTypes admin): create and delete types and parts,
 /// remove, rename and reorder fields and parts, and every settings section of a type, a part on a
 /// type, a part and a field - settings edited as their stored JSON, so a section a module adds
-/// needs no editor. Definition locks hold on every path (docs/content-items.md › Definition locks).
+/// needs no editor. Definition locks hold on every path (docs/content-engine.md › Definition locks).
 /// </summary>
 public sealed class ContentDefinitionsHandlers(
     IContentDefinitionManager definitions,

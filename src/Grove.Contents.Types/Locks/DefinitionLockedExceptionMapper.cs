@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace Grove.Contents.Types;
 
-/// <summary>A change to a locked definition answers 409 (docs/content-items.md › Definition locks).</summary>
+/// <summary>A change to a locked definition answers 409 (docs/content-engine.md › Definition locks).</summary>
 public sealed class DefinitionLockedExceptionMapper : IApiExceptionMapper
 {
     public IResult? Map(Exception exception, HttpContext httpContext) =>
