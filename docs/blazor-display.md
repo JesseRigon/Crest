@@ -457,7 +457,9 @@ drafts, the setting for instances on inaccessible pages, and the designer UI.
   it the real path, [shells-and-themes.md › Shell dispatch](shells-and-themes.md#shell-dispatch))
   asks `api/grove/site/page?path=`, which `SitePageBuilder` (`Grove.Infrastructure.Server/Display`) answers: a
   designed page matching the path first, else the path through Autoroute (the home route for
-  `/`, `Contents/ContentItems/{id}` for an item without a route), `ViewContent` for the caller,
+  `/`, `Contents/ContentItems/{id}` for an item without a route; `/` on a tenant with no home
+  route is the site theme's default home, the layout with `Home` (200), which a template named
+  `Home` replaces), `ViewContent` for the caller,
   decision 10, then the `Layout` shape filled (the item into `Content`, the `alias:main-menu`
   menu into `Navigation`, the `ILayoutTreeContributor`s) and mapped and filtered as one tree. A
   miss is the layout with `NotFound` (404), a refusal with `Forbidden` (403). The page's query is
@@ -468,7 +470,8 @@ drafts, the setting for instances on inaccessible pages, and the designer UI.
   page as `[PersistentState]`; the status set while prerendering through
   `IShellResponseStatus`), and the components `Layout` (zones `Navigation`, `Header`, `Messages`,
   `Content`, `Sidebar`, `Footer`), `Content` (zones `Header`, `Meta`, `Content`, `Tags`,
-  `Actions`, `Footer`), `NotFound`, `Forbidden`; `GroveSite.css` on the tokens. `App.razor`'s
+  `Actions`, `Footer`), `Home` (the default home), `NotFound`, `Forbidden`; `GroveSite.css` on
+  the tokens. `App.razor`'s
   site branch loads the design system (tokens, component styles, icons, scripts). The page's
   status is applied as the response starts and the status code pages are off for it, since it
   renders its own error page.

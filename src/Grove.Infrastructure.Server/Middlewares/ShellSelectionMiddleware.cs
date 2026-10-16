@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -294,9 +295,26 @@ public sealed class ShellSelectionMiddleware(RequestDelegate next, ILogger<Shell
         // login redirect, no route authorization - its own API calls stay authorization-checked
         // server-side like every other page's. An organization-free page acts in no
         // organization, so it takes the site side (SideFor): whoever is signed in sees it.
-        if (!await Gate(context).AdmitAsync(context, SideFor(shell, page), allowAnonymous: true, organizationId))
+        // A URL naming no organization the user is bound to is the shell's not-found page, which
+        // is organization-free: admitted on the site side like every organization-free page.
+        var side = !isPage && shell.OrganizationInPath ? CallerSide.Site : SideFor(shell, page);
+        if (!await Gate(context).AdmitAsync(context, side, allowAnonymous: true, organizationId))
         {
-            return;
+            // A refused page shows the shell's error page in its place, as a visitor of the
+            // shell's base (the status code pages run inside this middleware, so they never see
+            // this refusal). A redirect (a pending sign-in step) or an API answer stays as it is.
+            if (shell.ErrorPage is null || context.Response.StatusCode != StatusCodes.Status403Forbidden || context.Response.HasStarted
+                || !await Gate(context).AdmitAsync(context, CallerSide.Site, allowAnonymous: true))
+            {
+                return;
+            }
+
+            isPage = true;
+            page = null;
+            pageRemainder = ErrorPage(shell.ErrorPage, StatusCodes.Status403Forbidden);
+            AnswerWith(context, StatusCodes.Status403Forbidden);
+            organizationId = null;
+            shellBase = shell.BasePath;
         }
 
         if (isPage && shell.FixedPage is null && page?.AllowsAnonymous != true)
@@ -319,8 +337,15 @@ public sealed class ShellSelectionMiddleware(RequestDelegate next, ILogger<Shell
                 var caller = context.RequestServices.GetRequiredService<ICallerContextAccessor>().Current;
                 if (!await routeAuthorization.CanAccessAsync(caller, pageRemainder.Value, context.RequestAborted))
                 {
-                    context.Response.StatusCode = StatusCodes.Status403Forbidden;
-                    return;
+                    if (shell.ErrorPage is null)
+                    {
+                        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                        return;
+                    }
+
+                    // The shell's error page, in place of the page the caller may not open.
+                    pageRemainder = ErrorPage(shell.ErrorPage, StatusCodes.Status403Forbidden);
+                    AnswerWith(context, StatusCodes.Status403Forbidden);
                 }
             }
         }
@@ -349,6 +374,13 @@ public sealed class ShellSelectionMiddleware(RequestDelegate next, ILogger<Shell
         var rewrittenPath = isPage
             ? (pageRemainder.HasValue ? pageRemainder : new PathString("/"))
             : new PathString(shell.NotFoundPage);
+        if (!isPage && (shell.LoginPath is null || context.User.Identity?.IsAuthenticated == true))
+        {
+            // The shell's not-found page answers with its status (a visitor of a shell that
+            // requires sign-in is sent to its login by the page's authorization instead).
+            AnswerWith(context, StatusCodes.Status404NotFound);
+        }
+
         if (!isPage && shell.OrganizationInPath)
         {
             // An organization the user is not bound to is not found at the shell base: the
@@ -372,6 +404,23 @@ public sealed class ShellSelectionMiddleware(RequestDelegate next, ILogger<Shell
             context.Request.Path = requestPath;
         }
     }
+
+    // A page rendered in place of a refusal or a miss answers with that status. The status is
+    // applied as the response starts: a page that renders while the response carries an error
+    // status is left to the status code pages, which would render a second page into the same
+    // request (as ShellResponseStatus does for the site's content page).
+    private static void AnswerWith(HttpContext context, int status)
+    {
+        context.Response.StatusCode = StatusCodes.Status200OK;
+        context.Response.OnStarting(() =>
+        {
+            context.Response.StatusCode = status;
+            return Task.CompletedTask;
+        });
+    }
+
+    // The shell's error page for a status: "{ErrorPage}/{status}" (ShellDescriptor.ErrorPage).
+    private static PathString ErrorPage(string errorPage, int status) => new(errorPage.TrimEnd('/') + "/" + status.ToString(CultureInfo.InvariantCulture));
 
     private static IAccessGate Gate(HttpContext context) => context.RequestServices.GetRequiredService<IAccessGate>();
 

@@ -26,6 +26,8 @@
 
   <ItemGroup>
     <None Update="Recipes\**\*.json" CopyToOutputDirectory="PreserveNewest" />
+    <!-- The development recipe, compared with the host's features (StandaloneHostTests). -->
+    <None Include="..\..\src\Grove.Themes.Site\Recipes\grove.dev.recipe.json" Link="DevRecipe\grove.dev.recipe.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

@@ -153,9 +153,13 @@ before publishing.
 
 ## Development recipes
 
-Reusable development recipes live under `Grove.Themes.Site/Recipes`: `GroveBasicDev` for a
-focused admin shell and `GroveFullDev` for broad feature testing. Host apps keep
-tenant/user autosetup recipes in the host repo.
+Development recipes live under `Grove.Themes.Site/Recipes`. `GroveDev` is the setup recipe a
+host's development auto-setup names: every Grove feature (see
+[docs/feature-enablement.md](docs/feature-enablement.md) › Every feature enabled), the admin,
+site and member themes, the dev roles, a layer and the admin menu layout. Grove runs on its own
+in [Grove.Host](https://github.com/JesseRigon/Grove.Host), whose auto-setup provisions the
+Default tenant from it; the tenant's admin account is the host's (`admin` / `GroveRules1!` there).
+`GroveBasicDev` and `GroveFullDev` adjust the features of an existing tenant.
 
 ## Validation
 

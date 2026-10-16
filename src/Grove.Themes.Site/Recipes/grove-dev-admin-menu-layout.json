@@ -1,0 +1,61 @@
+{
+  "items": [
+    {
+      "itemKey": "new",
+      "parentKey": null,
+      "order": 2,
+      "hidden": false,
+      "displayText": null,
+      "iconClass": null
+    },
+    {
+      "itemKey": "Organization",
+      "parentKey": null,
+      "order": null,
+      "hidden": false,
+      "displayText": null,
+      "iconClass": null
+    },
+    {
+      "itemKey": "Person",
+      "parentKey": null,
+      "order": null,
+      "hidden": false,
+      "displayText": null,
+      "iconClass": null
+    },
+    {
+      "itemKey": "custom-8141948acc6c4d2594a0d5838916bad2",
+      "parentKey": null,
+      "order": 5,
+      "hidden": false,
+      "displayText": null,
+      "iconClass": null
+    },
+    {
+      "itemKey": "Option list",
+      "parentKey": null,
+      "order": null,
+      "hidden": false,
+      "displayText": null,
+      "iconClass": null
+    },
+    {
+      "itemKey": "Regional profile",
+      "parentKey": null,
+      "order": null,
+      "hidden": false,
+      "displayText": null,
+      "iconClass": null
+    }
+  ],
+  "customItems": [
+    {
+      "key": "custom-8141948acc6c4d2594a0d5838916bad2",
+      "text": "Platform",
+      "url": null,
+      "iconClass": "@iconify:at-icons:galaxy"
+    }
+  ],
+  "separators": []
+}

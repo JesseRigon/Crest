@@ -137,7 +137,7 @@ Dispatch is a registry of shells, with Site as the fallback:
   rather than a code change in every place that dispatches.
 - **The registry** (`ShellRegistryOptions`, `Grove.Routing`) lists `ShellDescriptor`s: base
   path, shell, caller side, theme detector, authentication policy (login path, route
-  authorization), not-found page, and whether pages carry the organization in their path.
+  authorization), not-found page, error page, and whether pages carry the organization in their path.
   Grove registers admin, its login page and member from the tenant's configured paths
   (`ShellRegistryConfiguration`); a host adds its own with `services.Configure`.
   Every tenant reserves the member prefix, Members enabled or not.
@@ -437,6 +437,12 @@ member portal (`Grove.Access.Members`' `member-wasm`) and the site pages (Grove.
 - **Error pages**: one shared set per tenant (`GroveErrorPage` at `/Error/{status}`), editable
   per tenant and laid out by the admin theme (§ Required pages); the shells' prefixes do not
   multiply it. The status code pages re-execute to that set; API paths keep their bare status.
+  A page the shell selection refuses (the admin route authorization, a caller the access gate
+  denies) renders the shell's error page (`ShellDescriptor.ErrorPage`, `/Error/403`; each theme
+  owns its own) in its place, answered 403, since the status code
+  pages run inside the shell selection; a URL no page of the shell answers renders the shell's
+  not-found page, answered 404. A member URL naming an organization the user holds no binding
+  to is that not-found page, admitted on the site side like every organization-free page.
   Not changed: an API refusal that redirects to `/Error/403` (Diagnostics re-execution of a page).
 - Pages that make the browser receive a cookie (the account pages, registration, the two-factor
   pages, the external sign-in completion, the consent page for its antiforgery cookie) declare
@@ -459,7 +465,7 @@ make a theme operational and a site load.
 | --- | --- |
 | Admin theme | the error pages, the admin home (index), the admin shell's sign-in and registration pages |
 | Member theme | the member registration pages, the member home |
-| Site theme | the site home (index) |
+| Site theme | the site home (index): the item the home route names, else the theme's default home (`Home`) |
 
 Which shell lays out an Access screen is fixed by this table, not a setting: the login,
 registration, password reset and two-factor settings have no "use the site theme" choice. The

@@ -38,6 +38,10 @@ public static class MemberRoutePaths
     /// (docs/media.md § 8).</summary>
     public const string Files = "/files";
 
+    /// <summary>The member shell's error pages, <c>{Error}/{status}</c>: the status code pages and a
+    /// refused member page render them. Organization-free.</summary>
+    public const string Error = "/Error";
+
     /// <summary>Shown for a member URL with no member page. Organization-free.</summary>
     public const string NotFound = "/not-found";
 

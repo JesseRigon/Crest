@@ -31,6 +31,9 @@ public sealed class StandaloneHost : IAsyncLifetime
 
     public IShellHost ShellHost => _app!.Services.GetRequiredService<IShellHost>();
 
+    /// <summary>The host's own services (the extension manager, the shell host).</summary>
+    public IServiceProvider Services => _app!.Services;
+
     public async ValueTask InitializeAsync()
     {
         // A web root of the instance's own (media caches write under it); the build output has none.

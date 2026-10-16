@@ -84,6 +84,9 @@ public sealed class SitePageBuilder(
 {
     public const string MainMenuAlias = "alias:main-menu";
 
+    /// <summary>The shape of the site's default home page, shown at "/" until the tenant sets a home route.</summary>
+    public const string DefaultHomeShape = "Home";
+
     private const string DetailDisplayType = "Detail";
 
     public async Task<SitePage> BuildAsync(string? path, CancellationToken cancellationToken = default)
@@ -95,6 +98,13 @@ public sealed class SitePageBuilder(
         if (await designedPages.MatchAsync(Grove.Display.Templates.Models.DesignedPagesConstants.SiteBucket, Normalize(path)) is { } designed)
         {
             return await BuildDesignedAsync(designed.Page, designed.Values, cancellationToken);
+        }
+
+        // The site's home before the tenant chose one (no home route): the shipped default home
+        // page, the Home shape, which a tenant template named Home replaces.
+        if (Normalize(path) == "/" && HomeContentItemId(site) is null)
+        {
+            return await DefaultHomeAsync(site, caller, cancellationToken);
         }
 
         var contentItemId = await ResolveAsync(path, site);
@@ -170,7 +180,7 @@ public sealed class SitePageBuilder(
         var normalized = Normalize(path);
         if (normalized == "/")
         {
-            return site.HomeRoute is { } home && home.TryGetValue(autorouteOptions.Value.ContentItemIdKey, out var id) ? id as string : null;
+            return HomeContentItemId(site);
         }
 
         const string itemPrefix = "/Contents/ContentItems/";
@@ -181,6 +191,15 @@ public sealed class SitePageBuilder(
 
         var (found, entry) = await autorouteEntries.TryGetEntryByPathAsync(normalized);
         return found ? entry.ContentItemId : null;
+    }
+
+    private string? HomeContentItemId(ISite site) =>
+        site.HomeRoute is { } home && home.TryGetValue(autorouteOptions.Value.ContentItemIdKey, out var id) ? id as string : null;
+
+    private async Task<SitePage> DefaultHomeAsync(ISite site, CallerContext? caller, CancellationToken cancellationToken)
+    {
+        var shape = await shapeFactory.CreateAsync(DefaultHomeShape, Arguments.From(new { site.SiteName }));
+        return new SitePage(200, Title(null, site), await BuildLayoutAsync(shape, item: null, pageTitle: null, site, caller, cancellationToken));
     }
 
     private async Task<SitePage> ErrorPageAsync(int status, string shapeType, string title, ISite site, CallerContext? caller, CancellationToken cancellationToken)

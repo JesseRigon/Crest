@@ -1,5 +1,5 @@
-@attribute [Route("/Error")]
-@attribute [Route("/Error/{Status:int}")]
+@attribute [Route(MemberRoutePaths.Error)]
+@attribute [Route(MemberRoutePaths.Error + "/{Status:int}")]
 @attribute [AllowAnonymous]
 @attribute [Grove.Display.Components.Modules.OrganizationFreePage]
 @namespace Grove.Themes.Members.Pages

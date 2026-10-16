@@ -188,3 +188,33 @@ public sealed class SiteForbidden : ComponentBase
         builder.CloseElement();
     }
 }
+
+/// <summary>
+/// The site's default home page (<c>Home</c>): what "/" shows until the tenant sets a home route
+/// (an item made the home page) or a template named <c>Home</c> replaces it.
+/// </summary>
+[BlazorComponent("Home", DisplayName = "Default home", Category = "Pages", Icon = "home")]
+public sealed class SiteHome : ComponentBase
+{
+    [Parameter]
+    public string? SiteName { get; set; }
+
+    [Parameter]
+    public string Message { get; set; } = "This site is ready. Its home page has not been chosen yet.";
+
+    protected override void BuildRenderTree(RenderTreeBuilder builder)
+    {
+        builder.OpenElement(0, "section");
+        builder.AddAttribute(1, "class", "grove-site__home");
+        builder.AddAttribute(2, "data-testid", "site-home");
+        builder.OpenElement(3, "h1");
+        builder.AddAttribute(4, "class", "grove-site__title");
+        builder.AddContent(5, string.IsNullOrWhiteSpace(SiteName) ? "Welcome" : $"Welcome to {SiteName}");
+        builder.CloseElement();
+        builder.OpenElement(6, "p");
+        builder.AddAttribute(7, "class", "grove-site__notice");
+        builder.AddContent(8, Message);
+        builder.CloseElement();
+        builder.CloseElement();
+    }
+}

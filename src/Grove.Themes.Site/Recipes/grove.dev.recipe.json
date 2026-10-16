@@ -1,0 +1,339 @@
+{
+  "name": "GroveDev",
+  "displayName": "Grove Dev",
+  "description": "Development setup for Grove on its own: every Grove feature, the admin, site and member themes, a dev admin menu layout and layer. Grove.Cms.Web auto-sets up the Default tenant from it in Development.",
+  "author": "Grove",
+  "website": "",
+  "version": "1.0.0",
+  "issetuprecipe": true,
+  "categories": [
+    "default"
+  ],
+  "tags": [
+    "dev",
+    "grove",
+    "sqlite"
+  ],
+  "excludedFeatures": {
+    "Grove.Infrastructure.Setup": "Setup-only: it runs in the uninitialized shell that provisions a tenant (the host's setup features), never in a provisioned tenant.",
+    "Grove.Infrastructure.Setup.Auto": "Setup-only: the host enables it for the uninitialized shell (AddSetupFeatures) to run this recipe; it has no role in a provisioned tenant."
+  },
+  "variables": {},
+  "steps": [
+    {
+      "name": "feature",
+      "enable": [
+        "Grove",
+        "Grove.Access",
+        "Grove.Access.Members",
+        "Grove.Access.OpenId",
+        "Grove.Access.OpenId.Client",
+        "Grove.Access.OpenId.Management",
+        "Grove.Access.OpenId.Server",
+        "Grove.Access.OpenId.Validation",
+        "Grove.Access.Roles",
+        "Grove.Access.Roles.Core",
+        "Grove.Access.Sharing",
+        "Grove.Access.Users",
+        "Grove.Access.Users.2FA",
+        "Grove.Access.Users.2FA.AuthenticatorApp",
+        "Grove.Access.Users.2FA.Email",
+        "Grove.Access.Users.2FA.Sms",
+        "Grove.Access.Users.AuditTrail",
+        "Grove.Access.Users.Authentication.CacheTicketStore",
+        "Grove.Access.Users.ChangeEmail",
+        "Grove.Access.Users.CustomUserSettings",
+        "Grove.Access.Users.ExternalAuthentication",
+        "Grove.Access.Users.Localization",
+        "Grove.Access.Users.Registration",
+        "Grove.Access.Users.ResetPassword",
+        "Grove.Access.Users.TimeZone",
+        "Grove.AuditTrail",
+        "Grove.Communications",
+        "Grove.Communications.Email",
+        "Grove.Communications.Notifications.Email",
+        "Grove.Communications.Notifications.Portal",
+        "Grove.Communications.Notifications.Sms",
+        "Grove.Communications.Screens",
+        "Grove.Communications.Sms",
+        "Grove.Contents",
+        "Grove.Contents.AdminMenu",
+        "Grove.Contents.Alias",
+        "Grove.Contents.ArchiveLater",
+        "Grove.Contents.Deployment.AddToDeploymentPlan",
+        "Grove.Contents.Deployment.Download",
+        "Grove.Contents.Deployment.ExportContentToDeploymentTarget",
+        "Grove.Contents.Fields",
+        "Grove.Contents.Fields.Indexing.SQL",
+        "Grove.Contents.FileContentDefinition",
+        "Grove.Contents.Hierarchy",
+        "Grove.Contents.Localization",
+        "Grove.Contents.Localization.ContentCulturePicker",
+        "Grove.Contents.Localization.Sitemaps",
+        "Grove.Contents.Markdown",
+        "Grove.Contents.OptionLists",
+        "Grove.Contents.OptionPicker",
+        "Grove.Contents.Preview",
+        "Grove.Contents.PublishLater",
+        "Grove.Contents.SiteMenu",
+        "Grove.Contents.Taxonomies",
+        "Grove.Contents.Taxonomies.ContentsAdminList",
+        "Grove.Contents.Title",
+        "Grove.Contents.Types",
+        "Grove.Contents.VersionPruning",
+        "Grove.Data.Cache.Dynamic",
+        "Grove.Data.Connectors",
+        "Grove.Data.Feeds",
+        "Grove.Data.Global",
+        "Grove.Data.Indexing",
+        "Grove.Data.Indexing.Worker",
+        "Grove.Data.Localization",
+        "Grove.Data.Localization.AdminCulturePicker",
+        "Grove.Data.Localization.ContentLanguageHeader",
+        "Grove.Data.Localization.Translations",
+        "Grove.Data.Protection.Azure",
+        "Grove.Data.Protocols.GraphQL",
+        "Grove.Data.Protocols.Html",
+        "Grove.Data.Protocols.Https",
+        "Grove.Data.Protocols.Imap",
+        "Grove.Data.Protocols.OpenApi",
+        "Grove.Data.Protocols.OpenApi.ReDocUI",
+        "Grove.Data.Protocols.OpenApi.ScalarUI",
+        "Grove.Data.Protocols.OpenApi.SwaggerUI",
+        "Grove.Data.Protocols.Pop",
+        "Grove.Data.Protocols.SignalR",
+        "Grove.Data.Protocols.SignalR.Azure",
+        "Grove.Data.Protocols.SignalR.Redis",
+        "Grove.Data.Protocols.Smtp",
+        "Grove.Data.Queries",
+        "Grove.Data.Queries.Connections",
+        "Grove.Data.Queries.Core",
+        "Grove.Data.Queries.Sql",
+        "Grove.Data.Regions",
+        "Grove.Data.ResponseCompression",
+        "Grove.Data.Types.Money",
+        "Grove.Data.Types.Spatial",
+        "Grove.Deployment",
+        "Grove.Deployment.Remote",
+        "Grove.DesignSystem",
+        "Grove.Diagnostics",
+        "Grove.Diagnostics.MiniProfiler",
+        "Grove.Display.Icons",
+        "Grove.Display.Icons.TenantMedia",
+        "Grove.Display.Layers",
+        "Grove.Display.Liquid",
+        "Grove.Display.Liquid.Core",
+        "Grove.Display.Navigation",
+        "Grove.Display.Placements",
+        "Grove.Display.Placements.FileStorage",
+        "Grove.Display.Resources",
+        "Grove.Display.Rules",
+        "Grove.Display.Templates",
+        "Grove.HomeRoute",
+        "Grove.Infrastructure.CustomSettings",
+        "Grove.Infrastructure.Features",
+        "Grove.Infrastructure.HealthChecks",
+        "Grove.Infrastructure.Recipes",
+        "Grove.Infrastructure.Recipes.Core",
+        "Grove.Infrastructure.Server.ReverseProxy",
+        "Grove.Infrastructure.Settings",
+        "Grove.Infrastructure.Shells.Admin",
+        "Grove.Infrastructure.Tenants",
+        "Grove.Infrastructure.Tenants.Distributed",
+        "Grove.Infrastructure.Tenants.FeatureProfiles",
+        "Grove.Infrastructure.Tenants.FileProvider",
+        "Grove.Integrations.AI.Azure",
+        "Grove.Integrations.Facebook",
+        "Grove.Integrations.Facebook.Login",
+        "Grove.Integrations.Facebook.Pixel",
+        "Grove.Integrations.GitHub",
+        "Grove.Integrations.GitHub.Authentication",
+        "Grove.Integrations.Google",
+        "Grove.Integrations.Google.Analytics",
+        "Grove.Integrations.Google.GoogleAuthentication",
+        "Grove.Integrations.Google.TagManager",
+        "Grove.Integrations.Microsoft.AzureAD",
+        "Grove.Integrations.Microsoft.Email",
+        "Grove.Integrations.Microsoft.Graph",
+        "Grove.Integrations.Microsoft.GraphMail",
+        "Grove.Integrations.Microsoft.GraphMailbox",
+        "Grove.Integrations.Microsoft.MicrosoftAccount",
+        "Grove.Integrations.Microsoft.Sms",
+        "Grove.Integrations.Redis",
+        "Grove.Integrations.Redis.Bus",
+        "Grove.Integrations.Redis.Cache",
+        "Grove.Integrations.Redis.DataProtection",
+        "Grove.Integrations.Redis.Lock",
+        "Grove.Integrations.Twilio",
+        "Grove.Integrations.Twitter",
+        "Grove.Integrations.Twitter.Signin",
+        "Grove.Media",
+        "Grove.Media.AmazonS3",
+        "Grove.Media.AmazonS3.ImageCache",
+        "Grove.Media.AmazonS3.ImageSharpImageCache",
+        "Grove.Media.Azure.ImageCache",
+        "Grove.Media.Azure.ImageSharpImageCache",
+        "Grove.Media.Azure.Storage",
+        "Grove.Media.Cache",
+        "Grove.Media.ImageSharpV3",
+        "Grove.Media.Indexing",
+        "Grove.Media.Indexing.OpenXML",
+        "Grove.Media.Indexing.Pdf",
+        "Grove.Media.Indexing.Text",
+        "Grove.Media.Scanning",
+        "Grove.Media.Security",
+        "Grove.Media.SignalR",
+        "Grove.Media.Slugify",
+        "Grove.Media.Tus",
+        "Grove.Parties",
+        "Grove.Parties.SampleRole",
+        "Grove.Routes",
+        "Grove.Routes.Auto",
+        "Grove.Scripting",
+        "Grove.Search",
+        "Grove.Search.AzureAI",
+        "Grove.Search.Elasticsearch",
+        "Grove.Search.Elasticsearch.Worker",
+        "Grove.Search.Lucene",
+        "Grove.Search.Lucene.Worker",
+        "Grove.Security",
+        "Grove.Security.Antivirus.ClamAV",
+        "Grove.Security.Cors",
+        "Grove.Security.RateLimits",
+        "Grove.Security.ReCaptcha",
+        "Grove.Security.ReCaptcha.Users",
+        "Grove.Seo",
+        "Grove.Seo.Sitemaps",
+        "Grove.Seo.Sitemaps.Cleanup",
+        "Grove.Shortcodes",
+        "Grove.Shortcodes.Templates",
+        "Grove.Themes",
+        "Grove.Themes.Admin",
+        "Grove.Themes.Members",
+        "Grove.Themes.Site",
+        "Grove.Workflows",
+        "Grove.Workflows.BackgroundTasks",
+        "Grove.Workflows.Contents",
+        "Grove.Workflows.Http",
+        "Grove.Workflows.Samples"
+      ]
+    },
+    {
+      "name": "themes",
+      "admin": "Grove.Themes.Admin",
+      "site": "Grove.Themes.Site"
+    },
+    {
+      "name": "settings",
+      "SiteName": "Grove Dev",
+      "CurrentAdminThemeName": "Grove.Themes.Admin",
+      "LocalizationSettings": {
+        "DefaultCulture": "en-US",
+        "SupportedCultures": [
+          "en-US",
+          "es-ES"
+        ],
+        "FallBackToParentCulture": true
+      },
+      "AdminSettings": {
+        "DisplayThemeToggler": true,
+        "DisplayMenuFilter": true,
+        "DisplayNewMenu": true,
+        "DisplayTitlesInTopbar": false
+      }
+    },
+    {
+      "name": "OpenIdServerSettings",
+      "AccessTokenFormat": "JsonWebToken",
+      "EnableTokenEndpoint": true,
+      "AllowClientCredentialsFlow": true
+    },
+    {
+      "name": "OpenIdValidationSettings"
+    },
+    {
+      "name": "Roles",
+      "Roles": [
+        {
+          "Name": "Editor",
+          "Description": "Can edit site content.",
+          "Permissions": [
+            "EditContent",
+            "ViewContent"
+          ]
+        },
+        {
+          "Name": "Author",
+          "Description": "Can author site content.",
+          "Permissions": [
+            "EditOwnContent",
+            "ViewContent"
+          ]
+        },
+        {
+          "Name": "Moderator",
+          "Description": "Grants users the ability to moderate content.",
+          "Permissions": []
+        },
+        {
+          "Name": "Contributor",
+          "Description": "Grants users the ability to contribute content.",
+          "Permissions": []
+        },
+        {
+          "Name": "WorkflowEditor",
+          "Description": "Authors the tenant's own workflows: view, edit, publish and run; not the shipped templates or connections.",
+          "Permissions": [
+            "AccessAdminPanel",
+            "ViewGroveWorkflows",
+            "EditGroveWorkflows",
+            "PublishGroveWorkflows",
+            "RunGroveWorkflows"
+          ]
+        },
+        {
+          "Name": "WorkflowViewer",
+          "Description": "Reads workflows, instances and journals; changes nothing.",
+          "Permissions": [
+            "AccessAdminPanel",
+            "ViewGroveWorkflows"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "GroveAdminMenuLayout",
+      "file": "grove-dev-admin-menu-layout.json"
+    },
+    {
+      "name": "Layers",
+      "Layers": [
+        {
+          "Name": "Always",
+          "Description": "Every site page",
+          "LayerRule": {
+            "Conditions": [
+              {
+                "Name": "BooleanCondition",
+                "Value": true
+              }
+            ]
+          }
+        }
+      ],
+      "Placements": [
+        {
+          "Id": "dev-counter",
+          "Layer": "Always",
+          "Zone": "Footer",
+          "Component": "GroveCounter",
+          "Properties": {
+            "StartValue": 5
+          },
+          "Position": 1,
+          "Title": "Interactive counter (dev)"
+        }
+      ]
+    }
+  ]
+}

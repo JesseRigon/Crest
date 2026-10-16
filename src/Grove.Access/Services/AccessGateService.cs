@@ -39,7 +39,14 @@ public sealed class AccessGateService(ILogger<AccessGateService> logger) : IAcce
         {
             logger.LogInformation("Request on {Path} refused by the caller factory: {Reason}", context.Request.Path, denied.Message);
             context.Response.StatusCode = StatusCodes.Status403Forbidden;
-            await context.Response.WriteAsync(denied.Message);
+
+            // An API call gets the reason; a page gets no body, so the status code pages render
+            // the shell's error page (/Error/403) in its place.
+            if (AccessGate.IsApiPath(context.Request.Path))
+            {
+                await context.Response.WriteAsync(denied.Message);
+            }
+
             return false;
         }
 

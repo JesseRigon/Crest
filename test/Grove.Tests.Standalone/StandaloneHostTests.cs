@@ -1,4 +1,6 @@
+using System.Text.Json.Nodes;
 using Grove.Data.Global.Services;
+using Grove.Environment.Extensions;
 using Grove.Environment.Shell;
 using Grove.Data.Types.Money.Abstractions;
 using Grove.Parties.Services;
@@ -97,10 +99,48 @@ public sealed class StandaloneHostTests(StandaloneHost host) : IClassFixture<Sta
     [Fact]
     public async Task TheSiteAndTheAdminLoginServe()
     {
+        // No home route is set: "/" is the site theme's default home, not a miss.
         using var root = await host.Client.GetAsync(string.Empty, TestContext.Current.CancellationToken);
-        Assert.True((int)root.StatusCode < 500, $"GET / answered {(int)root.StatusCode}");
+        root.EnsureSuccessStatusCode();
+        Assert.Contains("site-home", await root.Content.ReadAsStringAsync(TestContext.Current.CancellationToken), StringComparison.Ordinal);
 
         using var login = await host.Client.GetAsync("login", TestContext.Current.CancellationToken);
         login.EnsureSuccessStatusCode();
+    }
+
+    // The development recipe (src/Grove.Themes.Site/Recipes/grove.dev.recipe.json) enables every
+    // Grove feature: each feature this host knows is either in its feature step or in its
+    // "excludedFeatures" with the reason, so a new feature cannot be left out silently.
+    // tools/manifest-features.py --check makes the same comparison from the manifests' source.
+    private const string RecipePath = "DevRecipe/grove.dev.recipe.json";
+
+    [Fact]
+    public void EveryFeatureIsEnabledOrExcludedWithAReason()
+    {
+        var recipe = JsonNode.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, RecipePath)))!.AsObject();
+        var enabled = recipe["steps"]!.AsArray()
+            .Where(step => (string?)step!["name"] == "feature")
+            .SelectMany(step => step!["enable"]!.AsArray().Select(id => (string)id!))
+            .ToList();
+        var excluded = recipe["excludedFeatures"]!.AsObject()
+            .ToDictionary(pair => pair.Key, pair => (string?)pair.Value, StringComparer.Ordinal);
+
+        var application = typeof(StandaloneHost).Assembly.GetName().Name;
+        var features = host.Services.GetRequiredService<IExtensionManager>().GetFeatures()
+            .Select(feature => feature.Id)
+            .Where(id => id != application && id != "Application.Default")
+            .ToHashSet(StringComparer.Ordinal);
+
+        Assert.Equal(enabled.Count, enabled.Distinct(StringComparer.Ordinal).Count());
+        Assert.All(excluded, pair => Assert.False(string.IsNullOrWhiteSpace(pair.Value), $"'{pair.Key}' is excluded without a reason"));
+
+        var missing = features.Where(id => !enabled.Contains(id) && !excluded.ContainsKey(id)).Order(StringComparer.Ordinal).ToList();
+        Assert.True(missing.Count == 0, "Features neither enabled nor excluded by the dev recipe: " + string.Join(", ", missing));
+
+        var both = enabled.Where(excluded.ContainsKey).ToList();
+        Assert.True(both.Count == 0, "Features both enabled and excluded: " + string.Join(", ", both));
+
+        var unknown = enabled.Concat(excluded.Keys).Where(id => !features.Contains(id)).ToList();
+        Assert.True(unknown.Count == 0, "Recipe features no module declares: " + string.Join(", ", unknown));
     }
 }

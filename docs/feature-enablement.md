@@ -57,8 +57,16 @@ graph.
 
 ## Every feature enabled: the dev recipe
 
-The host's dev recipe enables every tenant feature, so a fresh provision is also the test that
-all features coexist. That holds three rules for every feature:
+Grove's dev recipe, `GroveDev` (`src/Grove.Themes.Site/Recipes/grove.dev.recipe.json`, the
+setup recipe a host's development auto-setup names), enables every feature a Grove manifest
+declares, so a fresh provision is also the test that all features coexist. A feature it leaves
+out is listed in the recipe's `excludedFeatures` with the reason (the setup-only features).
+Nothing can be left out silently: `tools/manifest-features.py --check <recipe>` compares the
+recipe with the manifests' source, and `Grove.Tests.Standalone` compares it with the features
+a host built from Grove actually loads. The recipe also carries the dev roles, the
+`Always` layer and the admin menu layout (`grove-dev-admin-menu-layout.json`).
+
+That holds three rules for every feature:
 
 - **Unconfigured infrastructure is inert, not broken.** A feature that needs external
   configuration (Redis, Azure or S3 media storage and image caches, Azure data protection,

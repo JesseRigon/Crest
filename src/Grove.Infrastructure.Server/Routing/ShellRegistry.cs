@@ -55,6 +55,12 @@ public sealed class ShellDescriptor
     public required string NotFoundPage { get; init; }
 
     /// <summary>
+    /// The shell-relative base of the shell's error pages, <c>{ErrorPage}/{status}</c>: what a page
+    /// the shell refuses renders in its place. Null leaves a refusal its bare status.
+    /// </summary>
+    public string? ErrorPage { get; init; }
+
+    /// <summary>
     /// Whether pages carry the organization in their path, <c>{base}/{slug}/…</c> (the member
     /// shell). Pages marked <c>[OrganizationFreePage]</c> are served at the base instead.
     /// </summary>
@@ -146,8 +152,10 @@ public sealed class ShellRegistryConfiguration(
     IOptions<MemberOptions> memberOptions) : IConfigureOptions<ShellRegistryOptions>
 {
     public const string AdminNotFoundPage = "/not-found";
+    public const string AdminErrorPage = "/Error";
     public const string MemberLoginPage = Grove.Themes.Members.MemberRoutePaths.Login;
     public const string MemberNotFoundPage = Grove.Themes.Members.MemberRoutePaths.NotFound;
+    public const string MemberErrorPage = Grove.Themes.Members.MemberRoutePaths.Error;
     public const string MemberOrganizationPicker = Grove.Themes.Members.MemberRoutePaths.Organizations;
 
     public void Configure(ShellRegistryOptions options)
@@ -166,6 +174,7 @@ public sealed class ShellRegistryConfiguration(
             LoginPath = admin.LoginPath,
             AuthorizesRoutes = true,
             NotFoundPage = AdminNotFoundPage,
+            ErrorPage = AdminErrorPage,
         });
 
         // Login is part of the admin shell: it renders the admin document and its page lives
@@ -193,6 +202,7 @@ public sealed class ShellRegistryConfiguration(
             BasePath = memberBase,
             LoginPath = memberBase + MemberLoginPage,
             NotFoundPage = MemberNotFoundPage,
+            ErrorPage = MemberErrorPage,
             OrganizationInPath = true,
             OrganizationPicker = MemberOrganizationPicker,
         });
