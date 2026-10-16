@@ -8,7 +8,7 @@
 # What it provides:
 #   Package feeds   source_stamp, evict_from_cache, pack_into_output, ensure_feed,
 #                   restore_host (FORCE_RESTORE after a repack)
-#   Local server    url_is_up, stop_server
+#   Local server    url_is_up, dev_process_limits, start_watch, stop_server, stop_all_watches
 #   Test server     start_test_server, stop_test_server, wait_until_provisioned
 #   Suite plumbing  check_solution_membership, is_legacy_script, run_host_suite
 #
@@ -18,6 +18,11 @@
 LOCAL_VERSION="${LOCAL_VERSION:-4.0.0-local}"
 NUGET_CACHE="${NUGET_PACKAGES:-${HOME}/.nuget/packages}"
 FORCE_RESTORE="${FORCE_RESTORE:-0}"
+
+# One dev server per container: every host on Grove serves port 5010 and shares the
+# container's memory, so a second watcher only doubles the memory and fights over the port.
+WATCH_LOCK="${WATCH_LOCK:-/tmp/grove-dev-watch.lock}"
+WATCH_PIDFILE="${WATCH_PIDFILE:-/tmp/grove-dev-watch.pid}"
 
 require_dotnet() {
   if ! command -v dotnet >/dev/null 2>&1; then
@@ -107,6 +112,60 @@ url_is_up() {
   [ "${code}" != "000" ]
 }
 
+# dev_process_limits: what every dev build and dev server runs under. MSBuild worker nodes
+# and the compiler server exit with their build instead of idling; the host's heap is capped
+# (GROVE_DEV_HEAP_LIMIT, default 6 GB) so a leak fails the app with an OutOfMemoryException
+# in its log rather than exhausting the container; an edit hot reload cannot apply restarts
+# the app, so a long session does not accumulate hot-reload deltas.
+dev_process_limits() {
+  export MSBUILDDISABLENODEREUSE=1
+  export UseSharedCompilation=false
+  export DOTNET_CLI_TELEMETRY_OPTOUT=1
+  export DOTNET_GCHeapHardLimit="${GROVE_DEV_HEAP_LIMIT:-0x180000000}"
+  export DOTNET_WATCH_RESTART_ON_RUDE_EDIT=true
+}
+
+# stop_all_watches: stops every `dotnet watch` in the container, whichever host started it,
+# and the build servers. Exact process matching: only dotnet processes whose command line is
+# a watch, never a shell that mentions one.
+stop_all_watches() {
+  local pid cmd
+  for pid in $(pgrep -x dotnet) $(pgrep -f 'dotnet-watch\.dll' 2>/dev/null); do
+    cmd=$(tr '\0' ' ' < "/proc/${pid}/cmdline" 2>/dev/null) || continue
+    case "${cmd}" in
+      *dotnet-watch.dll*|"dotnet watch "*) kill -9 "${pid}" >/dev/null 2>&1 || true ;;
+    esac
+  done
+  rm -f "${WATCH_PIDFILE}"
+}
+
+# start_watch <project> [log file]
+# Runs the host under `dotnet watch`, the only one in the container: it takes the watch lock,
+# stops any other watcher and the app it supervised, applies dev_process_limits and records
+# the watcher's PID in WATCH_PIDFILE. With a log file it runs in the background and returns;
+# without one it runs in the foreground until stopped.
+start_watch() {
+  local project="$1" log="${2:-}"
+  exec 9>"${WATCH_LOCK}"
+  if ! flock -n 9; then
+    echo "Another dev server is starting; try again in a moment." >&2
+    return 1
+  fi
+  stop_all_watches
+  dev_process_limits
+  if [ -n "${log}" ]; then
+    mkdir -p "$(dirname "${log}")"
+    nohup dotnet watch --project "${project}" > "${log}" 2>&1 9>&- &
+    echo $! > "${WATCH_PIDFILE}"
+    echo "dotnet watch started (PID $(cat "${WATCH_PIDFILE}")); log: ${log}"
+    flock -u 9
+  else
+    echo $$ > "${WATCH_PIDFILE}"
+    flock -u 9
+    exec dotnet watch --project "${project}"
+  fi
+}
+
 # stop_server <host project file name, e.g. My.Host.csproj> <port> [root dir]
 # dotnet watch supervises a child host process; the watcher is stopped first so it does not
 # restart what is killed next. It ignores SIGTERM, so a watcher still there after a moment
@@ -128,6 +187,8 @@ stop_server() {
   if command -v lsof >/dev/null 2>&1; then
     lsof -ti :"${port}" | xargs -r kill -9 >/dev/null 2>&1 || true
   fi
+  rm -f "${WATCH_PIDFILE}"
+  dotnet build-server shutdown >/dev/null 2>&1 || true
 }
 
 # --- Throwaway test server -----------------------------------------------------------
@@ -144,6 +205,7 @@ start_test_server() {
   local project="$1" port="$2" data_root="$3" log="$4" url="${5:-http://localhost:$2}"
   rm -rf "${data_root}"
   mkdir -p "${data_root}" "$(dirname "${log}")"
+  dev_process_limits
   setsid dotnet run --no-build --project "${project}" -- \
     --urls "http://0.0.0.0:${port}" --Grove:DataRoot="${data_root}" > "${log}" 2>&1 &
   TEST_SERVER_PGID=$!

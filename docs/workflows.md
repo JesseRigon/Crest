@@ -1071,14 +1071,30 @@ background action.
   authenticated as the Anonymous caller, since it is the first check on use and on the share
   settings of content, pages and media), then permissions. The gate owns authentication before
   routing.
-- **One registry.** The engine's registry (`IActivityRegistry`) is the registry. Grove's
-  `WorkflowRegistryCatalog` and its providers (`IWorkflowTriggerProvider`,
-  `IWorkflowActivityProvider`, `IWorkflowFlowProvider`, hook
-  slots) migrate onto it: each catalog kind becomes engine descriptors with grouping and
-  position in `CustomProperties`, and every consumer of the catalog (the registry page,
-  `api/grove/workflows/registry`, the trigger publisher, the stock-activity and
-  connector-operation providers) reads the engine registry instead. The catalog is deleted when
-  its last consumer moves. (How each catalog kind maps is open, [Open questions](#open-questions).)
+- **Workflow and activity are the only two words.** A **workflow** is a definition; an
+  **activity** is one step in it. A workflow placed inside another is a workflow step, listed
+  under Workflows in the palette, and is never called an activity. "Flow" is not a separate
+  term: shipped, system and tenant workflows are all workflows.
+- **One home per kind of thing.** Each kind lives in exactly one registry:
+  - **Activities and triggers** (everything placed in a workflow, presets included) are
+    descriptors in the engine's registry (`IActivityRegistry`), with grouping and position in
+    `CustomProperties`. Published workflows appear there as workflow steps.
+  - **Shipped workflows** are installation data: a module's provider lists the definitions and
+    the installer imports them; once imported they are ordinary workflows in the engine.
+  - **Hook slots and their attachments** live in the **hook registry**, the only registry of
+    places a workflow attaches: module slots, per-type content lifecycle slots, system
+    attachments (per slot or per field set) and tenant attachments. The hook service and runner
+    read it.
+
+  Grove's `WorkflowRegistryCatalog` is deleted. `api/grove/workflows/registry` and the registry
+  page read the engine registry for the palette and the hook registry for hooks.
+- **Webhooks are hooks.** Internal hooks and webhooks attach the same workflows through the
+  same hook registry. An **inbound webhook** is a hook slot raised by an external caller
+  (`webhooks/{connection}/{hook}`): workflows attach to it like any slot. An **outbound
+  webhook** is an external subscriber to a slot or trigger. Webhooks add, on top of the hook
+  registry and never beside it: subscriptions (pub/sub), signing and signature verification,
+  a delivery queue with retries and idempotency keys, response caching and deduplication, rate
+  limits, and a delivery log.
 - **HTTP-endpoint workflows** are served under `/workflows/`, consolidated so a caller knows
   it is calling an action; later `/workflows/{group}/{name}` once workflows have groups and an
   organization system. Their routes are defined entries in Grove.Infrastructure.Server's API registry
@@ -1208,9 +1224,16 @@ descriptor (Grove's `FieldDependencyDescriptorModifier` adds Grove data to
   decision again with the item, validates before it writes, and calls the content manager. Copy
   fields and Move fields write through its update path. Update writes the latest version in
   place (no draft is forced).
-- [ ] **One registry** ([Design decisions](#design-decisions)): Grove's catalog kinds
-  (triggers, flows, connectors, hook slots) become engine descriptors; the catalog's consumers
-  move to the engine registry; the catalog goes. Not started; the mapping is open.
+- [ ] **One home per kind of thing** ([Design decisions](#design-decisions)), one kind at a
+  time: triggers, then activity presets, become engine descriptors and their catalog consumers
+  (trigger publisher, registry page) move to the engine; shipped workflows leave the catalog
+  (the installer reads the providers); hook slots and attachments move behind the hook
+  registry; then the catalog is deleted and the registry API reshaped.
+- [ ] **One vocabulary**: "flow" replaced by "workflow" in code, screens and docs
+  (`WorkflowFlowDescriptor`, `IWorkflowFlowProvider`, `ShippedFlowsInstaller`, "system flows").
+- [ ] **Webhooks on the hook registry**: the inbound `Webhook received` trigger becomes an
+  inbound hook slot; outbound webhooks (subscriptions, signing, delivery queue, retries,
+  caching, delivery log) are built on the same registry.
 - [ ] **Operation names per tenant**, mapped from the module's declared name, so a tenant can
   replace a shipped read with a saved query of the same name (the override model of
   blazor-display.md § 5a, applied to operations). Not started; the model is open. Today a saved
@@ -1400,12 +1423,6 @@ insight, per-process metrics) are built on Grove components now, independent of 
 
 ## Open questions
 
-- **One registry: how each catalog kind maps.** Only triggers and activity presets are
-  operations; a shipped flow is a definition JSON to import, a connector is an auth kind and
-  base URL (and moves with the connection system), a hook attachment is a pairing. What does a
-  flow, a connector, a hook slot and a system attachment become in the engine registry (a
-  descriptor each, with the JSON and settings in `CustomProperties`, or providers that stay as
-  import sources), and may the registry API's shape change for the pages that read it?
 - **Operation names per tenant.** Is it the existing shadowing made consistent (find and
   execute too), or a stored per-tenant map from the declared name to the tenant's operation
   (the three-ids-and-a-map model), and where is that map edited?

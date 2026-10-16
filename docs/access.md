@@ -410,8 +410,14 @@ authorized routes) use the Access types.
   tenant's domains and subdomains as a tenant setting, without host-level tenant administration:
   ownership is proved by a DNS TXT record before a domain is accepted, a certificate is issued
   and renewed for each verified domain (ACME), a domain claimed by another tenant is refused,
-  and every change reloads the running shell table. Today hosts are set only on the host's
-  Tenants page (`RequestUrlHost`).
+  and every change reloads the running shell table. A new module, `Grove.Infrastructure.Domains`
+  (with its abstractions), owns it: the tenant's domain records and their verification state,
+  the DNS check, certificate issuance and renewal, the cross-tenant claim check, and writing the
+  verified hosts into the tenant's `RequestUrlHost`. Matching stays where it is
+  (`RunningShellTable` in Grove.Infrastructure, `ShellSettings.RequestUrlHost` in
+  Grove.Infrastructure.Abstractions); host-level editing stays on the Tenants page
+  (Grove.Infrastructure.Tenants' tenant API and validator, `TenantEdit.razor` in
+  Grove.Themes.Admin).
 - [ ] **Public media and content endpoints that start a flow.** None exists, so the anonymous
   exception for them has nothing to admit yet.
 
