@@ -42,7 +42,7 @@ The Users list query service and filter providers left without a UI are tracked 
 | ☑ | The content picker field is the option picker over the content items source (one field type for picking); definitions and values converted by migration and recipe import | — | Grove.Contents.OptionPicker |
 | ☐ | The content item source searches the SQL index only: the Lucene and Elasticsearch picker editors (and their `*.ContentPicker` features) are gone | a search-engine-backed content item source, through Queries with the caller's scope | Grove.Contents.OptionPicker, Grove.Search |
 | ☐ | The option picker's editor and placeable component are admin-shell only (the client library declares no shell); member and site templates cannot place the picker | a shell-neutral home or a per-shell library when a member or site form needs it | Grove.Contents.OptionPicker |
-| ☐ | A list child's editor has no list header or navigation back to the list | the parent list as a breadcrumb on the editor | Grove.Display.Lists |
+| ☐ | A list child's editor has no list header or navigation back to the list | the parent list as a breadcrumb on the editor | Grove.Contents.Lists |
 | ☐ | Preview pane renders the Detail display as static HTML without the site theme's CSS and scripts; no preview at the PreviewPart URL in the full site theme; no separate live-preview window | preview in the site shell with its theme, at the item's URL, openable in its own window | Grove.Contents.Preview |
 | ☐ | The culture picker is no longer injected into the site navbar | document: place `CulturePicker` through a template or a layer | Grove.Contents.Localization |
 | ☐ | SEO custom meta tags are edited as JSON, not a table | a name/content table | Grove.Seo |

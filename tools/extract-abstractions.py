@@ -3,7 +3,7 @@
 
     tools/extract-abstractions.py MODULE [--from-core] [--dry-run] [FILE ...]
 
-MODULE is a module project name under src/ (for example Grove.Contents.Flows). FILE paths are
+MODULE is a module project name under src/ (for example Grove.Contents.BagParts). FILE paths are
 relative to the module folder. `--from-core` adds every file that an uncommitted fold of
 MODULE.Core moved into the module (read from `git status`) and that is a contract by kind:
 it declares an interface, is named *Permissions.cs, *Constants.cs, *Options.cs or

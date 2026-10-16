@@ -2,7 +2,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.DependencyInjection;
 using Grove.Contents.Management.Metadata;
 using Grove.Contents.Management.Metadata.Models;
-using Grove.Contents.Flows.Models;
+using Grove.Contents.BagParts.Models;
 using Grove.Data.Indexing;
 using Grove.Integrations.AI.Azure.Handlers;
 using Grove.Integrations.AI.Azure.Models;

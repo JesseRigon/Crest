@@ -31,7 +31,7 @@ Features can be enabled or disabled from a recipe using the `Feature` step. List
       "name": "Feature",
       "enable": [
         "Grove.Contents",
-        "Grove.Display.Lists"
+        "Grove.Contents.Lists"
       ],
       "disable": [
         "Grove.HomeRoute"

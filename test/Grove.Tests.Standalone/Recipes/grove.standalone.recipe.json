@@ -55,7 +55,7 @@
         "Grove.Routes.Auto",
         "Grove.Communications.Email",
         "Grove.Data.Cache.Dynamic",
-        "Grove.Contents.Flows",
+        "Grove.Contents.BagParts",
         "Grove.HomeRoute",
         "Grove.Data.Protocols.Html",
         "Grove.Infrastructure.Recipes.Core",

@@ -1,4 +1,4 @@
-# Flows (`Grove.Contents.Flows`)
+# Flows (`Grove.Contents.BagParts`)
 
 The Flows module provides methods to display content items directly within another content item. This is achieved with the Flow Part and the Bag Part.
 

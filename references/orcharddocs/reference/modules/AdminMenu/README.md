@@ -38,7 +38,7 @@ This node type is provided by the Grove.Contents module.
 
 3. **Lists Admin Node**: It provides menu items pointing to the Edit Page of those Content Items that include a part list on them.
 For example, if you have a Blog Content Type, and several Blog Content Items, it will provide a link for each existing Blog.
-This node type is provided by the Grove.Display.Lists module.
+This node type is provided by the Grove.Contents.Lists module.
 
 Note that each one of these nodes can have other nodes nested on it. The nesting is done through drag and drop on the UI.
 

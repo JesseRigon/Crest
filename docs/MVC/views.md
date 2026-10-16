@@ -181,14 +181,14 @@ module's screens are ports (§ Ports) and its shape templates are tracked in
 | --- | --- | --- | --- |
 | ☑ | Grove.Demo | 38 (incl. 6 Razor Pages) | Sample module for MVC, shapes and Razor Pages; nothing a host uses |
 | ☑ | Grove.Mvc.HelloWorld, Grove.Mvc.Web | 5 | MVC samples and the MVC-only host |
-| ☑ | Grove.XmlRpc, with Grove.MetaWeblog.Abstractions and the `RemotePublishing/` features of Grove.Display.Lists, Grove.Routes.Auto, Grove.Data.Protocols.Html, Grove.Contents.Markdown, Grove.Contents.Title and Grove.Media (their MetaWeblog drivers and the RSD endpoint serve XmlRpc only) | 0 views, 2 controllers | Retired protocol |
+| ☑ | Grove.XmlRpc, with Grove.MetaWeblog.Abstractions and the `RemotePublishing/` features of Grove.Contents.Lists, Grove.Routes.Auto, Grove.Data.Protocols.Html, Grove.Contents.Markdown, Grove.Contents.Title and Grove.Media (their MetaWeblog drivers and the RSD endpoint serve XmlRpc only) | 0 views, 2 controllers | Retired protocol |
 | ☑ | Grove.AdminDashboard | 19 | The native `Dashboard.razor` with regions covers it |
 
 **Kept and ported to Blazor**
 
 | ☐ | Module | Views (all kinds) | Port |
 | --- | --- | --- | --- |
-| ☑ | Grove.Contents.Taxonomies, Grove.Display.Lists | 23, 17 | Part and field editors and displays ([parity.md](parity.md) › New components): `TaxonomyPartEditor`, `TaxonomyFieldEditor` over `TaxonomiesApi`; `ListPartEditor` over Grove.Display.Lists' `ListsApi` (`api/grove/lists/{id}/items`, `/order`), a child created on the native create page with `?containerId=`; the MVC order action and the list's admin shapes deleted |
+| ☑ | Grove.Contents.Taxonomies, Grove.Contents.Lists | 23, 17 | Part and field editors and displays ([parity.md](parity.md) › New components): `TaxonomyPartEditor`, `TaxonomyFieldEditor` over `TaxonomiesApi`; `ListPartEditor` over Grove.Contents.Lists' `ListsApi` (`api/grove/lists/{id}/items`, `/order`), a child created on the native create page with `?containerId=`; the MVC order action and the list's admin shapes deleted |
 | ☑ | Grove.Seo, Grove.Seo.Sitemaps | 6, 22 | `SeoMetaPartEditor` (the Seo views, driver and scripts deleted); the sitemaps pages in the module's library (§ Ports); `SitemapPartEditor` (Grove.Display.Components, `Editors/ContentPartEditors.cs`) edits the sitemap part on the editor tree, its MVC view, driver, view model and scripts deleted |
 | ☑ | Grove.Security.Cors, Grove.Security.RateLimits | 3, 24 | Settings groups through the generic `SettingsForm` ([parity.md](parity.md) › New components): `cors` (`CorsSettings`), `ratelimits` (`RateLimitsSettingsModel`) |
 | ☑ | Grove.Contents.Markdown, Grove.Data.Protocols.Html, Grove.Data.Types.Spatial, Grove.Contents.Title, Grove.Contents.Alias, Grove.Contents.PublishLater, Grove.Contents.ArchiveLater, Grove.Contents.Localization, Grove.Contents.Preview | 15, 13, 6, 7, 3, 4, 4, 9, 5 | Content parts: editors on the editor tree (`GeoPointFieldEditor`, `LocalizationPartEditor` over Grove.Contents.Localization's `api/grove/content-localization/{id}` and its `localize` action, `ContentPreviewPane`); the edit and option views, editor scripts and editor-only drivers deleted; the display templates are deleted too, their shapes binding the display components ([shape-engine.md](shape-engine.md) › Component coverage) |

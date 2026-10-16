@@ -28,6 +28,7 @@ is safe for anything to use. For its protocol it:
 
 | Module | Protocol |
 |---|---|
+| `Grove.Data.Protocols.Json` | JSON: the one place for serializer options, converters and polymorphic types, JSON nodes and dynamic access, JSON Path and JSON Schema. Every module serializes through it |
 | `Grove.Data.Protocols.Http` | HTTP: requests, responses, the guarded client the engine runs |
 | `Grove.Data.Protocols.Rest` | REST described by OpenAPI |
 | `Grove.Data.Protocols.Soap` | SOAP described by WSDL |

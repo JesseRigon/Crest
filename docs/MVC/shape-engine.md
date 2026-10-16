@@ -108,13 +108,13 @@ resolved; the report is the live answer.
 | Shape | Owner module | Live path | Status |
 | --- | --- | --- | --- |
 | `TermPart` (a term's page: the items tagged) | Grove.Contents.Taxonomies | site | - [x] `TermPart` (`ListPart`'s display, bound as `TermPart`) |
-| `ListPartFeed` (RSS link in the head) | Grove.Display.Lists | site | - [x] `HeadLink`, bound as `ListPartFeed`: the feed driver puts the link's values on the shape |
+| `ListPartFeed` (RSS link in the head) | Grove.Contents.Lists | site | - [x] `HeadLink`, bound as `ListPartFeed`: the feed driver puts the link's values on the shape |
 | `LiquidPart`, `LiquidPart_Summary` | Grove.Display.Liquid | site | - [x] retired: one body format. Grove.Display.Templates' migration (`Migrations.UpdateFrom3Async`, `LiquidBodies`) gives every type with the part `DisplayTreePart` in its place, converts every version's body (a body rendering one shape by name becomes that component's node; a body without Liquid a `RichText` node; a body with Liquid a published composite template of its own, `LiquidBody_{id}`, placed by name with the item's id as its `ContentItemId` input, `Model.ContentItem` read through the `Content` accessor) and deletes the part's definition |
 | `SearchFormPart` | Grove.Search | none | - [x] deleted with its driver (views.md › Search) |
 | `PublishLaterPart`, `ArchiveLaterPart` (scheduled-date notes) | Grove.Contents.PublishLater, Grove.Contents.ArchiveLater | `/display` | - [x] `PublishLaterPart`, `ArchiveLaterPart` (the scheduled date as a badge); their `_SummaryAdmin` shapes resolve through the registry's display-variant rule |
 | `DashboardPart` and its shapes | Grove.AdminDashboard | — | - [x] deleted with the module |
 | `*_SummaryAdmin`, `*_Thumbnail`, `*_Admin` of the MVC admin lists; the deployment modals | Grove.Contents, Grove.Contents.SiteMenu | — | - [x] deleted with the Contents MVC screens and Grove.Themes.TheAdmin |
-| `ListPart_RemotePublishing` | Grove.Display.Lists | — | ☑ deleted with Grove.XmlRpc |
+| `ListPart_RemotePublishing` | Grove.Contents.Lists | — | ☑ deleted with Grove.XmlRpc |
 | `TestContentPartA`, `LowerDoll` | Grove.Demo | — | ☑ deleted with Grove.Demo |
 | Non-driver shapes rendered into the site layout (menus, pager, layout zones) | Grove.Contents.SiteMenu, Grove.Display.Navigation, theme clients | site | ☑ covered (`Menu`, `MenuItem`, `Pager`, `PagerSlim`, `Layout`, `Content`, `NotFound`, `Forbidden`) |
 | `ContentPart`, `ContentPart_Summary` (a part with fields and no driver) | Grove.Contents | site, `/display` | - [x] `ContentPart` (`Grove.Display.Components/Components/Content/ContentPartDisplay.cs`, its `Content` zone) |

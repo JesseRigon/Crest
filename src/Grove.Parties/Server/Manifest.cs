@@ -19,7 +19,7 @@ using Grove.Modules.Manifest;
         "Grove.Contents.Fields",
         "Grove.Contents.Fields.Indexing.SQL.UserPicker",
         "Grove.Contents.Title",
-        "Grove.Contents.Flows",
+        "Grove.Contents.BagParts",
         "Grove.Contents.PartLists",
         "Grove.Contents.OptionPicker",
         "Grove.Data.Regions"

@@ -122,7 +122,7 @@ public sealed class DeploymentStartup : StartupBase
     }
 }
 
-[RequireFeatures("Grove.Contents.Flows")]
+[RequireFeatures("Grove.Contents.BagParts")]
 public sealed class FlowsStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)

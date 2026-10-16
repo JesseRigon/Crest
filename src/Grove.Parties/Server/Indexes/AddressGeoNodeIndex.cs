@@ -2,7 +2,7 @@ using Grove.Fields;
 using Grove.Data.Regions.Fields;
 using Grove.Parties.Constants;
 using Grove.Contents.Management;
-using Grove.Contents.Flows.Models;
+using Grove.Contents.BagParts.Models;
 using YesSql.Indexes;
 
 namespace Grove.Parties.Indexes;

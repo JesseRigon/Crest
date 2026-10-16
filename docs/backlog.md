@@ -8,7 +8,7 @@ Left out on purpose, because a question is still open against them: the
 Queries API (queries.md Q6, Q7; workflows.md "what the platform offers for connections"),
 audit feeds at volume (A4), the designer UI and its move (blazordesigner.md, workflows.md W6),
 design systems as content (part vs fields), cross-tenant translation suggestions, the global
-editing UI (which UI first), the geocoder, Regions and Spatial (regions.md), merging Grove.Routes and Grove.Routes.Auto, the content model's naming (content types, fields, parts; bags and part lists, today Grove.Contents.Flows and the `Grove.Contents.PartLists` feature), approvals, theme storage and switching
+editing UI (which UI first), the geocoder, Regions and Spatial (regions.md), merging Grove.Routes and Grove.Routes.Auto, the content model's naming (content types, fields, parts; bags and part lists, today Grove.Contents.BagParts and the `Grove.Contents.PartLists` feature), approvals, theme storage and switching
 (shells-and-themes.md), shells on their own hostnames, user settings, and the parked security audit and sandboxed custom elements (blazor-display.md).
 
 Status: ☐ open, ◐ partial, ☑ done.
@@ -78,6 +78,7 @@ Status: ☐ open, ◐ partial, ☑ done.
 
 ## Connectors (connectors.md)
 
+- ☐ `Grove.Data.Protocols.Json`: centralizes JSON. Today it is spread over `Grove.Infrastructure.Abstractions/Json` (serializer options, `JConvert`, `JOptions`, derived-type options, nodes, dynamic access), the `System.Text.Json`, `JsonPath.Net`, `NJsonSchema` and `GraphQL.SystemTextJson` packages referenced per module, and two Newtonsoft uses (Grove.Infrastructure.Abstractions, Grove.Workflows) (connectors.md › Protocols)
 - ☑ The protocol libraries: `Grove.Data.Protocols.Http`, `.Rest` (OpenAPI), `.Soap` (WSDL), `.OAuth` (client flows), `.Webhooks`, `.Sql`, and the GraphQL client side (connectors.md › Protocols)
 - ☑ The connector engine `Grove.Data.Connectors` (+ Abstractions): declared and defined connections, tenant and user credential scopes, the OAuth lifecycle, the execution pipeline (guarded client, cache, retries with `Retry-After`, rate limits, "retry after T"); Workflows' `Server/Connectors` moved into it, with the renames listed in connectors.md (connectors.md › The connector engine)
 - ☑ The Connections screen and each user's Connected accounts page (connectors.md › Screens and permissions)
@@ -202,6 +203,16 @@ Status: ☐ open, ◐ partial, ☑ done.
 - ☑ Wave 4: Grove.Themes.TheAdmin, Grove.Infrastructure.SafeMode, Grove.LegacyFrame (`/legacy-host`, `LegacyAdminFrame`) and Razor Pages support deleted; the admin's not-found page is native (MVC/views.md › Themes, layouts and layout filters)
 - ☑ MVC deleted: `AddMvc`, Grove.Mvc, Grove.Mvc.Abstractions, Grove.Application.Mvc.Targets, Grove.Contents.TagHelpers (MVC/api.md H4)
 - ☐ The shape contract in Grove.Display.Management.Abstractions, or dropped (MVC/shape-engine.md E4)
+
+## Content engine (content-engine.md)
+
+- ☐ Parts renamed to field sets in code, the definition store and screens, same function (content-engine.md › Field sets)
+- ☐ `BagPart` replaced by type nesting declared on the parent type (content-engine.md › Nested types)
+- ☐ Code parts split into a field set for their data and system flows for their behaviour, on content event hook slots ("before" slots inside the saving unit of work), with field locks for fields system flows require (content-engine.md › Behaviour is workflows)
+- ☐ Option lists renamed to enums in code (feature, types, parts, routes, permissions, client library); screens say "Option lists"; taxonomies labelled "Categories" in screens (content-engine.md › Names)
+- ☐ `TaxonomyField`, `UserPickerField` and `LocalizationSetContentPickerField` replaced by option-picker sources (content-engine.md › Picking is one field type)
+- ☐ Every field type registers through Grove.Contents.Fields' registry from its own module (content-engine.md › Fields and field types)
+- ☐ Project name out of type names: `GroveContentPartListPart`, `GroveOptionPart`, `GroveRegionalProfilePart`, `GroveRegionalProfileReferencePart`, `GroveOrganizationPart`, `GroveContentGroupsDocument`
 
 ## Content items (content-items.md)
 

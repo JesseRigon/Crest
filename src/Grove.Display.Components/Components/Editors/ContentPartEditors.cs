@@ -15,7 +15,7 @@ namespace Grove.Display.Components.Editors;
 /// children (searched, filtered by status), each opening its own editor; moved up and down when
 /// the list is ordered; a child created as one of the list's contained types on the native create
 /// page with the list as its container. Below them, the list's feed values (its RSS link, a proxy
-/// address, the number of feed items). The children come from Grove.Display.Lists'
+/// address, the number of feed items). The children come from Grove.Contents.Lists'
 /// <c>api/grove/lists/{id}/items</c>; an unsaved list has none yet.
 /// </summary>
 [BlazorComponent("ListPartEditor", DisplayName = "List items", Category = "Editors", Icon = "list", Edits = ["ListPart"])]

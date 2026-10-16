@@ -313,6 +313,22 @@
    "title": "Grove.Contents.ArchiveLater\\nreferenced by 1, references 8, packages 0"
   },
   {
+   "id": "Grove.Contents.BagParts",
+   "label": "Grove.Contents.BagParts",
+   "color": "#ffb703",
+   "kind": "module",
+   "value": 4,
+   "title": "Grove.Contents.BagParts\\nreferenced by 3, references 13, packages 0"
+  },
+  {
+   "id": "Grove.Contents.BagParts.Abstractions",
+   "label": "Grove.Contents.BagParts.Abstractions",
+   "color": "#8ecae6",
+   "kind": "abstractions",
+   "value": 2,
+   "title": "Grove.Contents.BagParts.Abstractions\\nreferenced by 1, references 1, packages 0"
+  },
+  {
    "id": "Grove.Contents.Fields",
    "label": "Grove.Contents.Fields",
    "color": "#ffb703",
@@ -329,20 +345,12 @@
    "title": "Grove.Contents.Fields.Abstractions\\nreferenced by 1, references 3, packages 0"
   },
   {
-   "id": "Grove.Contents.Flows",
-   "label": "Grove.Contents.Flows",
+   "id": "Grove.Contents.Lists",
+   "label": "Grove.Contents.Lists",
    "color": "#ffb703",
    "kind": "module",
-   "value": 4,
-   "title": "Grove.Contents.Flows\\nreferenced by 3, references 13, packages 0"
-  },
-  {
-   "id": "Grove.Contents.Flows.Abstractions",
-   "label": "Grove.Contents.Flows.Abstractions",
-   "color": "#8ecae6",
-   "kind": "abstractions",
    "value": 2,
-   "title": "Grove.Contents.Flows.Abstractions\\nreferenced by 1, references 1, packages 0"
+   "title": "Grove.Contents.Lists\\nreferenced by 1, references 18, packages 0"
   },
   {
    "id": "Grove.Contents.Localization",
@@ -1031,14 +1039,6 @@
    "kind": "abstractions",
    "value": 27,
    "title": "Grove.Display.Liquid.Abstractions\\nreferenced by 26, references 1, packages 1"
-  },
-  {
-   "id": "Grove.Display.Lists",
-   "label": "Grove.Display.Lists",
-   "color": "#ffb703",
-   "kind": "module",
-   "value": 2,
-   "title": "Grove.Display.Lists\\nreferenced by 1, references 18, packages 0"
   },
   {
    "id": "Grove.Display.Management",
@@ -2509,96 +2509,6 @@
    "arrows": "to"
   },
   {
-   "from": "Grove.Display.Lists",
-   "to": "Grove.Infrastructure.Server.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Display.Lists",
-   "to": "Grove.Infrastructure.Shells.Admin.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Display.Lists",
-   "to": "Grove.Contents.AdminMenu.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Display.Lists",
-   "to": "Grove.Data.Protocols.GraphQL.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Display.Lists",
-   "to": "Grove.Contents.Localization.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Display.Lists",
-   "to": "Grove.Contents.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Display.Lists",
-   "to": "Grove.Contents.Management",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Display.Lists",
-   "to": "Grove.Contents.Management.Display",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Display.Lists",
-   "to": "Grove.Contents.Management.GraphQL",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Display.Lists",
-   "to": "Grove.Contents.Types.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Display.Lists",
-   "to": "Grove.Data.YesSql.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Display.Lists",
-   "to": "Grove.Data.Feeds.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Display.Lists",
-   "to": "Grove.Data.Indexing.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Display.Lists",
-   "to": "Grove.Media.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Display.Lists",
-   "to": "Grove.Media",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Display.Lists",
-   "to": "Grove.Module.Targets",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Display.Lists",
-   "to": "Grove.Access.Users.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Display.Lists",
-   "to": "Grove.Display.Resources.Management",
-   "arrows": "to"
-  },
-  {
    "from": "Grove.Application.Cms.Core.Targets",
    "to": "Grove.Application.Targets",
    "arrows": "to"
@@ -2755,7 +2665,7 @@
   },
   {
    "from": "Grove.Application.Cms.Core.Targets",
-   "to": "Grove.Contents.Flows",
+   "to": "Grove.Contents.BagParts",
    "arrows": "to"
   },
   {
@@ -2810,7 +2720,7 @@
   },
   {
    "from": "Grove.Application.Cms.Core.Targets",
-   "to": "Grove.Display.Lists",
+   "to": "Grove.Contents.Lists",
    "arrows": "to"
   },
   {
@@ -3341,11 +3251,6 @@
   {
    "from": "Grove.Infrastructure.Shells.Admin",
    "to": "Grove.Infrastructure.Settings",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Contents.Flows.Abstractions",
-   "to": "Grove.Contents.Management.Abstractions",
    "arrows": "to"
   },
   {
@@ -4186,6 +4091,11 @@
   {
    "from": "Grove.Infrastructure.Features",
    "to": "Grove.Infrastructure.Features.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.BagParts.Abstractions",
+   "to": "Grove.Contents.Management.Abstractions",
    "arrows": "to"
   },
   {
@@ -5366,6 +5276,96 @@
   {
    "from": "Grove.Data.Feeds",
    "to": "Grove.Data.Feeds.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.Lists",
+   "to": "Grove.Infrastructure.Server.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.Lists",
+   "to": "Grove.Infrastructure.Shells.Admin.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.Lists",
+   "to": "Grove.Contents.AdminMenu.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.Lists",
+   "to": "Grove.Data.Protocols.GraphQL.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.Lists",
+   "to": "Grove.Contents.Localization.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.Lists",
+   "to": "Grove.Contents.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.Lists",
+   "to": "Grove.Contents.Management",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.Lists",
+   "to": "Grove.Contents.Management.Display",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.Lists",
+   "to": "Grove.Contents.Management.GraphQL",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.Lists",
+   "to": "Grove.Contents.Types.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.Lists",
+   "to": "Grove.Data.YesSql.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.Lists",
+   "to": "Grove.Data.Feeds.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.Lists",
+   "to": "Grove.Data.Indexing.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.Lists",
+   "to": "Grove.Media.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.Lists",
+   "to": "Grove.Media",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.Lists",
+   "to": "Grove.Module.Targets",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.Lists",
+   "to": "Grove.Access.Users.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.Lists",
+   "to": "Grove.Display.Resources.Management",
    "arrows": "to"
   },
   {
@@ -7189,6 +7189,71 @@
    "arrows": "to"
   },
   {
+   "from": "Grove.Contents.BagParts",
+   "to": "Grove.Infrastructure.Shells.Admin.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.BagParts",
+   "to": "Grove.Contents.Management.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.BagParts",
+   "to": "Grove.Contents.Management.Display",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.BagParts",
+   "to": "Grove.Contents.Management.GraphQL",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.BagParts",
+   "to": "Grove.Contents.Types.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.BagParts",
+   "to": "Grove.Data.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.BagParts",
+   "to": "Grove.Data.Indexing.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.BagParts",
+   "to": "Grove.Display.Liquid.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.BagParts",
+   "to": "Grove.Module.Targets",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.BagParts",
+   "to": "Grove.Display.Resources.Management",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.BagParts",
+   "to": "Grove.Contents.BagParts.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.BagParts",
+   "to": "Grove.Contents.Management",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.BagParts",
+   "to": "Grove.Contents.Abstractions",
+   "arrows": "to"
+  },
+  {
    "from": "Grove.Infrastructure.Abstractions",
    "to": "Grove.Display.Resources.Management.Abstractions",
    "arrows": "to"
@@ -7934,71 +7999,6 @@
    "arrows": "to"
   },
   {
-   "from": "Grove.Contents.Flows",
-   "to": "Grove.Infrastructure.Shells.Admin.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Contents.Flows",
-   "to": "Grove.Contents.Management.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Contents.Flows",
-   "to": "Grove.Contents.Management.Display",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Contents.Flows",
-   "to": "Grove.Contents.Management.GraphQL",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Contents.Flows",
-   "to": "Grove.Contents.Types.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Contents.Flows",
-   "to": "Grove.Data.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Contents.Flows",
-   "to": "Grove.Data.Indexing.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Contents.Flows",
-   "to": "Grove.Display.Liquid.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Contents.Flows",
-   "to": "Grove.Module.Targets",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Contents.Flows",
-   "to": "Grove.Display.Resources.Management",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Contents.Flows",
-   "to": "Grove.Contents.Flows.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Contents.Flows",
-   "to": "Grove.Contents.Management",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Contents.Flows",
-   "to": "Grove.Contents.Abstractions",
-   "arrows": "to"
-  },
-  {
    "from": "Grove.Search.Lucene.Abstractions",
    "to": "Grove.Data.Indexing.Abstractions",
    "arrows": "to"
@@ -8425,7 +8425,7 @@
   },
   {
    "from": "Grove.Integrations.AI.Azure",
-   "to": "Grove.Contents.Flows",
+   "to": "Grove.Contents.BagParts",
    "arrows": "to"
   },
   {
@@ -9870,7 +9870,7 @@
   },
   {
    "from": "Grove.Parties",
-   "to": "Grove.Contents.Flows",
+   "to": "Grove.Contents.BagParts",
    "arrows": "to"
   },
   {

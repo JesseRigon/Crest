@@ -3,7 +3,7 @@ using Grove.Data.Protocols.GraphQL;
 using Grove.Routes.Auto.Models;
 using Grove.Contents.Fields.Fields;
 using Grove.Contents.Management;
-using Grove.Display.Lists.Models;
+using Grove.Contents.Lists.Models;
 using Grove.Tests.Apis.Context;
 using GraphQLApi = Grove.Data.Protocols.GraphQL;
 

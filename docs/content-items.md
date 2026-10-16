@@ -1,5 +1,8 @@
 # Content system — items, types, parts, fields, lists
 
+The content model itself (types, fields, field sets, nesting, taxonomies, enums and how workflows carry behaviour)
+is [content-engine.md](content-engine.md). This doc covers the screens and APIs built on it.
+
 How Grove surfaces Orchard's content system: the definition editors, the content
 items surface, per-type menu presence, and the Content Part Lists enum system with
 its option-picker machinery. This is an explanatory document — what exists, how it

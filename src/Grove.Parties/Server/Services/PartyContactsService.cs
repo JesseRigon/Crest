@@ -8,7 +8,7 @@ using Grove.Parties.Constants;
 using Grove.Parties.ViewModels;
 using Grove.Contents.Fields.Fields;
 using Grove.Contents.Management;
-using Grove.Contents.Flows.Models;
+using Grove.Contents.BagParts.Models;
 
 namespace Grove.Parties.Services;
 

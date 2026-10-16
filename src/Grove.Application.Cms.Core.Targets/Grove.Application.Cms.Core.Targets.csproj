@@ -68,7 +68,7 @@
     <ProjectReference Include="..\Grove.Integrations.Facebook\Grove.Integrations.Facebook.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Infrastructure.Features\Grove.Infrastructure.Features.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Data.Feeds\Grove.Data.Feeds.csproj" PrivateAssets="none" />
-    <ProjectReference Include="..\Grove.Contents.Flows\Grove.Contents.Flows.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Contents.BagParts\Grove.Contents.BagParts.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Integrations.GitHub\Grove.Integrations.GitHub.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Integrations.Google\Grove.Integrations.Google.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Infrastructure.HealthChecks\Grove.Infrastructure.HealthChecks.csproj" PrivateAssets="none" />
@@ -79,7 +79,7 @@
     <ProjectReference Include="..\Grove.Infrastructure\Grove.Infrastructure.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Display.Layers\Grove.Display.Layers.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Display.Liquid\Grove.Display.Liquid.csproj" PrivateAssets="none" />
-    <ProjectReference Include="..\Grove.Display.Lists\Grove.Display.Lists.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Contents.Lists\Grove.Contents.Lists.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Data.Localization\Grove.Data.Localization.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Contents.Markdown\Grove.Contents.Markdown.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Media\Grove.Media.csproj" PrivateAssets="none" />

@@ -166,7 +166,7 @@ Hubs need no MVC. The caller lifetime on hubs is already Grove.Access's
 | `robots.txt` | Grove.Seo | `RobotsMiddleware` |
 | media files, image processing, secure media | Grove.Media | middleware; `FileServingEndpoint` for placements |
 | scanner verdict callback | Grove.Media.Scanning | `ScanVerdictApi` (its own signature, no antiforgery) |
-| RSS feeds | Grove.Data.Feeds | `FeedsApi`; the routes are declared through `FeedRoutesOptions.MapFeed` (Grove.Display.Lists: `Contents/Lists/{contentItemId}/rss`) |
+| RSS feeds | Grove.Data.Feeds | `FeedsApi`; the routes are declared through `FeedRoutesOptions.MapFeed` (Grove.Contents.Lists: `Contents/Lists/{contentItemId}/rss`) |
 | sitemaps (`sitemap.xml`, index) | Grove.Seo.Sitemaps | `SitemapDocumentsApi` (`{**sitemap:sitemapPath}`, a route constraint that matches only an enabled sitemap's path) |
 | remote deployment import | Grove.Deployment.Remote | `RemoteImportApi` (the gate's remote deployment key scheme; answers problem details on failure) |
 | culture switch redirect | Grove.Contents.Localization | `CultureRedirectApi` |

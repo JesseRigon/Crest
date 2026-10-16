@@ -2853,9 +2853,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@grove/flows@workspace:Grove.Contents.Flows/Assets":
+"@grove/flows@workspace:Grove.Contents.BagParts/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/flows@workspace:Grove.Contents.Flows/Assets"
+  resolution: "@grove/flows@workspace:Grove.Contents.BagParts/Assets"
   languageName: unknown
   linkType: soft
 
@@ -2893,9 +2893,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@grove/lists@workspace:Grove.Display.Lists/Assets":
+"@grove/lists@workspace:Grove.Contents.Lists/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/lists@workspace:Grove.Display.Lists/Assets"
+  resolution: "@grove/lists@workspace:Grove.Contents.Lists/Assets"
   languageName: unknown
   linkType: soft
 

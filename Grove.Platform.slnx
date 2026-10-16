@@ -190,8 +190,8 @@
     <Project Path="src/Grove.Infrastructure.Features.Abstractions/Grove.Infrastructure.Features.Abstractions.csproj" />
     <Project Path="src/Grove.Infrastructure.Features/Grove.Infrastructure.Features.csproj" />
     <Project Path="src/Grove.Data.Feeds/Grove.Data.Feeds.csproj" />
-    <Project Path="src/Grove.Contents.Flows.Abstractions/Grove.Contents.Flows.Abstractions.csproj" />
-    <Project Path="src/Grove.Contents.Flows/Grove.Contents.Flows.csproj" />
+    <Project Path="src/Grove.Contents.BagParts.Abstractions/Grove.Contents.BagParts.Abstractions.csproj" />
+    <Project Path="src/Grove.Contents.BagParts/Grove.Contents.BagParts.csproj" />
     <Project Path="src/Grove.Integrations.GitHub/Grove.Integrations.GitHub.csproj" />
     <Project Path="src/Grove.Integrations.Google/Grove.Integrations.Google.csproj" />
     <Project Path="src/Grove.Infrastructure.HealthChecks/Grove.Infrastructure.HealthChecks.csproj" />
@@ -202,7 +202,7 @@
     <Project Path="src/Grove.Data.Indexing/Grove.Data.Indexing.csproj" />
     <Project Path="src/Grove.Display.Layers/Grove.Display.Layers.csproj" />
     <Project Path="src/Grove.Display.Liquid/Grove.Display.Liquid.csproj" />
-    <Project Path="src/Grove.Display.Lists/Grove.Display.Lists.csproj" />
+    <Project Path="src/Grove.Contents.Lists/Grove.Contents.Lists.csproj" />
     <Project Path="src/Grove.Data.Localization/Grove.Data.Localization.csproj" />
     <Project Path="src/Grove.Search.Lucene/Grove.Search.Lucene.csproj" />
     <Project Path="src/Grove.Contents.Markdown/Grove.Contents.Markdown.csproj" />
